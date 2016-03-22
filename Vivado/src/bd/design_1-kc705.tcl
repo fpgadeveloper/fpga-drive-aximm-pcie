@@ -269,8 +269,8 @@ create_bd_addr_seg -range 0x10000 -offset 0x76010000 [get_bd_addr_spaces axi_cdm
 create_bd_addr_seg -range 0x8000 -offset 0xC0000000 [get_bd_addr_spaces axi_cdma_1/Data] [get_bd_addr_segs axi_bram_ctrl_1/S_AXI/Mem0] SEG3
 create_bd_addr_seg -range 0x10000 -offset 0xD0000000 [get_bd_addr_spaces axi_cdma_1/Data] [get_bd_addr_segs axi_cdma_1/s_axi_lite/Reg] SEG5
 create_bd_addr_seg -range 0x40000000 -offset 0x80000000 [get_bd_addr_spaces axi_cdma_1/Data] [get_bd_addr_segs mig_7series_1/memmap/memaddr] SEG6
-create_bd_addr_seg -range 0x2000 -offset 0x0 [get_bd_addr_spaces microblaze_1/Data] [get_bd_addr_segs microblaze_1_local_memory/dlmb_bram_if_cntlr/SLMB/Mem] SEG2
-create_bd_addr_seg -range 0x2000 -offset 0x0 [get_bd_addr_spaces microblaze_1/Instruction] [get_bd_addr_segs microblaze_1_local_memory/ilmb_bram_if_cntlr/SLMB/Mem] SEG1
+create_bd_addr_seg -range 128K -offset 0x0 [get_bd_addr_spaces microblaze_1/Data] [get_bd_addr_segs microblaze_1_local_memory/dlmb_bram_if_cntlr/SLMB/Mem] SEG2
+create_bd_addr_seg -range 128K -offset 0x0 [get_bd_addr_spaces microblaze_1/Instruction] [get_bd_addr_segs microblaze_1_local_memory/ilmb_bram_if_cntlr/SLMB/Mem] SEG1
 assign_bd_address
 
 # Restore current instance
