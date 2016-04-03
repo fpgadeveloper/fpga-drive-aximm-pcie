@@ -56,7 +56,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_ex
 
 # Configure the PS: Generate 200MHz clock, Enable HP0, Enable interrupts
 startgroup
-set_property -dict [list CONFIG.PCW_USE_M_AXI_GP0 {1} CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_EN_CLK0_PORT {0} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_USE_M_AXI_GP0 {1} CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_EN_CLK0_PORT {0} CONFIG.PCW_IRQ_F2P_INTR {1} CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1}] [get_bd_cells processing_system7_0]
 endgroup
 
 # Add the AXI Memory Mapped to PCIe Bridge IP

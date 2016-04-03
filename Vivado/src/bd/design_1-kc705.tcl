@@ -183,12 +183,6 @@ set_property -dict [ list CONFIG.NUM_SI {1} CONFIG.NUM_MI {7}  ] $periph_interco
 set pcie_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 pcie_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {2} CONFIG.NUM_MI {2}  ] $pcie_intercon
 
-# Create AXI CDMA and set properties
-set axi_cdma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma:4.1 axi_cdma_1 ]
-set_property -dict [ list CONFIG.C_M_AXI_DATA_WIDTH {128} CONFIG.C_INCLUDE_SG {0}  ] $axi_cdma_1
-connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_cdma_1/m_axi_aclk]
-connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_cdma_1/s_axi_lite_aclk]
-
 # Create Microblaze and set properties
 set microblaze_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze:9.5 microblaze_1 ]
 set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} CONFIG.C_USE_MSR_INSTR {1} CONFIG.C_USE_PCMP_INSTR {1} CONFIG.C_USE_BARREL {1} CONFIG.C_USE_DIV {1} CONFIG.C_USE_HW_MUL {2} CONFIG.C_UNALIGNED_EXCEPTIONS {1} CONFIG.C_ILL_OPCODE_EXCEPTION {1} CONFIG.C_M_AXI_I_BUS_EXCEPTION {1} CONFIG.C_M_AXI_D_BUS_EXCEPTION {1} CONFIG.C_DIV_ZERO_EXCEPTION {1} CONFIG.C_PVR {2} CONFIG.C_OPCODE_0x0_ILLEGAL {1} CONFIG.C_USE_ICACHE {1} CONFIG.C_CACHE_BYTE_SIZE {16384} CONFIG.C_ICACHE_LINE_LEN {8} CONFIG.C_ICACHE_VICTIMS {8} CONFIG.C_ICACHE_STREAMS {1} CONFIG.C_USE_DCACHE {1} CONFIG.C_DCACHE_BYTE_SIZE {16384} CONFIG.C_DCACHE_VICTIMS {8} CONFIG.C_USE_MMU {3} CONFIG.C_MMU_ZONES {2} CONFIG.C_USE_INTERRUPT {1}] $microblaze_1
@@ -219,8 +213,15 @@ connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out
 
 # Add concat for interrupts
 set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
-set_property -dict [list CONFIG.NUM_PORTS {4}] $xlconcat_0
+set_property -dict [list CONFIG.NUM_PORTS {5}] $xlconcat_0
 connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins axi_intc_0/intr]
+
+# Create AXI CDMA and set properties
+set axi_cdma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma:4.1 axi_cdma_1 ]
+set_property -dict [ list CONFIG.C_M_AXI_DATA_WIDTH {128} CONFIG.C_INCLUDE_SG {0}  ] $axi_cdma_1
+connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_cdma_1/m_axi_aclk]
+connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_cdma_1/s_axi_lite_aclk]
+connect_bd_net -net axi_cdma_1_cdma_introut [get_bd_pins axi_cdma_1/cdma_introut] [get_bd_pins xlconcat_0/In4]
 
 # Add UART for console output
 set axi_uart16550_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart16550_0 ]
