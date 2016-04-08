@@ -154,6 +154,16 @@ set_property -dict [ list CONFIG.POLARITY {ACTIVE_HIGH}  ] $reset
 # Create AXI Memory Mapped to PCIe Bridge IP and set properties
 set axi_pcie_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie:2.7 axi_pcie_1 ]
 set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} CONFIG.NO_OF_LANES {X4} CONFIG.MAX_LINK_SPEED {5.0_GT/s} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.DEVICE_ID {0x7014} CONFIG.BASE_CLASS_MENU {Bridge_device} CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} CONFIG.BAR0_SIZE {1} CONFIG.S_AXI_DATA_WIDTH {128} CONFIG.M_AXI_DATA_WIDTH {128} CONFIG.XLNX_REF_BOARD {KC705_REVC}] $axi_pcie_1
+# Class code required to use the right driver
+set_property -dict [list CONFIG.CLASS_CODE {0x060400}] $axi_pcie_1
+# Hide RP BAR0 to enable end-point to access entire 32-bit address range.
+#  Not sure why, but hiding RP BAR0 seems necessary for the Microblaze design, or we get kernel crashes.
+#  Strangely, we don't need to hide the RP BAR0 on the Zynq design.
+#  Here are some of the errors in the bootlog when RP BAR0 was not hidden:
+#    nvme 0000:01:00.0: Failed status: 3, reset controller
+#    nvme 0000:01:00.0: Cancelling I/O 0 QID 0
+#    nvme 0000:01:00.0: Could not set queue count (7)
+set_property -dict [list CONFIG.BAR_64BIT {true} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.BAR0_SIZE {4} CONFIG.PCIEBAR2AXIBAR_0 {0x00} CONFIG.rp_bar_hide {true}] $axi_pcie_1
 # Add MGT external port for PCIe
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp
 connect_bd_intf_net [get_bd_intf_pins axi_pcie_1/pcie_7x_mgt] [get_bd_intf_ports pci_exp]
@@ -213,8 +223,9 @@ connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out
 
 # Add concat for interrupts
 set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
-set_property -dict [list CONFIG.NUM_PORTS {5}] $xlconcat_0
+set_property -dict [list CONFIG.NUM_PORTS {6}] $xlconcat_0
 connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins axi_intc_0/intr]
+connect_bd_net -net axi_pcie_1_interrupt_out [get_bd_pins axi_pcie_1/interrupt_out] [get_bd_pins xlconcat_0/In5]
 
 # Create AXI CDMA and set properties
 set axi_cdma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma:4.1 axi_cdma_1 ]
