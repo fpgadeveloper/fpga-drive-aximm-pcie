@@ -192,6 +192,10 @@ connect_bd_net [get_bd_pins axi_pcie_0/interrupt_out] [get_bd_pins xlconcat_0/In
 connect_bd_net [get_bd_pins axi_cdma_0/cdma_introut] [get_bd_pins xlconcat_0/In1]
 connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins processing_system7_0/IRQ_F2P]
 
+# Add external port to connect MMCM_LOCK to LED
+create_bd_port -dir O mmcm_lock
+connect_bd_net [get_bd_pins /axi_pcie_0/mmcm_lock] [get_bd_ports mmcm_lock]
+
 # Assign addresses
 create_bd_addr_seg -range 1G -offset 0x00000000 [get_bd_addr_spaces axi_pcie_0/M_AXI] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG1
 create_bd_addr_seg -range 1G -offset 0x00000000 [get_bd_addr_spaces axi_cdma_0/Data] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG1
