@@ -21,7 +21,7 @@ performs enumeration of the detected PCIe end-points.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2015.4
+* Vivado 2016.1
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed above
@@ -38,7 +38,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2015.4\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2016.1\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ## License

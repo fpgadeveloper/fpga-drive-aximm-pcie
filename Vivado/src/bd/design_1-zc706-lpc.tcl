@@ -1,16 +1,6 @@
 ################################################################
-# Check if script is running in correct Vivado version.
+# Block design build script for ZC706 LPC FMC connector
 ################################################################
-set scripts_vivado_version 2015.4
-set current_vivado_version [version -short]
-
-if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
-   puts ""
-   puts "ERROR: This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."
-
-   return 1
-}
-
 set design_name design_1
 
 # CHECKING IF PROJECT EXISTS
@@ -50,7 +40,7 @@ current_bd_instance $parentObj
 
 # Add the Processor System and apply board preset
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7 processing_system7_0
 endgroup
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" apply_board_preset "1" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
 
@@ -61,7 +51,7 @@ endgroup
 
 # Add the AXI Memory Mapped to PCIe Bridge IP
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie:2.7 axi_pcie_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_0
 set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} CONFIG.MAX_LINK_SPEED {5.0_GT/s} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.DEVICE_ID {0x7012} CONFIG.BASE_CLASS_MENU {Bridge_device} CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} CONFIG.BAR0_SIZE {1} CONFIG.S_AXI_DATA_WIDTH {64} CONFIG.M_AXI_DATA_WIDTH {64}] [get_bd_cells axi_pcie_0]
 # Class code required to use the right driver
 set_property -dict [list CONFIG.CLASS_CODE {0x060400}] [get_bd_cells axi_pcie_0]
@@ -81,14 +71,14 @@ endgroup
 
 # Add constant to tie off /axi_pcie_0/INTX_MSI_Request
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant xlconstant_0
 set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
 connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_pcie_0/INTX_MSI_Request]
 endgroup
 
 # Add differential buffer for the 100MHz PCIe reference clock
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 ref_clk_buf
+create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf ref_clk_buf
 set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] [get_bd_cells ref_clk_buf]
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_0/REFCLK]
 endgroup
@@ -99,19 +89,19 @@ endgroup
 
 # Add CDMA
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma:4.1 axi_cdma_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma axi_cdma_0
 set_property -dict [list CONFIG.C_M_AXI_DATA_WIDTH {128} CONFIG.C_INCLUDE_SG {0} CONFIG.C_M_AXI_MAX_BURST_LEN {4}] [get_bd_cells axi_cdma_0]
 endgroup
 
 # Add interrupt concat
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat xlconcat_0
 set_property -dict [list CONFIG.NUM_PORTS {2}] [get_bd_cells xlconcat_0]
 endgroup
 
 # Add AXI Interconnect 0
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_0
 set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_interconnect_0]
 endgroup
 connect_bd_intf_net [get_bd_intf_pins axi_pcie_0/M_AXI] -boundary_type upper [get_bd_intf_pins axi_interconnect_0/S00_AXI]
@@ -119,7 +109,7 @@ connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_0/M0
 
 # Add AXI Interconnect 1
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_1
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_1
 set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {3}] [get_bd_cells axi_interconnect_1]
 endgroup
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/M00_AXI] [get_bd_intf_pins axi_pcie_0/S_AXI]
@@ -129,7 +119,7 @@ connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/S0
 
 # Add AXI Interconnect 2
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_2
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_2
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {2}] [get_bd_cells axi_interconnect_2]
 endgroup
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_2/M00_AXI] [get_bd_intf_pins axi_interconnect_0/S01_AXI]
@@ -138,7 +128,7 @@ connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_cdma_0/M_AXI] [ge
 
 # Add Processor System Reset 0
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_0
 endgroup
 connect_bd_net [get_bd_ports perst_n] [get_bd_pins proc_sys_reset_0/ext_reset_in]
 connect_bd_net [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins axi_pcie_0/axi_ctl_aclk_out]
@@ -148,7 +138,7 @@ connect_bd_net [get_bd_pins axi_interconnect_1/M01_ACLK] [get_bd_pins axi_pcie_0
 
 # Add Processor System Reset 1
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_1
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_1
 endgroup
 connect_bd_net [get_bd_pins proc_sys_reset_1/slowest_sync_clk] [get_bd_pins axi_pcie_0/axi_aclk_out]
 connect_bd_net [get_bd_ports perst_n] [get_bd_pins proc_sys_reset_1/ext_reset_in]

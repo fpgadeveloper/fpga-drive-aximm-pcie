@@ -1,16 +1,6 @@
 ################################################################
-# Check if script is running in correct Vivado version.
+# Block design build script for AC701 HPC FMC connector
 ################################################################
-set scripts_vivado_version 2015.4
-set current_vivado_version [version -short]
-
-if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
-   puts ""
-   puts "ERROR: This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."
-
-   return 1
-}
-
 set design_name design_1
 
 # CHECKING IF PROJECT EXISTS
@@ -60,21 +50,21 @@ proc create_hier_cell_microblaze_1_local_memory { parentCell nameHier } {
   create_bd_pin -dir I -from 0 -to 0 LMB_Rst
 
   # Create instance: dlmb_v10, and set properties
-  set dlmb_v10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_v10:3.0 dlmb_v10 ]
+  set dlmb_v10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_v10 dlmb_v10 ]
 
   # Create instance: ilmb_v10, and set properties
-  set ilmb_v10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_v10:3.0 ilmb_v10 ]
+  set ilmb_v10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_v10 ilmb_v10 ]
 
   # Create instance: dlmb_bram_if_cntlr, and set properties
-  set dlmb_bram_if_cntlr [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_bram_if_cntlr:4.0 dlmb_bram_if_cntlr ]
+  set dlmb_bram_if_cntlr [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_bram_if_cntlr dlmb_bram_if_cntlr ]
   set_property -dict [ list CONFIG.C_ECC {0}  ] $dlmb_bram_if_cntlr
 
   # Create instance: ilmb_bram_if_cntlr, and set properties
-  set ilmb_bram_if_cntlr [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_bram_if_cntlr:4.0 ilmb_bram_if_cntlr ]
+  set ilmb_bram_if_cntlr [ create_bd_cell -type ip -vlnv xilinx.com:ip:lmb_bram_if_cntlr ilmb_bram_if_cntlr ]
   set_property -dict [ list CONFIG.C_ECC {0}  ] $ilmb_bram_if_cntlr
 
   # Create instance: lmb_bram, and set properties
-  set lmb_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.3 lmb_bram ]
+  set lmb_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen lmb_bram ]
   set_property -dict [ list CONFIG.Memory_Type {True_Dual_Port_RAM} CONFIG.use_bram_block {BRAM_Controller}  ] $lmb_bram
 
   # Create interface connections
@@ -123,7 +113,7 @@ set oldCurInst [current_bd_instance .]
 current_bd_instance $parentObj
 
 # Add the Memory controller (MIG) for the DDR3
-set mig_7series_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:mig_7series:2.4  mig_7series_1 ]
+set mig_7series_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:mig_7series  mig_7series_1 ]
 set folder [pwd]
 set mig_file [glob $folder/src/mig/mig_ac701*.prj]
 if { [file exists "$mig_file"] == 1 } { 
@@ -152,7 +142,7 @@ set reset [ create_bd_port -dir I -type rst reset ]
 set_property -dict [ list CONFIG.POLARITY {ACTIVE_HIGH}  ] $reset
 
 # Create AXI Memory Mapped to PCIe Bridge IP and set properties
-set axi_pcie_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie:2.7 axi_pcie_1 ]
+set axi_pcie_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_1 ]
 set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} CONFIG.NO_OF_LANES {X2} CONFIG.MAX_LINK_SPEED {2.5_GT/s} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.DEVICE_ID {0x7014} CONFIG.BASE_CLASS_MENU {Bridge_device} CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} CONFIG.BAR0_SIZE {1} CONFIG.S_AXI_DATA_WIDTH {128} CONFIG.M_AXI_DATA_WIDTH {128} CONFIG.XLNX_REF_BOARD {AC701}] $axi_pcie_1
 # Class code required to use the right driver
 set_property -dict [list CONFIG.CLASS_CODE {0x060400}] $axi_pcie_1
@@ -168,11 +158,11 @@ set_property -dict [list CONFIG.BAR_64BIT {true} CONFIG.BAR0_SCALE {Gigabytes} C
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp
 connect_bd_intf_net [get_bd_intf_pins axi_pcie_1/pcie_7x_mgt] [get_bd_intf_ports pci_exp]
 # Add constant to tie off /axi_pcie_1/INTX_MSI_Request
-set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
+set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant xlconstant_0 ]
 set_property -dict [list CONFIG.CONST_VAL {0}] $xlconstant_0
 connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_pcie_1/INTX_MSI_Request]
 # Add differential buffer for the 100MHz PCIe reference clock
-set ref_clk_buf [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 ref_clk_buf ]
+set ref_clk_buf [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf ref_clk_buf ]
 set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] $ref_clk_buf
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_1/REFCLK]
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk
@@ -181,20 +171,20 @@ connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports r
 # Create AXI interconnects and set properties
 
 # Create mem_intercon
-set mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 mem_intercon ]
+set mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect mem_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {4} CONFIG.NUM_MI {1}  ] $mem_intercon
 # Create cdma_intercon
-set cdma_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 cdma_intercon ]
+set cdma_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect cdma_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {1} CONFIG.NUM_MI {2}  ] $cdma_intercon
 # Create periph_intercon
-set periph_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 periph_intercon ]
+set periph_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {1} CONFIG.NUM_MI {6}  ] $periph_intercon
 # Create pcie_intercon
-set pcie_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 pcie_intercon ]
+set pcie_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect pcie_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {2} CONFIG.NUM_MI {2}  ] $pcie_intercon
 
 # Create Microblaze and set properties
-set microblaze_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze:9.5 microblaze_1 ]
+set microblaze_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze microblaze_1 ]
 set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} CONFIG.C_USE_MSR_INSTR {1} CONFIG.C_USE_PCMP_INSTR {1} CONFIG.C_USE_BARREL {1} CONFIG.C_USE_DIV {1} CONFIG.C_USE_HW_MUL {2} CONFIG.C_UNALIGNED_EXCEPTIONS {1} CONFIG.C_ILL_OPCODE_EXCEPTION {1} CONFIG.C_M_AXI_I_BUS_EXCEPTION {1} CONFIG.C_M_AXI_D_BUS_EXCEPTION {1} CONFIG.C_DIV_ZERO_EXCEPTION {1} CONFIG.C_PVR {2} CONFIG.C_OPCODE_0x0_ILLEGAL {1} CONFIG.C_USE_ICACHE {1} CONFIG.C_CACHE_BYTE_SIZE {16384} CONFIG.C_ICACHE_LINE_LEN {8} CONFIG.C_ICACHE_VICTIMS {8} CONFIG.C_ICACHE_STREAMS {1} CONFIG.C_USE_DCACHE {1} CONFIG.C_DCACHE_BYTE_SIZE {16384} CONFIG.C_DCACHE_VICTIMS {8} CONFIG.C_USE_MMU {3} CONFIG.C_MMU_ZONES {2} CONFIG.C_USE_INTERRUPT {1}] $microblaze_1
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins microblaze_1/Clk]
 
@@ -203,39 +193,39 @@ create_hier_cell_microblaze_1_local_memory [current_bd_instance .] microblaze_1_
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins microblaze_1_local_memory/LMB_Clk]
 
 # Create instance: mdm_1, and set properties
-set mdm_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:mdm:3.2 mdm_1 ]
+set mdm_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:mdm mdm_1 ]
 
 # Create proc_sys_reset_0 for the main clock generated by PCIe block
-set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
+set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_0 ]
 
 # Create proc_sys_reset_1 for the CTRL clock generated by PCIe block
-set proc_sys_reset_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_1 ]
+set proc_sys_reset_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_1 ]
 
 # Create proc_sys_reset_2 for the MIG ui_clk
-set proc_sys_reset_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_2 ]
+set proc_sys_reset_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_2 ]
 
 # Add AXI interrupt controller
-set axi_intc_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_intc:4.1 axi_intc_0 ]
+set axi_intc_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_intc axi_intc_0 ]
 set_property -dict [list CONFIG.C_HAS_FAST {1}] $axi_intc_0
 connect_bd_intf_net [get_bd_intf_pins axi_intc_0/interrupt] [get_bd_intf_pins microblaze_1/INTERRUPT]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_intc_0/s_axi_aclk]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_intc_0/processor_clk]
 
 # Add concat for interrupts
-set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
+set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat xlconcat_0 ]
 set_property -dict [list CONFIG.NUM_PORTS {5}] $xlconcat_0
 connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins axi_intc_0/intr]
 connect_bd_net -net axi_pcie_1_interrupt_out [get_bd_pins axi_pcie_1/interrupt_out] [get_bd_pins xlconcat_0/In4]
 
 # Create AXI CDMA and set properties
-set axi_cdma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma:4.1 axi_cdma_1 ]
+set axi_cdma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma axi_cdma_1 ]
 set_property -dict [ list CONFIG.C_M_AXI_DATA_WIDTH {128} CONFIG.C_INCLUDE_SG {0}  ] $axi_cdma_1
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_cdma_1/m_axi_aclk]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_cdma_1/s_axi_lite_aclk]
 connect_bd_net -net axi_cdma_1_cdma_introut [get_bd_pins axi_cdma_1/cdma_introut] [get_bd_pins xlconcat_0/In3]
 
 # Add UART for console output
-set axi_uart16550_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart16550_0 ]
+set axi_uart16550_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550 axi_uart16550_0 ]
 set_property -dict [list CONFIG.UART_BOARD_INTERFACE {rs232_uart} CONFIG.UART_BOARD_INTERFACE {rs232_uart}] $axi_uart16550_0
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:uart_rtl:1.0 rs232_uart
 connect_bd_intf_net [get_bd_intf_pins axi_uart16550_0/UART] [get_bd_intf_ports rs232_uart]
@@ -243,12 +233,12 @@ connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get
 connect_bd_net [get_bd_pins axi_uart16550_0/ip2intc_irpt] [get_bd_pins xlconcat_0/In0]
 
 # Add AXI Timer
-set axi_timer_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer:2.0 axi_timer_0 ]
+set axi_timer_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0 ]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_timer_0/s_axi_aclk]
 connect_bd_net [get_bd_pins axi_timer_0/interrupt] [get_bd_pins xlconcat_0/In1]
 
 # Add SPI Flash (optionally used by Linux)
-set axi_quad_spi_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi:3.2 axi_quad_spi_0 ]
+set axi_quad_spi_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0 ]
 apply_board_connection -board_interface "spi_flash" -ip_intf "axi_quad_spi_0/SPI_0" -diagram "design_1"
 connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins xlconcat_0/In2]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
@@ -370,10 +360,10 @@ connect_bd_net -net mig_7series_1_init_calib_complete [get_bd_ports init_calib_c
 connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins mig_7series_1/sys_rst]
 
 # Create constants for AC701 SFP MGT CLK SEL0/1 for selection of FMC GTX clock
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 sfp_mgt_clk_sel0
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant sfp_mgt_clk_sel0
 create_bd_port -dir O -from 0 -to 0 sfp_mgt_clk_sel0
 connect_bd_net [get_bd_pins /sfp_mgt_clk_sel0/dout] [get_bd_ports sfp_mgt_clk_sel0]
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 sfp_mgt_clk_sel1
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant sfp_mgt_clk_sel1
 create_bd_port -dir O -from 0 -to 0 sfp_mgt_clk_sel1
 connect_bd_net [get_bd_pins /sfp_mgt_clk_sel1/dout] [get_bd_ports sfp_mgt_clk_sel1]
 
