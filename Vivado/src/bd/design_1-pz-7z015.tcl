@@ -1,7 +1,6 @@
 ################################################################
 # Block design build script for PicoZed FMC Carrier Card V2
 ################################################################
-set design_name design_1
 
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {

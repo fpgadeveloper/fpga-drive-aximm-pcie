@@ -1,7 +1,6 @@
 ################################################################
 # Block design build script for AC701
 ################################################################
-set design_name design_1
 
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {
@@ -239,7 +238,7 @@ connect_bd_net [get_bd_pins axi_timer_0/interrupt] [get_bd_pins xlconcat_0/In1]
 
 # Add SPI Flash (optionally used by Linux)
 set axi_quad_spi_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0 ]
-apply_board_connection -board_interface "spi_flash" -ip_intf "axi_quad_spi_0/SPI_0" -diagram "design_1"
+apply_board_connection -board_interface "spi_flash" -ip_intf "axi_quad_spi_0/SPI_0" -diagram "${design_name}"
 connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins xlconcat_0/In2]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins axi_quad_spi_0/s_axi_aclk]

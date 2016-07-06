@@ -1,7 +1,6 @@
 ################################################################
 # Block design build script for KC705
 ################################################################
-set design_name design_1
 
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {
@@ -246,7 +245,7 @@ connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out
 
 # Add SPI Flash (optionally used by Linux)
 set axi_quad_spi_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0 ]
-apply_board_connection -board_interface "spi_flash" -ip_intf "axi_quad_spi_0/SPI_0" -diagram "design_1"
+apply_board_connection -board_interface "spi_flash" -ip_intf "axi_quad_spi_0/SPI_0" -diagram "${design_name}"
 connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins xlconcat_0/In3]
 connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
 connect_bd_net -net axi_pcie_1_axi_aclk_out [get_bd_pins axi_pcie_1/axi_aclk_out] [get_bd_pins axi_quad_spi_0/s_axi_aclk]

@@ -1,23 +1,25 @@
 #
-# build.tcl: Tcl script for re-creating project 'zc706_lpc_aximm_pcie'
+# build.tcl: Tcl script for re-creating project 'zc706_lpc_pcie'
 #
 #*****************************************************************************************
+
+set design_name zc706_lpc_pcie
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."
 
 # Set the directory path for the original project from where this script was exported
-set orig_proj_dir "[file normalize "$origin_dir/zc706_lpc_aximm_pcie"]"
+set orig_proj_dir "[file normalize "$origin_dir/$design_name"]"
 
 # Create project
-create_project zc706_lpc_aximm_pcie ./zc706_lpc_aximm_pcie
+create_project $design_name $origin_dir/$design_name
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
-set obj [get_projects zc706_lpc_aximm_pcie]
-set_property "board_part" "xilinx.com:zc706:part0:1.2" $obj
+set obj [get_projects $design_name]
+set_property "board_part" "xilinx.com:zc706:part0:1.3" $obj
 set_property "default_lib" "xil_defaultlib" $obj
 set_property "simulator_language" "Mixed" $obj
 set_property "source_mgmt_mode" "DisplayOnly" $obj
@@ -31,7 +33,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
-set_property "top" "design_1_wrapper" $obj
+set_property "top" "${design_name}_wrapper" $obj
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
@@ -64,7 +66,7 @@ set obj [get_filesets sim_1]
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
-set_property "top" "design_1_wrapper" $obj
+set_property "top" "${design_name}_wrapper" $obj
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
@@ -90,15 +92,16 @@ set obj [get_runs impl_1]
 # set the current impl run
 current_run -implementation [get_runs impl_1]
 
-puts "INFO: Project created:zc706_lpc_aximm_pcie"
+puts "INFO: Project created:${design_name}"
 
 # Create block design
 source $origin_dir/src/bd/design_1-zc706-lpc.tcl
 
 # Generate the wrapper
-set design_name [get_bd_designs]
-make_wrapper -files [get_files $design_name.bd] -top -import
+make_wrapper -files [get_files *${design_name}.bd] -top
+add_files -norecurse ${design_name}/${design_name}.srcs/sources_1/bd/${design_name}/hdl/${design_name}_wrapper.vhd
 
 # Update the compile order
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
+
