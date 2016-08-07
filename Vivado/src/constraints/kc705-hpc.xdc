@@ -15,8 +15,8 @@ set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_p]
 set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_n]
 
 # PCI Express reset (perst) - IOSTANDARD determined by VADJ
-set_property PACKAGE_PIN C25 [get_ports perst_n]
-set_property IOSTANDARD LVCMOS25 [get_ports perst_n]
+set_property PACKAGE_PIN C25 [get_ports perst[0]]
+set_property IOSTANDARD LVCMOS25 [get_ports perst[0]]
 
 # PCI Express reference clock 100MHz
 # IOSTANDARD for GT reference clock does not need to be specified
@@ -25,6 +25,7 @@ set_property BEL IBUFDS_GTE2 [get_cells {*_i/ref_clk_buf/U0/USE_IBUFDS_GTE2.GEN_
 set_property LOC IBUFDS_GTE2_X0Y6 [get_cells {*_i/ref_clk_buf/U0/USE_IBUFDS_GTE2.GEN_IBUFDS_GTE2[0].IBUFDS_GTE2_I}]
 set_property PACKAGE_PIN C8 [get_ports {ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN C7 [get_ports {ref_clk_clk_n[0]}]
+create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
 
 # System reset (CPU_RESET)
 set_property PACKAGE_PIN AB7 [get_ports reset]

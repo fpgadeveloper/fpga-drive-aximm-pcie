@@ -15,6 +15,9 @@ Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge 
   * PCIe edge (use kc705.xdc)
   * LPC connnector (use kc705-lpc.xdc)
   * HPC connnector (use kc705-hpc.xdc)
+* Kintex Ultrascale [KCU105 Evaluation board](http://www.xilinx.com/products/boards-and-kits/kcu105.html "KCU105 Evaluation board")
+  * LPC connnector (use kcu105-lpc.xdc)
+  * HPC connnector (use kcu105-hpc.xdc)
 * Virtex-7 [VC707 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-v7-vc707-g.html "VC707 Evaluation board")
   * PCIe edge (use vc707.xdc)
   * HPC connector 1 (use vc707-hpc1.xdc)
@@ -47,11 +50,11 @@ In order to test this design on hardware, you will need the following:
 
 ## Board Specific Notes
 
-### VC709
+### VC709 and KCU105
 
-Note that there is no standalone SDK application for the VC709 in this repository. The reason is that the VC709 design
-is based on the [AXI Bridge for PCI Express Gen3 Subsystem v2.1](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v2.1"), for which Xilinx does not presently provide a driver.
-If you use the VC709 design from this repository, you must write your own drivers for standalone and Linux use.
+Note that there is no standalone SDK application for these eval boards in this repository. The reason is that those designs
+are based on the [AXI Bridge for PCI Express Gen3 Subsystem v2.1](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v2.1"), for which Xilinx does not presently provide a driver.
+If you use these designs from this repository, you must write your own drivers for standalone and Linux use.
 
 ### PicoZed
 
