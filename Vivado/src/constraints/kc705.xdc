@@ -31,6 +31,8 @@ set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_n]
 #set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports ref_clk_clk_p]
 set_property PACKAGE_PIN U8 [get_ports ref_clk_clk_p]
 set_property PACKAGE_PIN U7 [get_ports ref_clk_clk_n]
+create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
+
 set_property PACKAGE_PIN AB7 [get_ports reset]
 set_property IOSTANDARD LVCMOS15 [get_ports reset]
 

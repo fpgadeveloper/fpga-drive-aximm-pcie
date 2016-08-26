@@ -1,5 +1,5 @@
 ################################################################
-# Block design build script for ZC706 LPC FMC connector
+# Block design build script for ZC706 HPC FMC connector
 ################################################################
 
 # CHECKING IF PROJECT EXISTS
@@ -50,7 +50,7 @@ endgroup
 
 # Add the AXI Memory Mapped to PCIe Bridge IP
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_0
-set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} CONFIG.MAX_LINK_SPEED {5.0_GT/s} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.DEVICE_ID {0x7012} CONFIG.BASE_CLASS_MENU {Bridge_device} CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} CONFIG.BAR0_SIZE {1} CONFIG.S_AXI_DATA_WIDTH {64} CONFIG.M_AXI_DATA_WIDTH {64}] [get_bd_cells axi_pcie_0]
+set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} CONFIG.NO_OF_LANES {X4} CONFIG.MAX_LINK_SPEED {5.0_GT/s} CONFIG.BAR0_SCALE {Gigabytes} CONFIG.DEVICE_ID {0x7014} CONFIG.BASE_CLASS_MENU {Bridge_device} CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} CONFIG.BAR0_SIZE {1} CONFIG.S_AXI_DATA_WIDTH {128} CONFIG.M_AXI_DATA_WIDTH {128}] [get_bd_cells axi_pcie_0]
 # Class code required to use the right driver
 set_property -dict [list CONFIG.CLASS_CODE {0x060400}] [get_bd_cells axi_pcie_0]
 

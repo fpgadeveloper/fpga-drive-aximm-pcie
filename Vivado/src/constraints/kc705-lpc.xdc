@@ -15,8 +15,8 @@ set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_p]
 set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_n]
 
 # PCI Express reset (perst) - IOSTANDARD determined by VADJ
-set_property PACKAGE_PIN AD23 [get_ports perst_n]
-set_property IOSTANDARD LVCMOS25 [get_ports perst_n]
+set_property PACKAGE_PIN AD23 [get_ports perst[0]]
+set_property IOSTANDARD LVCMOS25 [get_ports perst[0]]
 
 # PCI Express reference clock 100MHz
 # IOSTANDARD for GT reference clock does not need to be specified

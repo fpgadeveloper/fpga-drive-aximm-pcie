@@ -22,12 +22,11 @@ set_property IOSTANDARD LVCMOS33 [get_ports perst_n]
 set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports ref_clk_clk_p]
 set_property PACKAGE_PIN F11 [get_ports ref_clk_clk_p]
 set_property PACKAGE_PIN E11 [get_ports ref_clk_clk_n]
+create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
 
 # System reset
 set_property PACKAGE_PIN U4 [get_ports reset]
 set_property IOSTANDARD LVCMOS15 [get_ports reset]
-
-create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
 
 # MGT locations
 set_property PACKAGE_PIN C12 [get_ports {pci_exp_rxn[0]}]

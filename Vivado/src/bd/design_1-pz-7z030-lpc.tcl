@@ -1,5 +1,5 @@
 ################################################################
-# Block design build script for ZC706 LPC FMC connector
+# Block design build script for PicoZed FMC Carrier Card V2
 ################################################################
 
 # CHECKING IF PROJECT EXISTS

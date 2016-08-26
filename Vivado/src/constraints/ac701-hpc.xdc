@@ -15,14 +15,13 @@ set_property IOSTANDARD LVDS_25 [get_ports sys_diff_clock_clk_p]
 set_property IOSTANDARD LVDS_25 [get_ports sys_diff_clock_clk_n]
 
 # PCI Express reset (perst)
-set_property PACKAGE_PIN D18 [get_ports perst_n]
-set_property IOSTANDARD LVCMOS25 [get_ports perst_n]
+set_property PACKAGE_PIN D18 [get_ports perst[0]]
+set_property IOSTANDARD LVCMOS25 [get_ports perst[0]]
 
 # PCI Express reference clock 100MHz
 set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports {ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN AA13 [get_ports {ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN AB13 [get_ports {ref_clk_clk_n[0]}]
-
 create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
 
 # System reset

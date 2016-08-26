@@ -23,6 +23,7 @@ set_property IOSTANDARD LVCMOS18 [get_ports perst_n]
 #set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports {ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN AB8 [get_ports {ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN AB7 [get_ports {ref_clk_clk_n[0]}]
+create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
 
 # System reset (CPU_RESET)
 set_property PACKAGE_PIN AV40 [get_ports reset]

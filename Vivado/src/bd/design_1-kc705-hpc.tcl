@@ -1,5 +1,5 @@
 ################################################################
-# Block design build script for KC705
+# Block design build script for KC705 HPC FMC connector
 ################################################################
 
 # CHECKING IF PROJECT EXISTS
@@ -139,9 +139,9 @@ set reset [ create_bd_port -dir I -type rst reset ]
 set_property -dict [ list CONFIG.POLARITY {ACTIVE_HIGH}  ] $reset
 
 # Inverter for the external reset signal
-set util_vector_logic_0 [create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0]
-set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] $util_vector_logic_0
-connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins util_vector_logic_0/Op1]
+#set util_vector_logic_0 [create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic util_vector_logic_0]
+#set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] $util_vector_logic_0
+#connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins util_vector_logic_0/Op1]
 
 # Create AXI Memory Mapped to PCIe Bridge IP and set properties
 set axi_pcie_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_1 ]
@@ -160,7 +160,7 @@ set_property -dict [list CONFIG.BAR_64BIT {true} CONFIG.BAR0_SCALE {Gigabytes} C
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp
 connect_bd_intf_net [get_bd_intf_pins axi_pcie_1/pcie_7x_mgt] [get_bd_intf_ports pci_exp]
 # Reset for PCIe
-connect_bd_net -net util_vector_logic_0_Res [get_bd_pins util_vector_logic_0/Res] [get_bd_pins axi_pcie_1/axi_aresetn]
+#connect_bd_net -net util_vector_logic_0_Res [get_bd_pins util_vector_logic_0/Res] [get_bd_pins axi_pcie_1/axi_aresetn]
 # Add constant to tie off /axi_pcie_1/INTX_MSI_Request
 set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant xlconstant_0 ]
 set_property -dict [list CONFIG.CONST_VAL {0}] $xlconstant_0
@@ -361,6 +361,7 @@ connect_bd_net -net axi_pcie_1_axi_ctl_aclk_out [get_bd_pins axi_pcie_1/axi_ctl_
 connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins proc_sys_reset_1/ext_reset_in]
 connect_bd_net -net axi_pcie_1_mmcm_lock [get_bd_pins axi_pcie_1/mmcm_lock] [get_bd_pins proc_sys_reset_1/dcm_locked]
 connect_bd_net -net proc_sys_reset_1_peripheral_aresetn [get_bd_pins proc_sys_reset_1/peripheral_aresetn] [get_bd_pins pcie_intercon/M01_ARESETN]
+connect_bd_net [get_bd_pins proc_sys_reset_1/peripheral_aresetn] [get_bd_pins axi_pcie_1/axi_aresetn]
 
 # proc_sys_reset_2 connections
 connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins proc_sys_reset_2/slowest_sync_clk]
