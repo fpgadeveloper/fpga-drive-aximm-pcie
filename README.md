@@ -73,6 +73,13 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 Copy those folders and their contents into the `C:\Xilinx\Vivado\2016.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
+### PicoZed FMC Carrier Card V2
+
+On this carrier, the GBTCLK0 of the LPC FMC connector is routed to a clock synthesizer/MUX, rather than being directly
+connected to the Zynq. In order to use the FPGA Drive FMC on the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2"), you will need to reprogram 
+the configuration EEPROM for the clock synthesizer. See the [Hardware User Guide](http://zedboard.org/sites/default/files/documentations/PZCC-FMC-V2-UG_1.0.pdf "Hardware User Guide")
+for the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2") more information about this.
+
 ## License
 
 Feel free to modify the code for your specific application.
