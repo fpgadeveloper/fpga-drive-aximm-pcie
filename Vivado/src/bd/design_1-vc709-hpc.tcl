@@ -162,6 +162,11 @@ set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_
 connect_bd_net [get_bd_pins axi_pcie_1/axi_aresetn] [get_bd_pins util_vector_logic_1/Op1]
 create_bd_port -dir O -from 0 -to 0 -type rst perst
 connect_bd_net [get_bd_pins util_vector_logic_1/Res] [get_bd_ports perst]
+# Inverter for the external reset signal
+set util_vector_logic_0 [create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic util_vector_logic_0]
+set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] $util_vector_logic_0
+connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins util_vector_logic_0/Op1]
+connect_bd_net [get_bd_pins util_vector_logic_0/Res] [get_bd_pins axi_pcie_1/sys_rst_n]
 
 # Create AXI interconnects and set properties
 
