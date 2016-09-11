@@ -366,9 +366,11 @@ connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins mig_7series_1/sys_
 
 # Create constants for AC701 SFP MGT CLK SEL0/1 for selection of FMC GTX clock
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant sfp_mgt_clk_sel0
+set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells sfp_mgt_clk_sel0]
 create_bd_port -dir O -from 0 -to 0 sfp_mgt_clk_sel0
 connect_bd_net [get_bd_pins /sfp_mgt_clk_sel0/dout] [get_bd_ports sfp_mgt_clk_sel0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant sfp_mgt_clk_sel1
+set_property -dict [list CONFIG.CONST_VAL {1}] [get_bd_cells sfp_mgt_clk_sel1]
 create_bd_port -dir O -from 0 -to 0 sfp_mgt_clk_sel1
 connect_bd_net [get_bd_pins /sfp_mgt_clk_sel1/dout] [get_bd_ports sfp_mgt_clk_sel1]
 
