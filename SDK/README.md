@@ -17,6 +17,7 @@ generate the SDK workspace. Windows users can run the `build-sdk.bat` file which
 launches the Tcl script.
 
 The build script does three things:
+
 1. Generates a Hello World example application for each exported Vivado design
 that is found in the ../Vivado directory. Most users will only have one exported
 Vivado design.
