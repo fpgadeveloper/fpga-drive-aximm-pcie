@@ -177,6 +177,8 @@ connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports r
 # Create mem_intercon
 set mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect mem_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {4} CONFIG.NUM_MI {1}  ] $mem_intercon
+# Add register slices to help pass timing
+set_property -dict [list CONFIG.S03_HAS_REGSLICE {3}] [get_bd_cells mem_intercon]
 # Create cdma_intercon
 set cdma_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect cdma_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {1} CONFIG.NUM_MI {2}  ] $cdma_intercon

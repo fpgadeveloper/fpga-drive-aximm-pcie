@@ -19,7 +19,7 @@ set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [get_projects $design_name]
-set_property "board_part" "xilinx.com:kc705:part0:1.3" $obj
+set_property "board_part" "xilinx.com:kc705:part0:1.4" $obj
 set_property "default_lib" "xil_defaultlib" $obj
 set_property "simulator_language" "Mixed" $obj
 set_property "source_mgmt_mode" "DisplayOnly" $obj

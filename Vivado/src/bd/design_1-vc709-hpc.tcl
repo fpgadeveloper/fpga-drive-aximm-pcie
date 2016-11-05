@@ -154,8 +154,6 @@ set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] $ref_clk_buf
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_1/refclk]
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
-# Connect AXI clock to AXI CTL clock input
-connect_bd_net [get_bd_pins axi_pcie_1/axi_aclk] [get_bd_pins axi_pcie_1/axi_ctl_aclk]
 # Connect AXI reset output to PERST output port
 set util_vector_logic_1 [create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic util_vector_logic_1]
 set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] $util_vector_logic_1
@@ -182,6 +180,8 @@ set_property -dict [ list CONFIG.NUM_SI {1} CONFIG.NUM_MI {6}  ] $periph_interco
 # Create pcie_intercon
 set pcie_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect pcie_intercon ]
 set_property -dict [ list CONFIG.NUM_SI {2} CONFIG.NUM_MI {2}  ] $pcie_intercon
+# Add register slices to help pass timing
+set_property -dict [list CONFIG.M00_HAS_REGSLICE {3} CONFIG.M01_HAS_REGSLICE {3}] [get_bd_cells pcie_intercon]
 
 # Create Microblaze and set properties
 set microblaze_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze microblaze_1 ]

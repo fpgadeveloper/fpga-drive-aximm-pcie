@@ -156,9 +156,6 @@ set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] $ref_clk_buf
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_1/refclk]
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
-# Connect AXI clock to AXI CTL clock input
-connect_bd_net [get_bd_pins axi_pcie_1/axi_aclk] [get_bd_pins axi_pcie_1/axi_ctl_aclk]
-
 
 # Create AXI interconnects and set properties
 

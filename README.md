@@ -43,7 +43,7 @@ performs enumeration of the detected PCIe end-points.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2016.2
+* Vivado 2016.3
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed above
@@ -53,7 +53,7 @@ In order to test this design on hardware, you will need the following:
 ### VC709 and KCU105
 
 Note that there is no standalone SDK application for these eval boards in this repository. The reason is that those designs
-are based on the [AXI Bridge for PCI Express Gen3 Subsystem v2.1](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v2.1"), for which Xilinx does not presently provide a driver.
+are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v2.1"), for which Xilinx does not presently provide a driver.
 If you use these designs from this repository, you must write your own drivers for standalone and Linux use.
 
 ### PicoZed
@@ -70,7 +70,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2016.2\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2016.3\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2
@@ -90,11 +90,9 @@ If you port this project to another hardware platform, please send me the
 code or push it onto GitHub and send me the link so I can post it on my
 website. The more people that benefit, the better.
 
-## About the author
+### About us
 
-I'm an FPGA consultant and I provide FPGA design services to innovative
-companies around the world. I believe in sharing knowledge and
-I regularly contribute to the open source community.
-
-Jeff Johnson
-[FPGA Developer](http://www.fpgadeveloper.com "FPGA Developer")
+This project was developed by [Opsero Inc.](http://opsero.com "Opsero Inc."),
+a tight-knit team of FPGA experts delivering FPGA products and design services to start-ups and tech companies. 
+Follow our blog, [FPGA Developer](http://www.fpgadeveloper.com "FPGA Developer"), for news, tutorials and
+updates on the awesome projects we work on.
