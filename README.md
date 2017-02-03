@@ -25,7 +25,7 @@ Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge 
 * Virtex-7 [VC709 Evaluation board](http://www.xilinx.com/products/boards-and-kits/dk-v7-vc709-g.html "VC709 Evaluation board")
   * PCIe edge (use vc709.xdc)
   * HPC connector (use vc709-hpc.xdc)
-* Zynq-7000 [ZC706 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html "ZC706 Evaluation board") (LPC only)
+* Zynq-7000 [ZC706 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html "ZC706 Evaluation board")
   * PCIe edge (use zc706.xdc)
   * LPC connector (use zc706-lpc.xdc)
   * HPC connector (use zc706-hpc.xdc)
