@@ -123,14 +123,10 @@ if { [file exists "$mig_file"] == 1 } {
 set_property -dict [ list CONFIG.XML_INPUT_FILE {mig_a.prj} CONFIG.RESET_BOARD_INTERFACE {Custom}  ] $mig_7series_1
 
 # Connect MIG external interfaces
-startgroup
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 ddr3_sdram
 connect_bd_intf_net [get_bd_intf_pins mig_7series_1/DDR3] [get_bd_intf_ports ddr3_sdram]
-endgroup
-startgroup
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 sys_diff_clock
 connect_bd_intf_net [get_bd_intf_pins mig_7series_1/SYS_CLK] [get_bd_intf_ports sys_diff_clock]
-endgroup
 
 # Create ports
 set mmcm_lock [ create_bd_port -dir O mmcm_lock ]

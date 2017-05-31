@@ -38,15 +38,11 @@ set oldCurInst [current_bd_instance .]
 current_bd_instance $parentObj
 
 # Add the Processor System and apply board preset
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7 processing_system7_0
-endgroup
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" apply_board_preset "1" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
 
 # Configure the PS: Generate 200MHz clock, Enable HP0, Enable interrupts
-startgroup
 set_property -dict [list CONFIG.PCW_USE_M_AXI_GP0 {1} CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_EN_CLK0_PORT {0} CONFIG.PCW_IRQ_F2P_INTR {1} CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1}] [get_bd_cells processing_system7_0]
-endgroup
 
 # Add the AXI Memory Mapped to PCIe Bridge IP
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_0
@@ -67,59 +63,43 @@ set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
 connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_pcie_0/INTX_MSI_Request]
 
 # Add differential buffer for the 100MHz PCIe reference clock
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf ref_clk_buf
 set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] [get_bd_cells ref_clk_buf]
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_0/REFCLK]
-endgroup
-startgroup
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
-endgroup
 
 # Add CDMA
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_cdma axi_cdma_0
 set_property -dict [list CONFIG.C_M_AXI_DATA_WIDTH {128} CONFIG.C_INCLUDE_SG {0} CONFIG.C_M_AXI_MAX_BURST_LEN {4}] [get_bd_cells axi_cdma_0]
-endgroup
 
 # Add interrupt concat
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat xlconcat_0
 set_property -dict [list CONFIG.NUM_PORTS {2}] [get_bd_cells xlconcat_0]
-endgroup
 
 # Add AXI Interconnect 0
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_0
 set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_interconnect_0]
-endgroup
 connect_bd_intf_net [get_bd_intf_pins axi_pcie_0/M_AXI] -boundary_type upper [get_bd_intf_pins axi_interconnect_0/S00_AXI]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
 
 # Add AXI Interconnect 1
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_1
 set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {3}] [get_bd_cells axi_interconnect_1]
-endgroup
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/M00_AXI] [get_bd_intf_pins axi_pcie_0/S_AXI]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/M01_AXI] [get_bd_intf_pins axi_pcie_0/S_AXI_CTL]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/M02_AXI] [get_bd_intf_pins axi_cdma_0/S_AXI_LITE]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_1/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
 
 # Add AXI Interconnect 2
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_2
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {2}] [get_bd_cells axi_interconnect_2]
-endgroup
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_2/M00_AXI] [get_bd_intf_pins axi_interconnect_0/S01_AXI]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_2/M01_AXI] [get_bd_intf_pins axi_interconnect_1/S01_AXI]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_cdma_0/M_AXI] [get_bd_intf_pins axi_interconnect_2/S00_AXI]
 
 # Add Processor System Reset 0
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_0
-endgroup
 connect_bd_net [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
 connect_bd_net [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins axi_pcie_0/axi_ctl_aclk_out]
 connect_bd_net [get_bd_pins proc_sys_reset_0/dcm_locked] [get_bd_pins axi_pcie_0/mmcm_lock]
@@ -129,9 +109,7 @@ connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_ports per
 connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins /axi_pcie_0/axi_aresetn]
 
 # Add Processor System Reset 1
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset proc_sys_reset_1
-endgroup
 connect_bd_net [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_1/ext_reset_in]
 connect_bd_net [get_bd_pins proc_sys_reset_1/slowest_sync_clk] [get_bd_pins axi_pcie_0/axi_aclk_out]
 connect_bd_net [get_bd_pins proc_sys_reset_1/dcm_locked] [get_bd_pins axi_pcie_0/mmcm_lock]
