@@ -1,9 +1,9 @@
 #
-# build.tcl: Tcl script for re-creating project 'kcu105_hpc'
+# build.tcl: Tcl script for re-creating project 'kcu105_hpc_pcie'
 #
 #*****************************************************************************************
 
-set design_name kcu105_hpc
+set design_name kcu105_hpc_pcie
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."

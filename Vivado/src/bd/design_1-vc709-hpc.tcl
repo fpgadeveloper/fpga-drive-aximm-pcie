@@ -369,6 +369,11 @@ create_bd_addr_seg -range 32M -offset 0x30000000 [get_bd_addr_spaces microblaze_
 create_bd_addr_seg -range 128K -offset 0x0 [get_bd_addr_spaces microblaze_1/Instruction] [get_bd_addr_segs microblaze_1_local_memory/ilmb_bram_if_cntlr/SLMB/Mem] LOCAL_MEM_SEG
 create_bd_addr_seg -range 1G -offset 0x80000000 [get_bd_addr_spaces microblaze_1/Instruction] [get_bd_addr_segs mig_7series_1/memmap/memaddr] DDR_SEG
 
+# PCIe AXI CTRL interface base address needs to be manually set in Vivado 2017.1
+# See https://forums.xilinx.com/t5/Embedded-Linux/Vivado-2017-1-not-setting-correct-BASEADDR-for-AXI-Bridge-for/m-p/769279#M19963
+set_property CONFIG.BASEADDR 0x50000000 [get_bd_cells /axi_pcie_1]
+set_property CONFIG.HIGHADDR 0x53FFFFFF [get_bd_cells /axi_pcie_1]
+
 # Restore current instance
 current_bd_instance $oldCurInst
 

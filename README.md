@@ -78,9 +78,14 @@ To use the sources in this repository, please follow these steps:
 
 ### VC709 and KCU105
 
-Note that there is no standalone SDK application for these eval boards in this repository. The reason is that those designs
-are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v2.1"), for which Xilinx does not presently provide a driver.
-If you use these designs from this repository, you must write your own drivers for standalone and Linux use.
+These designs are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v3_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v3.0")
+, for which Xilinx does not currently provide a driver. To generate an example stand-alone application for these boards,
+the SDK build script makes a local copy of the driver for the [AXI Memory Mapped to PCIe Gen2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html "AXI Memory Mapped to PCIe Gen2 IP")
+with a few small modifications to make it work with the Gen3 core. If you use or modify these applications, be aware
+that they refer to the locally copied and modified driver located in `EmbeddedSw/XilinxProcessorIPLib/drivers`, and that
+that driver is actually designed for the Gen2 core. In other words, you can expect the driver to work for the example
+application that checks link-up, link speed/width and enumerates the end points, but anything else may fail due to
+differences between the driver code and the Gen3 IP specs.
 
 ### PicoZed
 

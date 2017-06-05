@@ -193,6 +193,15 @@ set_property range 1G [get_bd_addr_segs {microblaze_0/Data/SEG_ddr4_0_C0_DDR4_AD
 set_property range 1G [get_bd_addr_segs {axi_pcie3_0/M_AXI/SEG_ddr4_0_C0_DDR4_ADDRESS_BLOCK}]
 set_property range 1G [get_bd_addr_segs {microblaze_0/Instruction/SEG_ddr4_0_C0_DDR4_ADDRESS_BLOCK}]
 
+# BAR0 must be set to 512M (in Vivado 2017.1 the default is only 1M)
+set_property offset 0x20000000 [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
+set_property range 512M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
+
+# PCIe AXI CTRL interface base address needs to be manually set in Vivado 2017.1
+# See https://forums.xilinx.com/t5/Embedded-Linux/Vivado-2017-1-not-setting-correct-BASEADDR-for-AXI-Bridge-for/m-p/769279#M19963
+set_property CONFIG.BASEADDR 0x10000000 [get_bd_cells /axi_pcie3_0]
+set_property CONFIG.HIGHADDR 0x13FFFFFF [get_bd_cells /axi_pcie3_0]
+
 # Restore current instance
 current_bd_instance $oldCurInst
 

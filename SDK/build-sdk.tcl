@@ -5,6 +5,64 @@
 # This Tcl script will create an SDK workspace with software applications for each of the
 # exported hardware designs in the ../Vivado directory.
 
+# axipcie Driver modifications
+# ----------------------------
+# Some of the Vivado designs in this project use the AXI Memory Mapped to PCIe Gen2 IP
+# and others use the AXI Bridge for PCIe Gen3 IP. The XSDK comes with a driver for the Gen2
+# core that is called "axipcie". The BSPs for projects using the Gen2 core refer to that 
+# driver. You can find the driver sources in the XSDK installation files:
+#
+# C:\Xilinx\SDK\2017.1\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1
+#
+# The XSDK does not currently supply a driver for the Gen3 core. However, there are enough
+# similarities between the Gen2 and Gen3 cores that we can get away with using a modified 
+# version of the "axipcie" driver, for doing some simple things such as link-up detection,
+# determining link speed and width, and enumerating PCIe devices with the Gen3 core.
+# 
+# We create this "Gen3 version" of the driver by making a local copy of the "axipcie" driver
+# sources and modifying the ".mdd" file, specifying that the driver supports the Gen3 core.
+# For SDK to be aware of our locally copied driver, we set the SDK's "repo" path to the path 
+# of the driver. This script handles the copying and modification of the "axipcie" driver, 
+# which is stored locally in the "EmbeddedSw/XilinxProcessorIPLib/drivers" directory.
+
+# Recursive copy function
+# Note: Does not overwrite existing files, thus our modified files are untouched.
+proc copy-r {{dir .} target_dir} {
+  foreach i [lsort [glob -nocomplain -dir $dir *]] {
+    # Get the name of the file or directory
+    set name [lindex [split $i /] end]
+    if {[file type $i] eq {directory}} {
+      # If doesn't exist in target, then create it
+      set target_subdir ${target_dir}/$name
+      if {[file exists $target_subdir] == 0} {
+        file mkdir $target_subdir
+      }
+      # Copy all files contained in this subdirectory
+      eval [copy-r $i $target_subdir]
+    } else {
+      # Copy the file if it doesn't already exist
+      if {[file exists ${target_dir}/$name] == 0} {
+        file copy $i $target_dir
+      }
+    }
+  }
+} ;# RS
+
+# Fill in the local libraries with original sources without overwriting existing code
+proc fill_local_libraries {} {
+  # Xilinx SDK install directory
+  set sdk_dir $::env(XILINX_SDK)
+  # For each of the custom driver versions in our local repo
+  foreach drv_dir [glob -type d "../EmbeddedSw/XilinxProcessorIPLib/drivers/*"] {
+    # Work out the original version library directory name by removing the appended "9"
+    set lib_name [string trimright [lindex [split $drv_dir /] end] "9"]
+    set orig_dir "$sdk_dir/data/embeddedsw/XilinxProcessorIPLib/drivers/$lib_name"
+    puts "Copying files from $orig_dir to $drv_dir"
+    # Copy the original files to local repo, without overwriting existing code
+    copy-r $orig_dir $drv_dir
+  }
+}
+
 # Add a hardware design to the SDK workspace
 proc add_hw_to_sdk {vivado_folder} {
   set hdf_filename [lindex [glob -dir ../Vivado/$vivado_folder/$vivado_folder.sdk *.hdf] 0]
@@ -158,12 +216,17 @@ proc create_sdk_ws {} {
   # Set the workspace directory
   setws [pwd]
   
+  # Add local SDK repo for our locally copied driver for the Gen3 designs
+  puts "Adding SDK repo to the workspace."
+  repo -set "../EmbeddedSw"
+  
   # Get list of Vivado projects (hardware designs) and add them to SDK workspace
   foreach {vivado_proj} [glob -type d "../Vivado/*"] {
     # Get the vivado folder name
     set vivado_folder [lindex [split $vivado_proj /] end]
     # Get the name of the board
     set board_name [string replace $vivado_folder [string last _ $vivado_folder end] end ""]
+
     # If the application has already been created, then skip
     if {[file exists "${board_name}_ssd_test"] == 1} {
       puts "Application already exists for Vivado project $vivado_folder."
@@ -171,19 +234,23 @@ proc create_sdk_ws {} {
     } elseif {[file exists "../Vivado/$vivado_folder/${vivado_folder}.sdk"] == 1} {
       puts "Creating application for Vivado project $vivado_folder."
       set hw_project_name [add_hw_to_sdk $vivado_folder]
-      # If the hardware contains the AXI MM PCIe block then generate example app
+      # Generate the example application
+      createapp -name ${board_name}_ssd_test \
+        -app {Hello World} \
+        -proc [get_processor_name $hw_project_name] \
+        -hwproject ${hw_project_name} \
+        -os standalone
+      # Delete the hello.c application
+      file delete ${board_name}_ssd_test/src/helloworld.c
+      # If the hardware contains the AXI MM PCIe block
       if {[design_contains_ip $hw_project_name "axi_pcie"] == 1} {
-        # Generate the example application
-        createapp -name ${board_name}_ssd_test \
-          -app {Hello World} \
-          -proc [get_processor_name $hw_project_name] \
-          -hwproject ${hw_project_name} \
-          -os standalone
-        # Copy the main application code from Xilinx SDK
-        file copy [get_pcie_code_filename ${board_name}_ssd_test_bsp] ${board_name}_ssd_test/src
-        # Delete the hello.c application
-        file delete ${board_name}_ssd_test/src/helloworld.c
-      }
+        # Copy the Gen2 application from common/src
+        file copy "common/src/pcie_gen2_enumerate.c" ${board_name}_ssd_test/src
+	  # else it contains the AXI Bridge for PCIe Gen3 block
+      } else {
+        # Copy the Gen3 application from common/src
+        file copy "common/src/pcie_gen3_enumerate.c" ${board_name}_ssd_test/src
+	  }
     } else {
       puts "Vivado project $vivado_folder not exported."
     }
@@ -193,6 +260,10 @@ proc create_sdk_ws {} {
   puts "Building all."
   projects -build
 }
+
+# Copy original driver sources into the local SDK repo
+puts "Building the local SDK repo from original sources"
+fill_local_libraries
 
 # Create the SDK workspace
 puts "Creating the SDK workspace"
