@@ -90,6 +90,9 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/ddr4_0/C0_DDR4_S_AXI" Clk "/axi_pcie3_0/axi_aclk (125 MHz)" }  [get_bd_intf_pins axi_pcie3_0/M_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "/axi_pcie3_0/axi_aclk (125 MHz)" }  [get_bd_intf_pins axi_pcie3_0/S_AXI]
 
+# Enable register slices for axi_mem_intercon S00 interface to help pass timing (added since Vivado 2017.2)
+set_property -dict [list CONFIG.S00_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
+
 ############################################################
 # Configure AXI Bridge for PCIe Gen3 Subsystem IP
 ############################################################

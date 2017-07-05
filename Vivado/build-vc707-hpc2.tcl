@@ -3,6 +3,20 @@
 #
 #*****************************************************************************************
 
+# Check the version of Vivado used
+set version_required "2017.2"
+set ver [lindex [split $::env(XILINX) /] 3]
+if {![string equal $ver $version_required]} {
+  puts "###############################"
+  puts "### Failed to build project ###"
+  puts "###############################"
+  puts "This project was designed for use with Vivado $version_required."
+  puts "You are using Vivado $ver. Please install Vivado $version_required,"
+  puts "or download the project sources from a commit of the Git repository"
+  puts "that was intended for your version of Vivado ($ver)."
+  return
+}
+
 set design_name vc707_hpc2_pcie
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)

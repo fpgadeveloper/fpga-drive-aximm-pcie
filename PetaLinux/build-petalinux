@@ -1,0 +1,81 @@
+# Get a list of all the exported projects
+
+filelist=(`find ../Vivado/ -name "*.sdk"`)
+
+# Iterate through all of those files
+
+for f in ${filelist[*]}
+do
+  # Get the project name
+  proj=$(echo $f | tr "/" "\n" | sed -n '3p')
+  echo "INFO: Exported Vivado project found: $proj"
+  echo "> Export location [$f]"
+
+  # Check if PetaLinux project already exists
+  if [ -d "./$proj" ]; then
+    echo "> PetaLinux project already exists"
+    echo
+    continue
+  fi
+
+  # Name of the HDF file
+  hdf="$f/${proj}_wrapper.hdf"
+  if [ -f "$hdf" ]; then
+    echo "> HDF file exists [$hdf]"
+  else
+    echo "> HDF file does not exist"
+    echo "> PetaLinux will not be built for this project"
+    echo
+    continue
+  fi
+
+  # Name of the BIT file
+  runs=$(echo $f | sed -e "s/.sdk/.runs/g")
+  bit="$runs/impl_1/${proj}_wrapper.bit"
+  if [ -f "$bit" ]; then
+    echo "> BIT file exists [$bit]"
+  else
+    echo "> BIT file does not exist"
+    echo "> PetaLinux will not be built for this project"
+    echo
+    continue
+  fi
+
+  # Get CPU type from first letters of project name
+  type=$(echo $proj | cut -c1-3)
+  if [[ $type == *z* ]]; then
+    if [[ $type == "zcu" ]]; then
+      echo "> CPU_TYPE: ZynqMP"
+      echo "> Creating PetaLinux project"
+      petalinux-create --type project --template zynqMP --name $proj
+      cd $proj
+      petalinux-config --get-hw-description ../$f --oldconfig
+      cp -R ../src/zynq/* .
+      petalinux-build
+      petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga ../$bit --u-boot
+      cd ..
+    else
+      echo "> CPU_TYPE: Zynq"
+      echo "> Creating PetaLinux project"
+      petalinux-create --type project --template zynq --name $proj
+      cd $proj
+      petalinux-config --get-hw-description ../$f --oldconfig
+      cp -R ../src/zynq/* .
+      petalinux-build
+      petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga ../$bit --u-boot
+      cd ..
+    fi
+  else
+    echo "> CPU_TYPE: Microblaze"
+    echo "> Creating PetaLinux project"
+    petalinux-create --type project --template microblaze --name $proj
+    cd $proj
+    petalinux-config --get-hw-description ../$f --oldconfig
+    cp -R ../src/microblaze/* .
+    petalinux-build
+    cd ..
+  fi
+done
+
+echo "PetaLinux build script completed"
+

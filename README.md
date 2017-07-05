@@ -3,6 +3,19 @@ fpga-drive-aximm-pcie
 
 Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge IP.
 
+## Requirements
+
+This project is designed for Vivado 2017.2. If you are using an older version of Vivado, then you *MUST* use an older version
+of this repository. Refer to the [list of commits](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/commits/master "list of commits")
+to find links to the older versions of this repository.
+
+In order to test this design on hardware, you will need the following:
+
+* Vivado 2017.2
+* [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
+* M.2 PCIe Solid State Drive
+* One of the supported carriers listed above
+
 ## Supported carrier boards
 
 * Zynq-7000 [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2") with [PicoZed 7015/30](http://picozed.org "PicoZed")
@@ -38,15 +51,6 @@ as a PCIe Root Port, using 1 to 4 lanes, Gen2 depending on target hardware.
 
 The bare metal software application reports on the status of the PCIe link and 
 performs enumeration of the detected PCIe end-points.
-
-## Requirements
-
-In order to test this design on hardware, you will need the following:
-
-* Vivado 2017.1
-* [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
-* M.2 PCIe Solid State Drive
-* One of the supported carriers listed above
 
 ### Build instructions
 
@@ -101,7 +105,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2017.1\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2017.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2
