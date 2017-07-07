@@ -5,7 +5,7 @@
 
 # Check the version of Vivado used
 set version_required "2017.2"
-set ver [lindex [split $::env(XILINX) /] 3]
+set ver [lindex [split $::env(XILINX_VIVADO) /] 3]
 if {![string equal $ver $version_required]} {
   puts "###############################"
   puts "### Failed to build project ###"
