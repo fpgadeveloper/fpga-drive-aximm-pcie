@@ -111,9 +111,19 @@ be different on your machine, depending on your Vivado installation directory).
 ### PicoZed FMC Carrier Card V2
 
 On this carrier, the GBTCLK0 of the LPC FMC connector is routed to a clock synthesizer/MUX, rather than being directly
-connected to the Zynq. In order to use the FPGA Drive FMC on the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2"), you will need to reprogram 
-the configuration EEPROM for the clock synthesizer. See the [Hardware User Guide](http://zedboard.org/sites/default/files/documentations/PZCC-FMC-V2-UG_1.0.pdf "Hardware User Guide")
-for the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2") more information about this.
+connected to the Zynq. In order to use the FPGA Drive FMC on the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2"), 
+you will need to reconfigure the clock synthesizer so that it feeds the FMC clock through to the Zynq. To change the configuration,
+you must reprogram the EEPROM (U14) where the configuration is stored. Avnet provides an SD card boot file that can be run to
+reprogram the EEPROM to the configuration we need for this project. The boot files have been copied to the links below for your
+convenience:
+
+* [PicoZed 7015 BOOT.bin for FMC clock config](https://opsero.com/downloads/picozed/pz_7015_fmc_clock.zip "PicoZed 7015 BOOT.bin for FMC clock config")
+* [PicoZed 7030 BOOT.bin for FMC clock config](https://opsero.com/downloads/picozed/pz_7030_fmc_clock.zip "PicoZed 7030 BOOT.bin for FMC clock config")
+
+Just boot up your [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2")
+using one of those boot files, and the EEPROM will be reprogrammed as required for this project. For more information,
+see the [Hardware User Guide](http://zedboard.org/sites/default/files/documentations/5285-UG-PZCC-FMC-V2-V1_1.pdf "Hardware User Guide")
+for the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2").
 
 ## Troubleshooting
 
