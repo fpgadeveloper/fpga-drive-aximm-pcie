@@ -5,13 +5,13 @@ Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge 
 
 ## Requirements
 
-This project is designed for Vivado 2017.2. If you are using an older version of Vivado, then you *MUST* use an older version
+This project is designed for Vivado 2017.3. If you are using an older version of Vivado, then you *MUST* use an older version
 of this repository. Refer to the [list of commits](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/commits/master "list of commits")
 to find links to the older versions of this repository.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2017.2
+* Vivado 2017.3
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed above
@@ -21,9 +21,6 @@ In order to test this design on hardware, you will need the following:
 * Zynq-7000 [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2") with [PicoZed 7015/30](http://picozed.org "PicoZed")
   * PCIe edge (use pzfmc-7z015-7z030-1v8-lpc.xdc)
   * LPC connector (use pzfmc-7z015-7z030-1v8.xdc)
-* Artix-7 [AC701 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-a7-ac701-g.html "AC701 Evaluation board")
-  * PCIe edge (use ac701.xdc)
-  * HPC connector (use ac701-hpc.xdc)
 * Kintex-7 [KC705 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-k7-kc705-g.html "KC705 Evaluation board")
   * PCIe edge (use kc705.xdc)
   * LPC connnector (use kc705-lpc.xdc)
@@ -105,7 +102,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2017.2\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2017.3\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2

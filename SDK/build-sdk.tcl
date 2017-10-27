@@ -12,7 +12,7 @@
 # core that is called "axipcie". The BSPs for projects using the Gen2 core refer to that 
 # driver. You can find the driver sources in the XSDK installation files:
 #
-# C:\Xilinx\SDK\2017.1\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1
+# C:\Xilinx\SDK\<version>\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1
 #
 # The XSDK does not currently supply a driver for the Gen3 core. However, there are enough
 # similarities between the Gen2 and Gen3 cores that we can get away with using a modified 
@@ -143,6 +143,60 @@ proc design_contains_ip {hw_project_name ip_type} {
   }
   return 0
 }
+
+# Modifies the linker script such that all sections are relocated to local mem.
+# This allows us to store the test application in the bitstream and provide a boot
+# file for all the Microblaze designs.
+proc linker_script_to_local_mem {linker_filename} {
+  set fd [open "${linker_filename}" "r"]
+  set file_data [read $fd]
+  close $fd
+
+  set local_mem ""
+  set mig_mem ""
+  
+  # Find the local memory name
+  set data [split $file_data "\n"]
+  foreach line $data {
+    if {[str_contains $line "local_memory"]} {
+      set words [regexp -all -inline {\S+} $line]
+      set local_mem [lindex $words 0]
+      break
+    }
+  }
+  
+  # Find the MIG memory name
+  foreach line $data {
+    if {[str_contains $line "ORIGIN"]} {
+      if {[str_contains $line "mig"] || [str_contains $line "ddr"]} {
+        set words [regexp -all -inline {\S+} $line]
+        set mig_mem [lindex $words 0]
+        break
+      }
+    }
+  }
+
+  # Write to new linker script and replace MIG references with local mem
+  set new_filename "${linker_filename}.txt"
+  set fd [open "$new_filename" "w"]
+  foreach line $data {
+    if {[str_contains $line ">"]} {
+      puts $fd [string map "$mig_mem $local_mem" $line]
+    } else {
+      puts $fd $line
+    }
+  }
+  close $fd
+
+  # Delete the old linker script
+  file delete $linker_filename
+  
+  # Rename new linker script to the old filename
+  file rename $new_filename $linker_filename
+  
+  return 0
+}
+
 
 # ============================================================
 #                IP NAME       DRIVER NAME  DRIVER VERSION
@@ -312,12 +366,17 @@ proc create_sdk_ws {} {
       # If the hardware contains the AXI MM PCIe block
       if {[design_contains_ip $hw_project_name "axi_pcie"] == 1} {
         # Copy the Gen2 application from common/src
-        file copy "common/src/pcie_gen2_enumerate.c" ${board_name}_ssd_test/src
-	  # else it contains the AXI Bridge for PCIe Gen3 block
+        file copy "common/src/pcie_gen2_enumerate.c" ${app_name}/src
+	    # else it contains the AXI Bridge for PCIe Gen3 block
       } else {
         # Copy the Gen3 application from common/src
-        file copy "common/src/pcie_gen3_enumerate.c" ${board_name}_ssd_test/src
-	  }
+        file copy "common/src/pcie_gen3_enumerate.c" ${app_name}/src
+	    }
+      # For Microblaze designs, modify the linker script to put
+      # all sections in local mem
+      if {[str_contains $proc_instance "microblaze"]} {
+        linker_script_to_local_mem ${app_name}/src/lscript.ld
+      }
       # Generate the FSBL for Zynq and Zynq MP designs
       # For Zynq MP designs
       if {[str_contains $proc_instance "psu_cortexa53_"]} {
@@ -326,7 +385,7 @@ proc create_sdk_ws {} {
           -proc $proc_instance \
           -hwproject ${hw_project_name} \
           -os standalone
-	  # For Zynq designs
+	    # For Zynq designs
       } elseif {[str_contains $proc_instance "ps7_cortexa9_"]} {
         createapp -name ${board_name}_fsbl \
           -app {Zynq FSBL} \
@@ -386,30 +445,34 @@ proc create_boot_files {} {
       }
     }
     
-    # Don't generate boot files for Microblaze designs
-    if {[str_contains $proc_instance "microblaze_"]} {
-      continue
-    }
-    
     # If all required files exist, then generate boot files
     # Create directory for the boot file if it doesn't already exist
     if {[file exists "./boot/$board_name"] == 0} {
       file mkdir "./boot/$board_name"
     }
 	
-    # For Zynq MP designs
-    if {[str_contains $proc_instance "psu_cortexa53_"]} {
-      puts "Generating BOOT.bin file for Zynq MP $board_name project."
-      # Generate the .bif file
-      create_zynqmp_bif $board_name $app_name $vivado_folder "./boot" "."
-      exec bootgen -image .\\boot\\${board_name}.bif -arch zynqmp -o .\\boot\\${board_name}\\BOOT.bin -w on
-    # For Zynq designs
+	# For Microblaze designs
+	if {[str_contains $proc_instance "microblaze"]} {
+	  puts "Generating combined bitstream/elf file for $board_name project."
+      # Generate the download.bit file with .elf
+      exec updatemem --bit "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.bit" \
+        --meminfo "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.mmi" \
+        --data "./${app_name}/Debug/${app_name}.elf" \
+        --proc "${vivado_folder}_i/microblaze_0" \
+        -force --out "./boot/${board_name}/${board_name}.bit"
+	# For Zynq MP designs
+	} elseif {[str_contains $proc_instance "psu_cortexa53_"]} {
+	  puts "Generating BOOT.bin file for Zynq MP $board_name project."
+	  # Generate the .bif file
+	  create_zynqmp_bif $board_name $app_name $vivado_folder "./boot" "."
+	  exec bootgen -image .\\boot\\${board_name}.bif -arch zynqmp -o .\\boot\\${board_name}\\BOOT.bin -w on
+	# For Zynq designs
     } else {
-      puts "Generating BOOT.bin file for Zynq $board_name project."
-      # Generate the .bif file
-      create_zynq_bif $board_name $app_name $vivado_folder "./boot" "."
-      exec bootgen -image .\\boot\\${board_name}.bif -arch zynq -o .\\boot\\${board_name}\\BOOT.bin -w on
-    }
+	  puts "Generating BOOT.bin file for Zynq $board_name project."
+	  # Generate the .bif file
+	  create_zynq_bif $board_name $app_name $vivado_folder "./boot" "."
+	  exec bootgen -image .\\boot\\${board_name}.bif -arch zynq -o .\\boot\\${board_name}\\BOOT.bin -w on
+	}
   }
 }
 

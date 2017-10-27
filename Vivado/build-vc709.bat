@@ -1,4 +1,4 @@
-SET vivado=C:\Xilinx\Vivado\2017.2\bin\vivado.bat
+SET vivado=C:\Xilinx\Vivado\2017.3\bin\vivado.bat
 @ECHO OFF
 if exist %vivado% (
   %vivado% -mode batch -source build-vc709.tcl

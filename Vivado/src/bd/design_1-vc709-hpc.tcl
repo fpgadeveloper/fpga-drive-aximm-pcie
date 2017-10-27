@@ -84,6 +84,7 @@ CONFIG.C_MMU_ZONES {2}] [get_bd_cells microblaze_0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550 axi_uart16550_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie3 axi_pcie3_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_emc axi_emc_0
 
 # Use Automation features
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "Auto" }  [get_bd_intf_pins axi_uart16550_0/S_AXI]
@@ -92,6 +93,9 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "/microblaze_0_axi_periph" Clk_xbar "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_master "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_slave "/axi_pcie3_0/axi_aclk (62 MHz)" }  [get_bd_intf_pins axi_pcie3_0/S_AXI_CTL]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/mig_7series_0/S_AXI" intc_ip "/axi_smc" Clk_xbar "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_master "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_slave "/axi_pcie3_0/axi_aclk (62 MHz)" }  [get_bd_intf_pins axi_pcie3_0/M_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "/microblaze_0_axi_periph" Clk_xbar "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_master "/axi_pcie3_0/axi_aclk (62 MHz)" Clk_slave "/axi_pcie3_0/axi_aclk (62 MHz)" }  [get_bd_intf_pins axi_pcie3_0/S_AXI]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Cached)" intc_ip "Auto" Clk_xbar "/mig_7series_0/ui_addn_clk_0 (100 MHz)" Clk_master "/mig_7series_0/ui_addn_clk_0 (100 MHz)" Clk_slave "/mig_7series_0/ui_addn_clk_0 (100 MHz)" }  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
+apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "linear_flash ( Linear flash ) " }  [get_bd_intf_pins axi_emc_0/EMC_INTF]
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/mig_7series_0/ui_addn_clk_0 (100 MHz)" }  [get_bd_pins axi_emc_0/rdclk]
 
 ############################################################
 # Configure AXI Bridge for PCIe Gen3 Subsystem IP
