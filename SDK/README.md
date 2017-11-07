@@ -64,3 +64,8 @@ of the driver. The `build-sdk.tcl` script handles the copying and modification o
 `axipcie` driver, which is stored locally in the `EmbeddedSw/XilinxProcessorIPLib/drivers` 
 directory.
 
+### UART configurations
+
+* Zynq & ZynqMP designs: 115200 baud
+* Microblaze designs: 9600 baud
+
