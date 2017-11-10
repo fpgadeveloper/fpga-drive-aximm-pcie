@@ -93,9 +93,6 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:board  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "Auto" Clk_xbar "Auto" Clk_master "Auto" Clk_slave "Auto" }  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
 
-# Enable register slices for axi_mem_intercon S00 interface to help pass timing (added since Vivado 2017.2)
-set_property -dict [list CONFIG.S00_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
-
 ############################################################
 # Configure AXI Bridge for PCIe Gen3 Subsystem IP
 ############################################################
@@ -197,9 +194,6 @@ connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_ca
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_CTL0}]
-set_property range 1G [get_bd_addr_segs {microblaze_0/Data/SEG_ddr4_0_C0_DDR4_ADDRESS_BLOCK}]
-set_property range 1G [get_bd_addr_segs {axi_pcie3_0/M_AXI/SEG_ddr4_0_C0_DDR4_ADDRESS_BLOCK}]
-set_property range 1G [get_bd_addr_segs {microblaze_0/Instruction/SEG_ddr4_0_C0_DDR4_ADDRESS_BLOCK}]
 
 # BAR0 must be set to 512M (in Vivado 2017.1 the default is only 1M)
 set_property offset 0x20000000 [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]

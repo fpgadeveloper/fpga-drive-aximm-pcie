@@ -188,9 +188,6 @@ connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins mig_7series_0/ini
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_CTL0}]
-set_property range 1G [get_bd_addr_segs {microblaze_0/Data/SEG_mig_7series_0_memaddr}]
-set_property range 1G [get_bd_addr_segs {microblaze_0/Instruction/SEG_mig_7series_0_memaddr}]
-set_property range 1G [get_bd_addr_segs {axi_pcie3_0/M_AXI/SEG_mig_7series_0_memaddr}]
 
 # BAR0 must be set to 512M (in Vivado 2017.1 the default is only 1M)
 set_property offset 0x20000000 [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]

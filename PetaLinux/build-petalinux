@@ -1,3 +1,7 @@
+# Before running this script, you must source the PetaLinux and Vivado settings:
+# source <petalinux-install-dir>/settings.sh
+# source <vivado-install-dir>/settings64.sh
+
 # Get a list of all the exported projects
 
 filelist=(`find ../Vivado/ -name "*.sdk"`)
@@ -10,13 +14,6 @@ do
   proj=$(echo $f | tr "/" "\n" | sed -n '3p')
   echo "INFO: Exported Vivado project found: $proj"
   echo "> Export location [$f]"
-
-  # Check if PetaLinux project already exists
-  if [ -d "./$proj" ]; then
-    echo "> PetaLinux project already exists"
-    echo
-    continue
-  fi
 
   # Name of the HDF file
   hdf="$f/${proj}_wrapper.hdf"
@@ -45,36 +42,78 @@ do
   type=$(echo $proj | cut -c1-3)
   if [[ $type == *z* ]]; then
     if [[ $type == "zcu" ]]; then
-      echo "> CPU_TYPE: ZynqMP"
-      echo "> Creating PetaLinux project"
-      petalinux-create --type project --template zynqMP --name $proj
-      cd $proj
-      petalinux-config --get-hw-description ../$f --oldconfig
-      cp -R ../src/zynq/* .
-      petalinux-build
-      petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga ../$bit --u-boot
-      cd ..
+      cpu_type="zynqMP"
+      fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
     else
-      echo "> CPU_TYPE: Zynq"
-      echo "> Creating PetaLinux project"
-      petalinux-create --type project --template zynq --name $proj
-      cd $proj
-      petalinux-config --get-hw-description ../$f --oldconfig
-      cp -R ../src/zynq/* .
-      petalinux-build
-      petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga ../$bit --u-boot
-      cd ..
+      cpu_type="zynq"
+      fsbl_option="--fsbl ./images/linux/zynq_fsbl.elf"
     fi
   else
-    echo "> CPU_TYPE: Microblaze"
-    echo "> Creating PetaLinux project"
-    petalinux-create --type project --template microblaze --name $proj
-    cd $proj
-    petalinux-config --get-hw-description ../$f --oldconfig
-    cp -R ../src/microblaze/* .
-    petalinux-build
-    cd ..
+    cpu_type="microblaze"
+    fsbl_option="--fsbl ./images/linux/fs-boot.elf"
   fi
+
+  echo "> CPU_TYPE: $cpu_type"
+
+  # Create PetaLinux project if it does not exists
+  if [ -d "./$proj" ]; then
+    echo "> PetaLinux project already exists"
+  else
+    echo "> Creating PetaLinux project"
+    petalinux-create --type project --template $cpu_type --name $proj
+  fi
+
+  cd $proj
+
+  # Configure PetaLinux project with hardware description if 'components' dir doesn't exist
+  if [ -d "./components" ]; then
+    echo "> PetaLinux project already configured with hardware description"
+  else
+    echo "> Configuring PetaLinux project with hardware description"
+    petalinux-config --get-hw-description ../$f --oldconfig
+  fi
+
+  # Get the board name
+  board=${proj%%_*}
+  
+  # Copy PetaLinux config files
+  cp -R ../src/$cpu_type/* .
+  if [ -d "../src/$board" ]; then
+    cp -R ../src/$board/* .
+  fi
+
+  # Build PetaLinux project if not built already
+  if [ -d "./images" ]; then
+    echo "> PetaLinux project already built"
+  else
+    echo "> Building PetaLinux project"
+    petalinux-build
+  fi
+
+  # Package PetaLinux project if not packaged
+  if [[ $cpu_type == microblaze ]]; then
+    # Do nothing for now
+    :
+    # if [ -f "./images/linux/boot.mcs" ]; then
+    #   echo "> PetaLinux project already packaged"
+    # else
+    #   echo "> Packaging PetaLinux project"
+    #   petalinux-package --boot --force \
+    #   --fpga ../$bit --offset 0x000000 \
+    #   $fsbl_option --u-boot --offset 0x1400000 \
+    #   --kernel --offset 0x1600000 \
+    #   --flash-size 128 \
+    #   --flash-intf BPIx16
+    # fi
+  else
+    if [[ -f "./images/linux/BOOT.BIN" && -f "./images/linux/image.ub" ]]; then
+      echo "> PetaLinux project already packaged"
+    else
+      echo "> Packaging PetaLinux project"
+      petalinux-package --boot $fsbl_option --fpga ../$bit --u-boot
+    fi
+  fi
+  cd ..
 done
 
 echo "PetaLinux build script completed"
