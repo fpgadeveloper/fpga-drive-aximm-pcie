@@ -3,6 +3,13 @@ PetaLinux Project source files
 
 ### How to build the PetaLinux projects
 
+#### Requirements
+
+* Windows or Linux PC with Vivado installed
+* Linux PC or virtual machine with PetaLinux installed
+
+#### Instructions
+
 In order to make use of these source files, you must:
 
 1. First generate the Vivado project hardware design(s) (the bitstream) and export the design(s) to SDK.
@@ -11,6 +18,13 @@ In order to make use of these source files, you must:
 
 The script will generate a separate PetaLinux project for all of the generated and exported Vivado projects that
 it finds in the Vivado directory of this repo.
+
+### UNIX line endings
+
+The scripts and files in the PetaLinux directory of this repository must have UNIX line endings when they are
+executed or used under Linux. The best way to ensure UNIX line endings, is to clone the repo directly onto your
+Linux machine. If instead you have copied the repo from a Windows machine, the files will have DOS line endings and
+you must use the `dos2unix` tool to convert the line endings for UNIX.
 
 ### How the script works
 
