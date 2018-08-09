@@ -1,4 +1,5 @@
-SRC_URI += "file://kernel-options.cfg \
+SRC_URI += "file://user.cfg \
+            file://kernel-options.cfg \
             file://kcu105.cfg \
             "
 
