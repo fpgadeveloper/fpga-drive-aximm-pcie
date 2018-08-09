@@ -38,6 +38,14 @@ do
     continue
   fi
 
+  # Determine the AXI PCIe IP core used in this project
+  vivadoprj="../Vivado/$proj/$proj.xpr"
+  if grep -Fq "axi_pcie3" $vivadoprj; then
+    pcie_ip="axi_pcie3"
+  else
+    pcie_ip="axi_pcie"
+  fi
+
   # Get CPU type from first letters of project name
   type=$(echo $proj | cut -c1-3)
   if [[ $type == *z* ]]; then
@@ -84,6 +92,9 @@ do
     cp -R ../src/$cpu_type/* .
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
+    fi
+    if [ -d "../src/$pcie_ip" ]; then
+      cp -R ../src/$pcie_ip/* .
     fi
     # File to indicate that config files have been transferred
     touch configdone.txt

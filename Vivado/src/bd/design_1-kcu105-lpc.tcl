@@ -83,6 +83,16 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie3 axi_pcie3_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0
 
+# Setup addresses
+set_property offset 0x11200000 [get_bd_addr_segs {microblaze_0/Data/SEG_microblaze_0_axi_intc_Reg}]
+# BAR0 set to 1GB
+create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_pcie3_0/S_AXI/BAR0] SEG_axi_pcie3_0_BAR0
+# CTL0 set to 256MB as required by product guide 194
+create_bd_addr_seg -range 0x10000000 -offset 0x20000000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_pcie3_0/S_AXI_CTL/CTL0] SEG_axi_pcie3_0_CTL0
+create_bd_addr_seg -range 0x00010000 -offset 0x14A10000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] SEG_axi_quad_spi_0_Reg
+create_bd_addr_seg -range 0x00010000 -offset 0x11C00000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_timer_0/S_AXI/Reg] SEG_axi_timer_0_Reg
+create_bd_addr_seg -range 0x00010000 -offset 0x14A00000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] SEG_axi_uart16550_0_Reg
+
 # Use Automation features
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "Auto" }  [get_bd_intf_pins axi_uart16550_0/S_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "rs232_uart ( UART ) " }  [get_bd_intf_pins axi_uart16550_0/UART]
@@ -119,7 +129,12 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 #    profile is the only one that disables the DFE, a feature
 #    that is better suited for longer and more lossy traces.
 #    
-set_property -dict [list CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
+# PCIe AXI CTRL interface base address (BASEADDR and HIGHADDR) needs to be manually set since Vivado 2017.1
+# See https://forums.xilinx.com/t5/Embedded-Linux/Vivado-2017-1-not-setting-correct-BASEADDR-for-AXI-Bridge-for/m-p/769279#M19963
+set_property -dict [list CONFIG.AXIBAR_NUM {1} \
+CONFIG.BASEADDR {0x20000000} \
+CONFIG.HIGHADDR {0x2FFFFFFF} \
+CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
 CONFIG.mode_selection {Advanced} \
 CONFIG.pcie_blk_locn {X0Y1} \
 CONFIG.pl_link_cap_max_link_width {X1} \
@@ -135,11 +150,11 @@ CONFIG.INS_LOSS_NYQ {5} \
 CONFIG.pf0_base_class_menu {Bridge_device} \
 CONFIG.pf0_class_code_base {06} \
 CONFIG.pf0_Use_Class_Code_Lookup_Assistant {false} \
-CONFIG.pf0_sub_class_interface_menu {InfiniBand_to_PCI_host_bridge} \
+CONFIG.pf0_sub_class_interface_menu {PCI_to_PCI_bridge} \
 CONFIG.pf0_class_code_sub {04} \
 CONFIG.pf0_bar0_scale {Gigabytes} \
-CONFIG.pf0_bar0_enabled {true} \
-CONFIG.pf0_bar0_64bit {true} \
+CONFIG.pf0_bar0_enabled {false} \
+CONFIG.pf0_bar0_64bit {false} \
 CONFIG.axibar2pciebar_0 {0x0000000040000000} \
 CONFIG.pf0_class_code {060400} \
 CONFIG.pf0_msix_cap_table_bir {BAR_1:0} \
@@ -191,18 +206,6 @@ connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_0/sys_rst_n]
 
 # Create external port connections
 connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
-
-# Microblaze address segments
-set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_CTL0}]
-
-# BAR0 must be set to 512M (in Vivado 2017.1 the default is only 1M)
-set_property offset 0x20000000 [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
-set_property range 512M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
-
-# PCIe AXI CTRL interface base address needs to be manually set in Vivado 2017.1
-# See https://forums.xilinx.com/t5/Embedded-Linux/Vivado-2017-1-not-setting-correct-BASEADDR-for-AXI-Bridge-for/m-p/769279#M19963
-set_property CONFIG.BASEADDR 0x10000000 [get_bd_cells /axi_pcie3_0]
-set_property CONFIG.HIGHADDR 0x13FFFFFF [get_bd_cells /axi_pcie3_0]
 
 # Restore current instance
 current_bd_instance $oldCurInst

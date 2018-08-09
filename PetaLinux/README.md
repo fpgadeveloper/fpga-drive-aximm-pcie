@@ -70,3 +70,24 @@ SD card:
 
 Then connect and power your hardware.
 
+### Device Tree Issue using PetaLinux 2018.2 and AXI PCIe Gen3 Subsystem
+
+In PetaLinux 2018.2, the auto-generation of the device tree for the AXI PCIe Gen3 Subsystem IP does not
+result in a working device tree. This repo contains a fix for this issue that essentially replaces the 
+erroneous part of the auto-generated device tree.
+
+The fix can be found in the following directory and it gets automatically applied by the build script:
+
+`PetaLinux/src/axi_pcie3/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
+
+### Kernel Start Address for AXI PCIe Gen3 Subsystem
+
+The AXI PCIe Gen3 Subsystem requires it's CTL0 interface to be allocated 256MB on the address map.
+During Linux boot, vmalloc is used to allocate virtual memory for this interface. This repo configures
+the Kernel start address to 0xB0000000 from the default 0xC0000000, in order to create sufficient
+virtual memory for the CTL0 interface. Without this modification, vmalloc fails during boot.
+
+Find the modification here:
+
+`PetaLinux/src/axi_pcie3/project-spec/meta-user/recipes-kernel/linux/linux-xlnx/kernel-options.cfg`
+

@@ -5,13 +5,13 @@ Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge 
 
 ## Requirements
 
-This project is designed for Vivado 2017.3. If you are using an older version of Vivado, then you *MUST* use an older version
+This project is designed for Vivado 2018.2. If you are using an older version of Vivado, then you *MUST* use an older version
 of this repository. Refer to the [list of commits](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/commits/master "list of commits")
 to find links to the older versions of this repository.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2017.3
+* Vivado 2018.2
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed above
@@ -80,7 +80,7 @@ To use the sources in this repository, please follow these steps:
 ### VC709 and KCU105
 
 These designs are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v3_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v3.0")
-, for which Xilinx does not currently provide a driver. To generate an example stand-alone application for these boards,
+. To generate an example stand-alone application for these boards,
 the SDK build script makes a local copy of the driver for the [AXI Memory Mapped to PCIe Gen2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html "AXI Memory Mapped to PCIe Gen2 IP")
 with a few small modifications to make it work with the Gen3 core. If you use or modify these applications, be aware
 that they refer to the locally copied and modified driver located in `EmbeddedSw/XilinxProcessorIPLib/drivers`, and that
@@ -102,7 +102,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2017.3\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2018.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2

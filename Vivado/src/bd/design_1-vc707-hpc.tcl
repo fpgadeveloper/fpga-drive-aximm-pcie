@@ -134,7 +134,7 @@ connect_bd_net [get_bd_pins /rst_axi_pcie_ctl/peripheral_reset] [get_bd_ports pe
 
 # Create external port connections
 connect_bd_net -net axi_pcie_0_mmcm_lock [get_bd_ports mmcm_lock] [get_bd_pins axi_pcie_0/mmcm_lock]
-connect_bd_net -net mig_7series_0_init_calib_complete [get_bd_ports init_calib_complete] [get_bd_pins mig_7series_1/init_calib_complete]
+connect_bd_net -net mig_7series_0_init_calib_complete [get_bd_ports init_calib_complete] [get_bd_pins mig_7series_0/init_calib_complete]
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie_0_CTL0}]
