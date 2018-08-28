@@ -39,8 +39,11 @@ do
   fi
 
   # Determine the AXI PCIe IP core used in this project
+  # and whether there are 1 or 2 cores in the design
   vivadoprj="../Vivado/$proj/$proj.xpr"
-  if grep -Fq "axi_pcie3" $vivadoprj; then
+  if grep -Fq "axi_pcie3_1" $vivadoprj; then
+    pcie_ip="axi_pcie3_2x"
+  elif grep -Fq "axi_pcie3_0" $vivadoprj; then
     pcie_ip="axi_pcie3"
   else
     pcie_ip="axi_pcie"
@@ -90,11 +93,11 @@ do
   else
     echo "> Transferring PetaLinux config files"
     cp -R ../src/$cpu_type/* .
-    if [ -d "../src/$board" ]; then
-      cp -R ../src/$board/* .
-    fi
     if [ -d "../src/$pcie_ip" ]; then
       cp -R ../src/$pcie_ip/* .
+    fi
+    if [ -d "../src/$board" ]; then
+      cp -R ../src/$board/* .
     fi
     # File to indicate that config files have been transferred
     touch configdone.txt

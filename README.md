@@ -23,8 +23,9 @@ In order to test this design on hardware, you will need the following:
   * LPC connector (use pzfmc-7z015-7z030-1v8.xdc)
 * Kintex-7 [KC705 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-k7-kc705-g.html "KC705 Evaluation board")
   * PCIe edge (use kc705.xdc)
-  * LPC connnector (use kc705-lpc.xdc)
-  * HPC connnector (use kc705-hpc.xdc)
+  * LPC connnector SSD1 only (use kc705-lpc.xdc)
+  * HPC connnector SSD1 only (use kc705-hpc.xdc)
+  * HPC connnector SSD1 and SSD2 (use kc705-hpc-dual.xdc)
 * Kintex Ultrascale [KCU105 Evaluation board](http://www.xilinx.com/products/boards-and-kits/kcu105.html "KCU105 Evaluation board")
   * LPC connnector (use kcu105-lpc.xdc)
   * HPC connnector (use kcu105-hpc.xdc)
@@ -42,12 +43,22 @@ In order to test this design on hardware, you will need the following:
 
 ## Description
 
-This project demonstrates using the AXI Memory Mapped to PCIe Bridge IP
-to interface an FPGA with a PCIe end-point device. The bridge IP is configured
-as a PCIe Root Port, using 1 to 4 lanes, Gen2 depending on target hardware.
+These are the example designs for the FPGA Drive and FPGA Drive FMC adapters that allow connecting
+NVMe SSDs to FPGAs via PCIe edge connectors and FPGA Mezzanine Card (FMC) connectors.
 
 The bare metal software application reports on the status of the PCIe link and 
-performs enumeration of the detected PCIe end-points.
+performs enumeration of the detected PCIe end-points (ie. the SSDs). The project also contains
+scripts to generate PetaLinux for these platforms to allow accessing the SSDs from the Linux
+operating system.
+
+### Dual SSD designs
+
+The projects in this repo with the "_dual" postfix can only be used with the FPGA Drive FMC 
+Rev-D (and future revisions). These revisions have two M.2 connectors for connecting two SSDs to the FPGA through the FMC connector. 
+At the moment there are dual designs for these carriers:
+* KCU105
+The single SSD designs (without "_dual" postfix) will also work on the dual connector adapter,
+however only one SSD (SSD1) will be operational.
 
 ### Build instructions
 
