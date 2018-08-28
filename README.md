@@ -57,6 +57,7 @@ The projects in this repo with the "_dual" postfix can only be used with the FPG
 Rev-D (and future revisions). These revisions have two M.2 connectors for connecting two SSDs to the FPGA through the FMC connector. 
 At the moment there are dual designs for these carriers:
 * KCU105
+
 The single SSD designs (without "_dual" postfix) will also work on the dual connector adapter,
 however only one SSD (SSD1) will be operational.
 
