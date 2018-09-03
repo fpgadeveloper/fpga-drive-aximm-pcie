@@ -24,22 +24,10 @@ set_property LOC GTHE3_CHANNEL_X0Y8 [get_cells {*_i/axi_pcie3_0/inst/pcie3_ip_i/
 # KCU105 LPC transceiver is best aligned with PCIE_3_1_X0Y1
 set_property LOC PCIE_3_1_X0Y1 [get_cells *_i/axi_pcie3_0/inst/pcie3_ip_i/inst/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst]
 
-#QSPI
-set_property PACKAGE_PIN M20 [ get_ports spi_rtl_io0_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_io0_io]
-
-set_property PACKAGE_PIN L20 [ get_ports spi_rtl_io1_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_io1_io]
-
-set_property PACKAGE_PIN R22 [ get_ports spi_rtl_io2_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_io2_io]
-
-set_property PACKAGE_PIN R21 [ get_ports spi_rtl_io3_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_io3_io]
-
-set_property PACKAGE_PIN G26 [ get_ports spi_rtl_ss_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_ss_io]
-
-# SCK not used - loc it to unused pin: GPIO_LED_1_LS
-set_property PACKAGE_PIN H23 [ get_ports spi_rtl_sck_io]
-set_property IOSTANDARD LVCMOS18 [ get_ports spi_rtl_sck_io]
+# Configuration via Quad SPI settings for KCU105
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
+set_property CONFIG_VOLTAGE 1.8 [current_design]
+set_property CFGBVS GND [current_design]
+set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR YES [current_design]
+set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES [current_design]

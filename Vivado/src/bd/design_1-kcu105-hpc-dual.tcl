@@ -45,9 +45,6 @@ apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "def
 apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "ddr4_sdram ( DDR4 SDRAM ) " }  [get_bd_intf_pins ddr4_0/C0_DDR4]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "reset ( FPGA Reset ) " }  [get_bd_pins ddr4_0/sys_rst]
 
-# Create ports
-set init_calib_complete [ create_bd_port -dir O init_calib_complete ]
-
 # Add the MicroBlaze
 create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config {local_mem "128KB" ecc "None" cache "16KB" debug_module "Debug Only" axi_periph "Enabled" axi_intc "1" clk "/ddr4_0/addn_ui_clkout1 (100 MHz)" }  [get_bd_cells microblaze_0]
@@ -100,7 +97,6 @@ create_bd_addr_seg -range 0x00010000 -offset 0x14A00000 [get_bd_addr_spaces micr
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_uart16550_0/S_AXI} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_uart16550_0/S_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {rs232_uart ( UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uart16550_0/UART]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_timer_0/S_AXI} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_timer_0/S_AXI]
-apply_bd_automation -rule xilinx.com:bd_rule:board -config { Manual_Source {Auto}}  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_quad_spi_0/AXI_LITE} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
 
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/axi_pcie3_0/axi_aclk (250 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_pcie3_0/S_AXI_CTL} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_pcie3_0/S_AXI_CTL]
@@ -245,7 +241,7 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 re
 connect_bd_intf_net [get_bd_intf_pins ref_clk_1_buf/CLK_IN_D] [get_bd_intf_ports ref_clk_1]
 
 # Configure the AXI QSPI
-set_property -dict [ list CONFIG.C_FIFO_DEPTH {256} CONFIG.C_SPI_MEMORY {2} CONFIG.C_SPI_MODE {2} ] [get_bd_cells axi_quad_spi_0]
+set_property -dict [ list CONFIG.C_FIFO_DEPTH {256} CONFIG.C_SPI_MEMORY {2} CONFIG.C_SPI_MODE {2} CONFIG.C_USE_STARTUP {1} CONFIG.C_USE_STARTUP_INT {1} ] [get_bd_cells axi_quad_spi_0]
 connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout1]
 
 # Configure Microblaze for 5 interrupts and connect them
@@ -280,14 +276,16 @@ connect_bd_net [get_bd_pins /rst_pcie_1_axi_aclk/peripheral_reset] [get_bd_ports
 connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_0/sys_rst_n]
 connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_1/sys_rst_n]
 
-# Create external port connections
-connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
-
 # Constant LOW to enable 3.3V power supply of SSD1 and clock source
 set const_dis_3v3_ssd1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_3v3_ssd1 ]
 set_property -dict [list CONFIG.CONST_VAL {0}] $const_dis_3v3_ssd1
 create_bd_port -dir O disable_3v3_ssd1
 connect_bd_net [get_bd_pins const_dis_3v3_ssd1/dout] [get_bd_ports disable_3v3_ssd1]
+
+# AXI GPIO to drive the LEDs
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio axi_gpio_0
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_gpio_0/S_AXI} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_gpio_0/S_AXI]
+apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {led_8bits ( LED ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_gpio_0/GPIO]
 
 # Restore current instance
 current_bd_instance $oldCurInst

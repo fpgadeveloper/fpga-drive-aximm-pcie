@@ -100,7 +100,6 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "/axi_pcie3_0/axi_aclk (125 MHz)" }  [get_bd_intf_pins axi_pcie3_0/S_AXI_CTL]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/ddr4_0/C0_DDR4_S_AXI" Clk "/axi_pcie3_0/axi_aclk (125 MHz)" }  [get_bd_intf_pins axi_pcie3_0/M_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "/axi_pcie3_0/axi_aclk (125 MHz)" }  [get_bd_intf_pins axi_pcie3_0/S_AXI]
-apply_bd_automation -rule xilinx.com:bd_rule:board  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "Auto" Clk_xbar "Auto" Clk_master "Auto" Clk_slave "Auto" }  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
 
 ############################################################
@@ -180,7 +179,7 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 re
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
 
 # Configure the AXI QSPI
-set_property -dict [ list CONFIG.C_FIFO_DEPTH {256} CONFIG.C_SPI_MEMORY {2} CONFIG.C_SPI_MODE {2} ] [get_bd_cells axi_quad_spi_0]
+set_property -dict [ list CONFIG.C_FIFO_DEPTH {256} CONFIG.C_SPI_MEMORY {2} CONFIG.C_SPI_MODE {2} CONFIG.C_USE_STARTUP {1} CONFIG.C_USE_STARTUP_INT {1} ] [get_bd_cells axi_quad_spi_0]
 connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout1]
 
 # Configure Microblaze for 4 interrupts and connect them
