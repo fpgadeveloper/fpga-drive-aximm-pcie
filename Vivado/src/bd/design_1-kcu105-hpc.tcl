@@ -196,8 +196,8 @@ connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins microblaze
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_axi_aclk
 connect_bd_net [get_bd_pins axi_pcie3_0/axi_aclk] [get_bd_pins rst_pcie_axi_aclk/slowest_sync_clk]
 connect_bd_net [get_bd_pins axi_pcie3_0/axi_ctl_aresetn] [get_bd_pins rst_pcie_axi_aclk/ext_reset_in]
-disconnect_bd_net /axi_pcie3_0_axi_aresetn [get_bd_pins microblaze_0_axi_periph/M04_ARESETN]
-connect_bd_net [get_bd_pins rst_pcie_axi_aclk/peripheral_aresetn] [get_bd_pins microblaze_0_axi_periph/M04_ARESETN]
+disconnect_bd_net /axi_pcie3_0_axi_aresetn [get_bd_pins microblaze_0_axi_periph/M03_ARESETN]
+connect_bd_net [get_bd_pins axi_pcie3_0/axi_ctl_aresetn] [get_bd_pins microblaze_0_axi_periph/M03_ARESETN]
 
 # Create PERST port
 create_bd_port -dir O -from 0 -to 0 -type rst perst
