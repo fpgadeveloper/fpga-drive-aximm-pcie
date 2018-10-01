@@ -40,10 +40,16 @@ do
 
   # Determine the AXI PCIe IP core used in this project
   # and whether there are 1 or 2 cores in the design
-  vivadoprj="../Vivado/$proj/$proj.xpr"
-  if grep -Fq "axi_pcie3_1" $vivadoprj; then
+  vivadosynthtcl="../Vivado/$proj/${proj}.runs/synth_1/${proj}_wrapper.tcl"
+  if [ ! -f "$vivadosynthtcl" ]; then
+    echo "> Synthesis Tcl file not found ($vivadosynthtcl)"
+    echo "> PetaLinux will not be built for this project"
+    echo
+    continue
+  fi
+  if grep -Fq "axi_pcie3_1" $vivadosynthtcl; then
     pcie_ip="axi_pcie3_2x"
-  elif grep -Fq "axi_pcie3_0" $vivadoprj; then
+  elif grep -Fq "axi_pcie3_0" $vivadosynthtcl; then
     pcie_ip="axi_pcie3"
   else
     pcie_ip="axi_pcie"
@@ -92,6 +98,7 @@ do
     echo "> PetaLinux config files already transferred"
   else
     echo "> Transferring PetaLinux config files"
+    cp -R ../src/common/* .
     cp -R ../src/$cpu_type/* .
     if [ -d "../src/$pcie_ip" ]; then
       cp -R ../src/$pcie_ip/* .
@@ -99,6 +106,18 @@ do
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
     fi
+    # Append mods to config file
+    config_mod_list=(`find ./project-spec/configs/ -name "config_*.append"`)
+    for f in ${config_mod_list[*]}
+    do
+      cat $f >> ./project-spec/configs/config
+    done
+    # Append mods to rootfs_config file
+    rootfs_config_mod_list=(`find ./project-spec/configs/ -name "rootfs_config_*.append"`)
+    for f in ${rootfs_config_mod_list[*]}
+    do
+      cat $f >> ./project-spec/configs/rootfs_config
+    done
     # File to indicate that config files have been transferred
     touch configdone.txt
     # Run petalinux-config again to register the config files
@@ -114,7 +133,14 @@ do
   fi
 
   # Package PetaLinux project if not packaged
-  if [[ $cpu_type == microblaze ]]; then
+  if [[ $board == kcu105 ]]; then
+    if [ -f "./images/linux/boot.mcs" ]; then
+      echo "> PetaLinux project already packaged"
+    else
+      echo "> Packaging PetaLinux project"
+      petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 32 --flash-intf SPIx4
+    fi
+  elif [[ $cpu_type == microblaze ]]; then
     # Do nothing for now
     :
     # if [ -f "./images/linux/boot.mcs" ]; then

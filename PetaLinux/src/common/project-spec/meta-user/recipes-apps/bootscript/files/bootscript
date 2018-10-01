@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ -e /dev/nvme0n1p1 ]; then
+	echo "Mounting SSD1 to /media/ssd1"
+	mkdir /media/ssd1
+	mount /dev/nvme0n1p1 /media/ssd1
+fi
+if [ -e /dev/nvme1n1p1 ]; then
+	echo "Mounting SSD2 to /media/ssd2"
+	mkdir /media/ssd2
+	mount /dev/nvme1n1p1 /media/ssd2
+fi
