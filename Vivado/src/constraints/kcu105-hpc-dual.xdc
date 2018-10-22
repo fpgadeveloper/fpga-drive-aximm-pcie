@@ -9,9 +9,9 @@ set_property IOSTANDARD LVCMOS18 [get_ports {perst_1[0]}]
 # PEDET_0 - G11 - IOSTANDARD determined by VADJ which is fixed to 1.8V on KCU105
 # PEDET_1 - K12 - IOSTANDARD determined by VADJ which is fixed to 1.8V on KCU105
 
-# Enable 3.3V power supply for SSD1
-set_property PACKAGE_PIN F8 [get_ports disable_3v3_ssd1]
-set_property IOSTANDARD LVCMOS18 [get_ports disable_3v3_ssd1]
+# Disable signal for 3.3V power supply for SSD2
+set_property PACKAGE_PIN F8 [get_ports disable_ssd2_pwr]
+set_property IOSTANDARD LVCMOS18 [get_ports disable_ssd2_pwr]
 
 # PCI Express reference clock 100MHz
 # IOSTANDARD for GT reference clock does not need to be specified

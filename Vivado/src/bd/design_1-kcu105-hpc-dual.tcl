@@ -241,11 +241,11 @@ connect_bd_net [get_bd_pins /rst_pcie_1_axi_aclk/peripheral_reset] [get_bd_ports
 connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_0/sys_rst_n]
 connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_1/sys_rst_n]
 
-# Constant LOW to enable 3.3V power supply of SSD1 and clock source
-set const_dis_3v3_ssd1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_3v3_ssd1 ]
-set_property -dict [list CONFIG.CONST_VAL {0}] $const_dis_3v3_ssd1
-create_bd_port -dir O disable_3v3_ssd1
-connect_bd_net [get_bd_pins const_dis_3v3_ssd1/dout] [get_bd_ports disable_3v3_ssd1]
+# Constant LOW to enable 3.3V power supply of SSD2 and clock source
+set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+set_property -dict [list CONFIG.CONST_VAL {0}] $const_dis_ssd2_pwr
+create_bd_port -dir O disable_ssd2_pwr
+connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 
 # AXI GPIO to drive the LEDs
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio axi_gpio_0
