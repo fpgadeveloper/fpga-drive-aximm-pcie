@@ -28,7 +28,7 @@ In order to test this design on hardware, you will need the following:
   * HPC connnector SSD1 and SSD2 (use kc705-hpc-dual.xdc)
 * Kintex Ultrascale [KCU105 Evaluation board](http://www.xilinx.com/products/boards-and-kits/kcu105.html "KCU105 Evaluation board")
   * LPC connnector (use kcu105-lpc.xdc)
-  * HPC connnector (use kcu105-hpc.xdc)
+  * HPC connnector (use kcu105-hpc.xdc or kcu105-hpc-dual.xdc for 2x SSDs)
 * Virtex-7 [VC707 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-v7-vc707-g.html "VC707 Evaluation board")
   * PCIe edge (use vc707.xdc)
   * HPC connector 1 (use vc707-hpc1.xdc)
@@ -40,6 +40,9 @@ In order to test this design on hardware, you will need the following:
   * PCIe edge (use zc706.xdc)
   * LPC connector (use zc706-lpc.xdc)
   * HPC connector (use zc706-hpc.xdc)
+* Zynq UltraScale+ MPSoC [ZCU106 Evaluation board](https://www.xilinx.com/products/boards-and-kits/zcu106.html "ZCU106 Evaluation board")
+  * HPC connector 0 (use zcu106-hpc0.xdc or zcu106-hpc0-dual.xdc for 2x SSDs)
+  * HPC connector 1 (use zcu106-hpc1.xdc)
 
 ## Description
 
@@ -57,6 +60,7 @@ The projects in this repo with the "_dual" postfix can only be used with the FPG
 Rev-D (and future revisions). These revisions have two M.2 connectors for connecting two SSDs to the FPGA through the FMC connector. 
 At the moment there are dual designs for these carriers:
 * KCU105
+* ZCU106
 
 The single SSD designs (without "_dual" postfix) will also work on the dual connector adapter,
 however only one SSD (SSD1) will be operational.
@@ -133,6 +137,16 @@ Just boot up your [PicoZed FMC Carrier Card V2](http://zedboard.org/product/pico
 using one of those boot files, and the EEPROM will be reprogrammed as required for this project. For more information,
 see the [Hardware User Guide](http://zedboard.org/sites/default/files/documentations/5285-UG-PZCC-FMC-V2-V1_1.pdf "Hardware User Guide")
 for the [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2").
+
+### ZCU106
+
+The ZCU106 has two HPC FMC connectors, HPC0 and HPC1. The HPC0 connector has enough connected gigabit transceivers to support
+2x SSDs, each with an independent 4-lane PCIe interface. The HPC1 connector has only 1x connected gigabit transceiver, so it can only
+support 1x SSD (SSD1) with a 1-lane PCIe interface. This repo contains designs for both of these connectors.
+
+The designs for the ZCU106 are based on the DMA/Bridge Subsystem for PCIe IP, for which there is no standalone driver at the time
+of writing. For this reason, this repo does not contain standalone applications for these designs. The designs can however be used
+with PetaLinux, and the scripts contained in this repo will generate PetaLinux projects for them.
 
 ## Troubleshooting
 

@@ -51,8 +51,16 @@ do
     pcie_ip="axi_pcie3_2x"
   elif grep -Fq "axi_pcie3_0" $vivadosynthtcl; then
     pcie_ip="axi_pcie3"
-  else
+  elif grep -Fq "axi_pcie_0" $vivadosynthtcl; then
     pcie_ip="axi_pcie"
+  elif grep -Fq "xdma_1" $vivadosynthtcl; then
+    pcie_ip="xdma_2x"
+  elif grep -Fq "xdma_0" $vivadosynthtcl; then
+    pcie_ip="xdma"
+  else
+    echo "> Failed to determine the PCIe IP used in this design"
+    echo
+    continue
   fi
 
   # Get CPU type from first letters of project name
