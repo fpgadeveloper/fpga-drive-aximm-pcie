@@ -1,7 +1,9 @@
 fpga-drive-aximm-pcie
 =====================
 
-Example design for FPGA Drive using the AXI Memory Mapped to PCI Express Bridge IP.
+This repo contains the example designs for the FPGA Drive FMC mated with several FPGA and MPSoC evaluation boards.
+
+![FPGA Drive FMC](http://fpgadrive.com/wp-content/uploads/2018/10/fpga-drive-fmc-3.jpg "FPGA Drive FMC")
 
 ## Requirements
 
@@ -25,7 +27,6 @@ In order to test this design on hardware, you will need the following:
   * PCIe edge (use kc705.xdc)
   * LPC connnector SSD1 only (use kc705-lpc.xdc)
   * HPC connnector SSD1 only (use kc705-hpc.xdc)
-  * HPC connnector SSD1 and SSD2 (use kc705-hpc-dual.xdc)
 * Kintex Ultrascale [KCU105 Evaluation board](http://www.xilinx.com/products/boards-and-kits/kcu105.html "KCU105 Evaluation board")
   * LPC connnector (use kcu105-lpc.xdc)
   * HPC connnector (use kcu105-hpc.xdc or kcu105-hpc-dual.xdc for 2x SSDs)
@@ -54,16 +55,25 @@ performs enumeration of the detected PCIe end-points (ie. the SSDs). The project
 scripts to generate PetaLinux for these platforms to allow accessing the SSDs from the Linux
 operating system.
 
+### Single SSD designs
+
+![FPGA Drive FMC single load](http://fpgadrive.com/wp-content/uploads/2018/10/fpga-drive-fmc-single-load.jpg "FPGA Drive FMC single load")
+
+The projects in this repo without the "_dual" postfix are intended to be used with only one loaded SSD as
+shown in the above image. The SSD should be loaded into the first M.2 slot, labelled SSD1. If you are using 
+the older version FPGA Drive FMC (Rev-B) with only one M.2 connector, you will only be able to use the single SSD designs.
+
 ### Dual SSD designs
 
-The projects in this repo with the "_dual" postfix can only be used with the FPGA Drive FMC 
-Rev-D (and future revisions). These revisions have two M.2 connectors for connecting two SSDs to the FPGA through the FMC connector. 
+![FPGA Drive FMC dual load](http://fpgadrive.com/wp-content/uploads/2018/10/fpga-drive-fmc-dual-load.jpg "FPGA Drive FMC dual load")
+
+The projects in this repo with the "_dual" postfix are intended to be used with two loaded SSDs as shown
+in the above image. The dual designs may not function as expected if only one SSD is loaded. If you are using the 
+older version FPGA Drive FMC (Rev-B) with only one M.2 connector, you will not be able to use the dual designs.
+
 At the moment there are dual designs for these carriers:
 * KCU105
 * ZCU106
-
-The single SSD designs (without "_dual" postfix) will also work on the dual connector adapter,
-however only one SSD (SSD1) will be operational.
 
 ### Build instructions
 
