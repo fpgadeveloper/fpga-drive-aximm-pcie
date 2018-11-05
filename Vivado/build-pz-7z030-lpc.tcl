@@ -111,8 +111,13 @@ current_run -implementation [get_runs impl_1]
 
 puts "INFO: Project created:${design_name}"
 
+# Input arguments for block design script
+set fmc_design 1
+set num_lanes "1"
+set link_speed "5"
+
 # Create block design
-source $origin_dir/src/bd/design_1-pz-7z030-lpc.tcl
+source $origin_dir/src/bd/design_1-zynq.tcl
 
 # Generate the wrapper
 make_wrapper -files [get_files *${design_name}.bd] -top

@@ -2,6 +2,10 @@
 set_property PACKAGE_PIN G3 [get_ports mmcm_lock]
 set_property IOSTANDARD LVCMOS18 [get_ports mmcm_lock]
 
+# Disable signal for 3.3V power supply for SSD2 - LA07_P (disable_ssd2_pwr)
+set_property PACKAGE_PIN C6 [get_ports disable_ssd2_pwr]
+set_property IOSTANDARD LVCMOS18 [get_ports disable_ssd2_pwr]
+
 # PCI Express reset (perst)
 set_property PACKAGE_PIN B4 [get_ports perst[0]]
 set_property IOSTANDARD LVCMOS18 [get_ports perst[0]]
