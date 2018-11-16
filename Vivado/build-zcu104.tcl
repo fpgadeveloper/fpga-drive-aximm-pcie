@@ -1,5 +1,5 @@
 #
-# build.tcl: Tcl script for re-creating project 'zcu106_hpc0'
+# build.tcl: Tcl script for re-creating project 'zcu104_pcie'
 #
 #*****************************************************************************************
 
@@ -17,7 +17,7 @@ if {![string equal $ver $version_required]} {
   return
 }
 
-set design_name zcu106_hpc0
+set design_name zcu104_pcie
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."
@@ -26,14 +26,14 @@ set origin_dir "."
 set orig_proj_dir "[file normalize "$origin_dir/$design_name"]"
 
 # Create project
-create_project $design_name $origin_dir/$design_name -part xc7z045ffg900-2
+create_project $design_name $origin_dir/$design_name -part xczu7ev-ffvc1156-2-e
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [get_projects $design_name]
-set_property -name "board_part" -value "xilinx.com:zcu106:part0:2.2" -objects $obj
+set_property -name "board_part" -value "xilinx.com:zcu104:part0:1.1" -objects $obj
 set_property -name "default_lib" -value "xil_defaultlib" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj
 set_property -name "ip_output_repo" -value "$proj_dir/$design_name.cache/ip" -objects $obj
@@ -44,7 +44,6 @@ set_property -name "simulator_language" -value "Mixed" -objects $obj
 if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
-
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
@@ -59,16 +58,16 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/src/constraints/zcu106-hpc0.xdc"]"
+set file "[file normalize "$origin_dir/src/constraints/zcu104.xdc"]"
 set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/src/constraints/zcu106-hpc0.xdc"
+set file "$origin_dir/src/constraints/zcu104.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property "file_type" "XDC" $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
-set_property "target_constrs_file" "[file normalize "$origin_dir/src/constraints/zcu106-hpc0.xdc"]" $obj
+set_property "target_constrs_file" "[file normalize "$origin_dir/src/constraints/zcu104.xdc"]" $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
@@ -112,8 +111,8 @@ current_run -implementation [get_runs impl_1]
 puts "INFO: Project created:${design_name}"
 
 # Input arguments for block design script
-set num_lanes 4
 set dual_design 0
+set num_lanes 1
 
 # Create block design
 source $origin_dir/src/bd/design_1-zynqmp.tcl

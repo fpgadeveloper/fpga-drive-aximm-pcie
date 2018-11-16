@@ -112,11 +112,11 @@ current_run -implementation [get_runs impl_1]
 puts "INFO: Project created:${design_name}"
 
 # Input arguments for block design script
-set fmc_name hpc0
+set num_lanes 4
 set dual_design 1
 
 # Create block design
-source $origin_dir/src/bd/design_1-zcu106.tcl
+source $origin_dir/src/bd/design_1-zynqmp.tcl
 
 # Generate the wrapper
 make_wrapper -files [get_files *${design_name}.bd] -top

@@ -1,5 +1,5 @@
 ################################################################
-# Block design build script for ZCU106 HPC0 FMC connector
+# Block design build script for Zynq US+ designs
 ################################################################
 
 # CHECKING IF PROJECT EXISTS
@@ -43,16 +43,24 @@ apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {apply_boar
 
 # Configure the PS: Enable HP0 and HP1 (for dual designs) to DDR
 if {$dual_design} {
-  set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} CONFIG.PSU__USE__S_AXI_GP3 {1}] [get_bd_cells zynq_ultra_ps_e_0]
+  set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} \
+  CONFIG.PSU__USE__S_AXI_GP3 {1} \
+  CONFIG.PSU__USE__M_AXI_GP0 {1} \
+  CONFIG.PSU__USE__M_AXI_GP1 {1} \
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 } else {
-  set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1}] [get_bd_cells zynq_ultra_ps_e_0]
+  set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} \
+  CONFIG.PSU__USE__S_AXI_GP3 {0} \
+  CONFIG.PSU__USE__M_AXI_GP0 {1} \
+  CONFIG.PSU__USE__M_AXI_GP1 {0} \
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 }
 
 # Connect the PS clocks
 connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk]
-connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk]
 connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/saxihp0_fpd_aclk]
 if {$dual_design} {
+  connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk]
   connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/saxihp1_fpd_aclk]
 }
 
@@ -64,14 +72,15 @@ if {$dual_design} {
 
 # ZCU106 HPC0 has enough MGTs for all 4-lanes for SSD1 and SSD2
 # ZCU106 HPC1 has only 1x MGT for SSD1 (cannot support SSD2)
-if {$fmc_name eq "hpc0"} {
-  # 4-lane PCIe config for HPC0
+# ZCU104 LPC has only 1x MGT for SSD1
+if {$num_lanes eq 4} {
+  # 4-lane PCIe config
   set max_link_width X4
   set axi_data_width 128_bit
   set axisten_freq 250
   set pf_device_id 9134
 } else {
-  # 1-lane PCIe config for HPC1
+  # 1-lane PCIe config
   set max_link_width X1
   set axi_data_width 64_bit
   set axisten_freq 125
@@ -89,6 +98,23 @@ if {$fmc_name eq "hpc0"} {
 #    default is "Add-on card"). Also, the "Chip-to-Chip"
 #    profile is the only one that disables the DFE, a feature
 #    that is better suited for longer and more lossy traces.
+# (2) Answer record 70854 was important in getting the settings
+#    right in this design:
+#    https://www.xilinx.com/support/answers/70854.html
+# (3) On Zynq Ultrascale+ designs, we have found that at least
+#    one BAR had to be assigned in the lower 32-bit address space,
+#    or the SSD would not be properly enumerated.
+# (4) To further the above point, we have also found that if BAR0
+#    is placed at address 0x10_0000_0000 (the default value),
+#    the NVMe driver crashes on boot. This occurs even when we
+#    enable "High Address" in ZynqMP settings "PS-PL Configuration"->
+#    "Address Fragmentation": CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}
+#    and even when the SSD's BARs are assigned to the lower 32-bit
+#    address space via another BAR (eg. BAR1 @ 0xA0000000).
+#    It seems that BAR0 must be assigned in the lower 32-bit
+#    address space for this to work, which is in line with the
+#    answer record mentioned above (although the images in that
+#    document do not align with what is written).
 #    
 set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
 CONFIG.mode_selection {Advanced} \
@@ -115,7 +141,8 @@ CONFIG.plltype {QPLL1} \
 CONFIG.ins_loss_profile {Chip-to-Chip} \
 CONFIG.type1_membase_memlimit_enable {Enabled} \
 CONFIG.type1_prefetchable_membase_memlimit {64bit_Enabled} \
-CONFIG.axibar2pciebar_0 {0x0000001000000000} \
+CONFIG.axibar_num {1} \
+CONFIG.axibar2pciebar_0 {0x00000000A0000000} \
 CONFIG.BASEADDR {0x00000000} \
 CONFIG.HIGHADDR {0x001FFFFF} \
 CONFIG.pf0_bar0_enabled {false} \
@@ -158,14 +185,14 @@ if {$dual_design} {
   set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
   CONFIG.mode_selection {Advanced} \
   CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
-  CONFIG.pl_link_cap_max_link_width {X4} \
+  CONFIG.pl_link_cap_max_link_width $max_link_width \
   CONFIG.pl_link_cap_max_link_speed {8.0_GT/s} \
   CONFIG.axi_addr_width {32} \
-  CONFIG.axi_data_width {128_bit} \
-  CONFIG.axisten_freq {250} \
+  CONFIG.axi_data_width $axi_data_width \
+  CONFIG.axisten_freq $axisten_freq \
   CONFIG.dedicate_perst {false} \
   CONFIG.sys_reset_polarity {ACTIVE_LOW} \
-  CONFIG.pf0_device_id {9134} \
+  CONFIG.pf0_device_id $pf_device_id \
   CONFIG.pf0_base_class_menu {Bridge_device} \
   CONFIG.pf0_class_code_base {06} \
   CONFIG.pf0_sub_class_interface_menu {PCI_to_PCI_bridge} \
@@ -180,7 +207,8 @@ if {$dual_design} {
   CONFIG.ins_loss_profile {Chip-to-Chip} \
   CONFIG.type1_membase_memlimit_enable {Enabled} \
   CONFIG.type1_prefetchable_membase_memlimit {64bit_Enabled} \
-  CONFIG.axibar2pciebar_0 {0x0000001010000000} \
+  CONFIG.axibar_num {1} \
+  CONFIG.axibar2pciebar_0 {0x00000000B0000000} \
   CONFIG.BASEADDR {0x00000000} \
   CONFIG.HIGHADDR {0x001FFFFF} \
   CONFIG.pf0_bar0_enabled {false} \
@@ -203,9 +231,9 @@ if {$dual_design} {
   CONFIG.pf1_sriov_bar0_type {Memory} \
   CONFIG.pf2_sriov_bar0_type {Memory} \
   CONFIG.pf3_sriov_bar0_type {Memory} \
-  CONFIG.PF0_DEVICE_ID_mqdma {9134} \
-  CONFIG.PF2_DEVICE_ID_mqdma {9134} \
-  CONFIG.PF3_DEVICE_ID_mqdma {9134} \
+  CONFIG.PF0_DEVICE_ID_mqdma $pf_device_id \
+  CONFIG.PF2_DEVICE_ID_mqdma $pf_device_id \
+  CONFIG.PF3_DEVICE_ID_mqdma $pf_device_id \
   CONFIG.pf0_base_class_menu_mqdma {Bridge_device} \
   CONFIG.pf0_class_code_base_mqdma {06} \
   CONFIG.pf0_class_code_mqdma {068000} \
@@ -221,23 +249,26 @@ if {$dual_design} {
 }
 
 # Create AXI Interconnect for the XDMA slave interfaces
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon_0
+if {$dual_design} {
+  create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon_1
+}
 
 # Use connection automation after configuration of the PCIe block - so it will assign 512MB to the S_AXI_CTL interfaces
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/xdma_0/axi_aclk (250 MHz)} Clk_slave {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_xbar {Auto} Master {/xdma_0/M_AXI_B} Slave {/zynq_ultra_ps_e_0/S_AXI_HP0_FPD} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HP0_FPD]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_0/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_0/S_AXI_B} intc_ip {periph_intercon} master_apm {0}}  [get_bd_intf_pins xdma_0/S_AXI_B]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_0/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_0/S_AXI_LITE} intc_ip {periph_intercon} master_apm {0}}  [get_bd_intf_pins xdma_0/S_AXI_LITE]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_0/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_0/S_AXI_B} intc_ip {periph_intercon_0} master_apm {0}}  [get_bd_intf_pins xdma_0/S_AXI_B]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_0/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_0/S_AXI_LITE} intc_ip {periph_intercon_0} master_apm {0}}  [get_bd_intf_pins xdma_0/S_AXI_LITE]
 if {$dual_design} {
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/xdma_1/axi_aclk (250 MHz)} Clk_slave {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_xbar {Auto} Master {/xdma_1/M_AXI_B} Slave {/zynq_ultra_ps_e_0/S_AXI_HP1_FPD} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HP1_FPD]
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_1/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_1/S_AXI_B} intc_ip {periph_intercon} master_apm {0}}  [get_bd_intf_pins xdma_1/S_AXI_B]
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_1/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/xdma_1/S_AXI_LITE} intc_ip {periph_intercon} master_apm {0}}  [get_bd_intf_pins xdma_1/S_AXI_LITE]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_1/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM1_FPD} Slave {/xdma_1/S_AXI_B} intc_ip {periph_intercon_1} master_apm {0}}  [get_bd_intf_pins xdma_1/S_AXI_B]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {/xdma_1/axi_aclk (250 MHz)} Clk_xbar {Auto} Master {/zynq_ultra_ps_e_0/M_AXI_HPM1_FPD} Slave {/xdma_1/S_AXI_LITE} intc_ip {periph_intercon_1} master_apm {0}}  [get_bd_intf_pins xdma_1/S_AXI_LITE]
 }
 
 # Set the BAR0 offsets and sizes
-set_property offset 0x1000000000 [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_0_BAR0}]
+set_property offset 0x00A0000000 [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_0_BAR0}]
 set_property range 256M [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_0_BAR0}]
 if {$dual_design} {
-  set_property offset 0x1010000000 [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_1_BAR0}]
+  set_property offset 0x00B0000000 [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_1_BAR0}]
   set_property range 256M [get_bd_addr_segs {zynq_ultra_ps_e_0/Data/SEG_xdma_1_BAR0}]
 }
 
@@ -289,16 +320,16 @@ if {$dual_design} {
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_0_axi_aclk
 connect_bd_net [get_bd_pins xdma_0/axi_aclk] [get_bd_pins rst_pcie_0_axi_aclk/slowest_sync_clk]
 connect_bd_net [get_bd_pins xdma_0/axi_ctl_aresetn] [get_bd_pins rst_pcie_0_axi_aclk/ext_reset_in]
-disconnect_bd_net /xdma_0_axi_aresetn [get_bd_pins periph_intercon/M01_ARESETN]
-connect_bd_net [get_bd_pins xdma_0/axi_ctl_aresetn] [get_bd_pins periph_intercon/M01_ARESETN]
+disconnect_bd_net /xdma_0_axi_aresetn [get_bd_pins periph_intercon_0/M01_ARESETN]
+connect_bd_net [get_bd_pins xdma_0/axi_ctl_aresetn] [get_bd_pins periph_intercon_0/M01_ARESETN]
 
 # Add proc system reset for xdma_1/axi_ctl_aresetn
 if {$dual_design} {
   create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_1_axi_aclk
   connect_bd_net [get_bd_pins xdma_1/axi_aclk] [get_bd_pins rst_pcie_1_axi_aclk/slowest_sync_clk]
   connect_bd_net [get_bd_pins xdma_1/axi_ctl_aresetn] [get_bd_pins rst_pcie_1_axi_aclk/ext_reset_in]
-  disconnect_bd_net /xdma_1_axi_aresetn [get_bd_pins periph_intercon/M03_ARESETN]
-  connect_bd_net [get_bd_pins xdma_1/axi_ctl_aresetn] [get_bd_pins periph_intercon/M03_ARESETN]
+  disconnect_bd_net /xdma_1_axi_aresetn [get_bd_pins periph_intercon_1/M01_ARESETN]
+  connect_bd_net [get_bd_pins xdma_1/axi_ctl_aresetn] [get_bd_pins periph_intercon_1/M01_ARESETN]
 }
 
 # Create PERST ports

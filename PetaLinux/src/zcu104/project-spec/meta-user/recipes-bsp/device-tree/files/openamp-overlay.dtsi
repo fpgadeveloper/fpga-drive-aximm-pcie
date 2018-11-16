@@ -1,0 +1,56 @@
+/ {
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		rproc_0_reserved: rproc@3ed000000 {
+			no-map;
+			reg = <0x0 0x3ed00000 0x0 0x1000000>;
+		};
+	};
+
+	power-domains {
+		pd_r5_0: pd_r5_0 {
+			#power-domain-cells = <0x0>;
+			pd-id = <0x7>;
+		};
+		pd_tcm_0_a: pd_tcm_0_a {
+			#power-domain-cells = <0x0>;
+			pd-id = <0xf>;
+		};
+		pd_tcm_0_b: pd_tcm_0_b {
+			#power-domain-cells = <0x0>;
+			pd-id = <0x10>;
+		};
+	};
+
+	amba {
+		r5_0_tcm_a: tcm@ffe00000 {
+			compatible = "mmio-sram";
+			reg = <0x0 0xFFE00000 0x0 0x10000>;
+			pd-handle = <&pd_tcm_0_a>;
+		};
+		r5_0_tcm_b: tcm@ffe20000 {
+			compatible = "mmio-sram";
+			reg = <0x0 0xFFE20000 0x0 0x10000>;
+			pd-handle = <&pd_tcm_0_b>;
+		};
+
+		elf_ddr_0: ddr@3ed00000 {
+			compatible = "mmio-sram";
+			reg = <0x0 0x3ed00000 0x0 0x40000>;
+		};
+
+		test_r50: zynqmp_r5_rproc@0 {
+			compatible = "xlnx,zynqmp-r5-remoteproc-1.0";
+			reg = <0x0 0xff9a0100 0x0 0x100>, <0x0 0xff340000 0x0 0x100>, <0x0 0xff9a0000 0x0 0x100>;
+			reg-names = "rpu_base", "ipi", "rpu_glbl_base";
+			dma-ranges;
+			core_conf = "split0";
+			srams = <&r5_0_tcm_a &r5_0_tcm_b &elf_ddr_0>;
+			pd-handle = <&pd_r5_0>;
+			interrupt-parent = <&gic>;
+			interrupts = <0 29 4>;
+		} ;
+	};
+};

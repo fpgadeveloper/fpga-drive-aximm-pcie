@@ -21,29 +21,31 @@ In order to test this design on hardware, you will need the following:
 ## Supported carrier boards
 
 * Zynq-7000 [PicoZed FMC Carrier Card V2](http://zedboard.org/product/picozed-fmc-carrier-card-v2 "PicoZed FMC Carrier Card V2") with [PicoZed 7015/30](http://picozed.org "PicoZed")
-  * PCIe edge (use pzfmc-7z015-7z030-1v8-lpc.xdc)
-  * LPC connector (use pzfmc-7z015-7z030-1v8.xdc)
+  * PCIe edge - Single SSD
+  * LPC connector - Single SSD
 * Kintex-7 [KC705 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-k7-kc705-g.html "KC705 Evaluation board")
-  * PCIe edge (use kc705.xdc)
-  * LPC connnector SSD1 only (use kc705-lpc.xdc)
-  * HPC connnector SSD1 only (use kc705-hpc.xdc)
+  * PCIe edge - Single SSD
+  * LPC connnector - Single SSD
+  * HPC connnector - Single SSD
 * Kintex Ultrascale [KCU105 Evaluation board](http://www.xilinx.com/products/boards-and-kits/kcu105.html "KCU105 Evaluation board")
-  * LPC connnector (use kcu105-lpc.xdc)
-  * HPC connnector (use kcu105-hpc.xdc or kcu105-hpc-dual.xdc for 2x SSDs)
+  * LPC connnector - Single SSD
+  * HPC connnector - Single and Dual SSD designs
 * Virtex-7 [VC707 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-v7-vc707-g.html "VC707 Evaluation board")
   * PCIe edge (use vc707.xdc)
-  * HPC connector 1 (use vc707-hpc1.xdc)
-  * HPC connector 2 (use vc707-hpc2.xdc)
+  * HPC connector 1 - Single SSD
+  * HPC connector 2 - Single SSD
 * Virtex-7 [VC709 Evaluation board](http://www.xilinx.com/products/boards-and-kits/dk-v7-vc709-g.html "VC709 Evaluation board")
-  * PCIe edge (use vc709.xdc)
-  * HPC connector (use vc709-hpc.xdc)
+  * PCIe edge - Single SSD
+  * HPC connector - Single SSD
 * Zynq-7000 [ZC706 Evaluation board](http://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html "ZC706 Evaluation board")
-  * PCIe edge (use zc706.xdc)
-  * LPC connector (use zc706-lpc.xdc)
-  * HPC connector (use zc706-hpc.xdc)
+  * PCIe edge - Single SSD
+  * LPC connector - Single SSD
+  * HPC connector - Single SSD
+* Zynq UltraScale+ MPSoC [ZCU104 Evaluation board](https://www.xilinx.com/products/boards-and-kits/zcu104.html "ZCU104 Evaluation board")
+  * LPC connector - Single SSD
 * Zynq UltraScale+ MPSoC [ZCU106 Evaluation board](https://www.xilinx.com/products/boards-and-kits/zcu106.html "ZCU106 Evaluation board")
-  * HPC connector 0 (use zcu106-hpc0.xdc or zcu106-hpc0-dual.xdc for 2x SSDs)
-  * HPC connector 1 (use zcu106-hpc1.xdc)
+  * HPC connector 0 - Single and Dual SSD designs
+  * HPC connector 1 - Single SSD
 
 ## Description
 

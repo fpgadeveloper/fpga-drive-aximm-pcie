@@ -345,9 +345,9 @@ proc create_sdk_ws {} {
   foreach {vivado_folder} $vivado_proj_list {
     # Get the name of the board
     set board_name [string replace $vivado_folder [string last _ $vivado_folder end] end ""]
-    # Don't create applications for the ZCU106 designs
-    if {[str_contains $board_name "zcu106"]} {
-      puts "No app will be generated for ZCU106 designs"
+    # Don't create applications for the ZynqMP designs
+    if {[str_contains $board_name "zcu"]} {
+      puts "No app will be generated for Zynq Ultrascale+ designs"
       continue
     }
     # Create the application name
