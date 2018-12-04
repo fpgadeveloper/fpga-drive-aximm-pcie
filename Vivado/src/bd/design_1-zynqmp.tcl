@@ -248,6 +248,14 @@ if {$dual_design} {
   CONFIG.pf3_class_code_mqdma {068000}] [get_bd_cells xdma_1]
 }
 
+# Answer record 71106: Zynq Ultrascale+ MPSoC - PL PCIe Root Port Bridge (Vivado 2018.1)
+# - MSI Interrupt handling causes downstream devices to time out
+# https://www.xilinx.com/support/answers/71106.html
+set_property -dict [list CONFIG.msi_rx_pin_en {true}] [get_bd_cells xdma_0]
+if {$dual_design} {
+  set_property -dict [list CONFIG.msi_rx_pin_en {true}] [get_bd_cells xdma_1]
+}
+
 # Create AXI Interconnect for the XDMA slave interfaces
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon_0
 if {$dual_design} {
@@ -308,12 +316,18 @@ if {$dual_design} {
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_interrupts
 connect_bd_net [get_bd_pins concat_interrupts/dout] [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq0]
 if {$dual_design} {
-  set_property -dict [list CONFIG.NUM_PORTS {2}] [get_bd_cells concat_interrupts]
+  set_property -dict [list CONFIG.NUM_PORTS {6}] [get_bd_cells concat_interrupts]
   connect_bd_net [get_bd_pins xdma_0/interrupt_out] [get_bd_pins concat_interrupts/In0]
   connect_bd_net [get_bd_pins xdma_1/interrupt_out] [get_bd_pins concat_interrupts/In1]
+  connect_bd_net [get_bd_pins xdma_0/interrupt_out_msi_vec0to31] [get_bd_pins concat_interrupts/In2]
+  connect_bd_net [get_bd_pins xdma_0/interrupt_out_msi_vec32to63] [get_bd_pins concat_interrupts/In3]
+  connect_bd_net [get_bd_pins xdma_1/interrupt_out_msi_vec0to31] [get_bd_pins concat_interrupts/In4]
+  connect_bd_net [get_bd_pins xdma_1/interrupt_out_msi_vec32to63] [get_bd_pins concat_interrupts/In5]
 } else {
-  set_property -dict [list CONFIG.NUM_PORTS {1}] [get_bd_cells concat_interrupts]
+  set_property -dict [list CONFIG.NUM_PORTS {3}] [get_bd_cells concat_interrupts]
   connect_bd_net [get_bd_pins xdma_0/interrupt_out] [get_bd_pins concat_interrupts/In0]
+  connect_bd_net [get_bd_pins xdma_0/interrupt_out_msi_vec0to31] [get_bd_pins concat_interrupts/In1]
+  connect_bd_net [get_bd_pins xdma_0/interrupt_out_msi_vec32to63] [get_bd_pins concat_interrupts/In2]
 }
 
 # Add proc system reset for xdma_0/axi_ctl_aresetn
