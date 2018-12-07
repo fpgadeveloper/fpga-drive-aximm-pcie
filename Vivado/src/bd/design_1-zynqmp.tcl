@@ -47,13 +47,13 @@ if {$dual_design} {
   CONFIG.PSU__USE__S_AXI_GP3 {1} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {1} \
-  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {0}] [get_bd_cells zynq_ultra_ps_e_0]
 } else {
   set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} \
   CONFIG.PSU__USE__S_AXI_GP3 {0} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {0} \
-  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {0}] [get_bd_cells zynq_ultra_ps_e_0]
 }
 
 # Connect the PS clocks
