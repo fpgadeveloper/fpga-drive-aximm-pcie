@@ -47,13 +47,13 @@ if {$dual_design} {
   CONFIG.PSU__USE__S_AXI_GP3 {1} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {1} \
-  CONFIG.PSU__HIGH_ADDRESS__ENABLE {0}] [get_bd_cells zynq_ultra_ps_e_0]
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 } else {
   set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} \
   CONFIG.PSU__USE__S_AXI_GP3 {0} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {0} \
-  CONFIG.PSU__HIGH_ADDRESS__ENABLE {0}] [get_bd_cells zynq_ultra_ps_e_0]
+  CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 }
 
 # Connect the PS clocks
@@ -121,7 +121,7 @@ CONFIG.mode_selection {Advanced} \
 CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
 CONFIG.pl_link_cap_max_link_width $max_link_width \
 CONFIG.pl_link_cap_max_link_speed {8.0_GT/s} \
-CONFIG.axi_addr_width {32} \
+CONFIG.axi_addr_width {49} \
 CONFIG.axi_data_width $axi_data_width \
 CONFIG.axisten_freq $axisten_freq \
 CONFIG.dedicate_perst {false} \
@@ -187,7 +187,7 @@ if {$dual_design} {
   CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
   CONFIG.pl_link_cap_max_link_width $max_link_width \
   CONFIG.pl_link_cap_max_link_speed {8.0_GT/s} \
-  CONFIG.axi_addr_width {32} \
+  CONFIG.axi_addr_width {49} \
   CONFIG.axi_data_width $axi_data_width \
   CONFIG.axisten_freq $axisten_freq \
   CONFIG.dedicate_perst {false} \
