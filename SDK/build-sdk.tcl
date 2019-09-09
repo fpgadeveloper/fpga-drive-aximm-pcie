@@ -262,14 +262,23 @@ proc get_pcie_code_filename {bsp_name} {
 # Creates the .bif file for a Zynq board
 proc create_zynq_bif {board_name app_name vivado_name target_dir sdk_dir} {
   set full_sdk_dir [file normalize $sdk_dir]
-  regsub -all {/} $full_sdk_dir {\\} full_sdk_dir
+  set fsbl_elf_filename "${full_sdk_dir}/${board_name}_fsbl/Debug/${board_name}_fsbl.elf"
+  set bitstream_filename "${full_sdk_dir}/${vivado_name}_wrapper_hw_platform_0/${vivado_name}_wrapper.bit"
+  set app_elf_filename "${full_sdk_dir}/${app_name}/Debug/${app_name}.elf"
+  # Swap forward slashes for back slashes on Windows systems
+  set OS [lindex $::tcl_platform(os) 0]
+  if { $OS == "Windows" } {
+    regsub -all {/} $fsbl_elf_filename {\\} fsbl_elf_filename
+    regsub -all {/} $bitstream_filename {\\} bitstream_filename
+    regsub -all {/} $app_elf_filename {\\} app_elf_filename
+  }
   set fd [open "${target_dir}/${board_name}.bif" "w"]
   puts $fd "//arch = zynq; split = false; format = BIN"
   puts $fd "the_ROM_image:"
   puts $fd "\{"
-  puts $fd "	\[bootloader\]${full_sdk_dir}\\${board_name}_fsbl\\Debug\\${board_name}_fsbl.elf"
-  puts $fd "	${full_sdk_dir}\\${vivado_name}_wrapper_hw_platform_0\\${vivado_name}_wrapper.bit"
-  puts $fd "	${full_sdk_dir}\\${app_name}\\Debug\\${app_name}.elf"
+  puts $fd "	\[bootloader\]${fsbl_elf_filename}"
+  puts $fd "	${bitstream_filename}"
+  puts $fd "	${app_elf_filename}"
   puts $fd "\}"
   close $fd
 }
@@ -277,15 +286,24 @@ proc create_zynq_bif {board_name app_name vivado_name target_dir sdk_dir} {
 # Creates the .bif file for a Zynq MP board
 proc create_zynqmp_bif {board_name app_name vivado_name target_dir sdk_dir} {
   set full_sdk_dir [file normalize $sdk_dir]
-  regsub -all {/} $full_sdk_dir {\\} full_sdk_dir
+  set fsbl_elf_filename "${full_sdk_dir}/${board_name}_fsbl/Debug/${board_name}_fsbl.elf"
+  set bitstream_filename "${full_sdk_dir}/${vivado_name}_wrapper_hw_platform_0/${vivado_name}_wrapper.bit"
+  set app_elf_filename "${full_sdk_dir}/${app_name}/Debug/${app_name}.elf"
+  # Swap forward slashes for back slashes on Windows systems
+  set OS [lindex $::tcl_platform(os) 0]
+  if { $OS == "Windows" } {
+    regsub -all {/} $fsbl_elf_filename {\\} fsbl_elf_filename
+    regsub -all {/} $bitstream_filename {\\} bitstream_filename
+    regsub -all {/} $app_elf_filename {\\} app_elf_filename
+  }
   set fd [open "${target_dir}/${board_name}.bif" "w"]
   puts $fd "//arch = zynqmp; split = false; format = BIN"
   puts $fd "the_ROM_image:"
   puts $fd "\{"
   puts $fd "	\[fsbl_config\]a53_x64"
-  puts $fd "	\[bootloader\]${full_sdk_dir}\\${board_name}_fsbl\\Debug\\${board_name}_fsbl.elf"
-  puts $fd "	\[destination_device = pl\]${full_sdk_dir}\\${vivado_name}_wrapper_hw_platform_0\\${vivado_name}_wrapper.bit"
-  puts $fd "	\[destination_cpu = a53-0\]${full_sdk_dir}\\${app_name}\\Debug\\${app_name}.elf"
+  puts $fd "	\[bootloader\]${fsbl_elf_filename}"
+  puts $fd "	\[destination_device = pl\]${bitstream_filename}"
+  puts $fd "	\[destination_cpu = a53-0\]${app_elf_filename}"
   puts $fd "\}"
   close $fd
 }
@@ -448,6 +466,11 @@ proc create_boot_files {} {
         puts "ELF does not exist for ${board_name}_fsbl"
         continue
       }
+      if {[str_contains $proc_instance "psu_cortexa53_"]} {
+        set arch_type "zynqmp"
+      } else {
+        set arch_type "zynq"
+      }
     }
     
     # If all required files exist, then generate boot files
@@ -456,28 +479,33 @@ proc create_boot_files {} {
       file mkdir "./boot/$board_name"
     }
 	
-	# For Microblaze designs
-	if {[str_contains $proc_instance "microblaze"]} {
-	  puts "Generating combined bitstream/elf file for $board_name project."
+    # For Microblaze designs
+    if {[str_contains $proc_instance "microblaze"]} {
+      puts "Generating combined bitstream/elf file for $board_name project."
       # Generate the download.bit file with .elf
       exec updatemem --bit "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.bit" \
         --meminfo "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.mmi" \
         --data "./${app_name}/Debug/${app_name}.elf" \
         --proc "${vivado_folder}_i/microblaze_0" \
         -force --out "./boot/${board_name}/${board_name}.bit"
-	# For Zynq MP designs
-	} elseif {[str_contains $proc_instance "psu_cortexa53_"]} {
-	  puts "Generating BOOT.bin file for Zynq MP $board_name project."
-	  # Generate the .bif file
-	  create_zynqmp_bif $board_name $app_name $vivado_folder "./boot" "."
-	  exec bootgen -image .\\boot\\${board_name}.bif -arch zynqmp -o .\\boot\\${board_name}\\BOOT.bin -w on
-	# For Zynq designs
+    # For Zynq and Zynq MP designs
     } else {
-	  puts "Generating BOOT.bin file for Zynq $board_name project."
-	  # Generate the .bif file
-	  create_zynq_bif $board_name $app_name $vivado_folder "./boot" "."
-	  exec bootgen -image .\\boot\\${board_name}.bif -arch zynq -o .\\boot\\${board_name}\\BOOT.bin -w on
-	}
+      # Generate the .bif file
+      if { $arch_type == "zynqmp" } {
+        puts "Generating BOOT.bin file for Zynq MP $board_name project."
+        create_zynqmp_bif $board_name $app_name $vivado_folder "./boot" "."
+      } else {
+        puts "Generating BOOT.bin file for Zynq $board_name project."
+        create_zynq_bif $board_name $app_name $vivado_folder "./boot" "."
+      }
+      set bootgen_cmd "bootgen -image ./boot/${board_name}.bif -arch ${arch_type} -o ./boot/${board_name}/BOOT.bin -w on"
+      # Swap forward slashes for back slashes on Windows systems
+      set OS [lindex $::tcl_platform(os) 0]
+      if { $OS == "Windows" } {
+        regsub -all {/} $bootgen_cmd {\\\\} bootgen_cmd
+      }
+      exec {*}$bootgen_cmd
+    }
   }
 }
 
