@@ -26,6 +26,11 @@ executed or used under Linux. The best way to ensure UNIX line endings, is to cl
 Linux machine. If instead you have copied the repo from a Windows machine, the files will have DOS line endings and
 you must use the `dos2unix` tool to convert the line endings for UNIX.
 
+1. Copy the cloned repository from your Windows machine to your Linux machine.
+2. Use the `cd` command to navigate to the copied repository on your Linux machine.
+3. Type `find . -type f -exec dos2unix --keepdate {} +` to convert all of the files
+to the Unix format.
+
 ### How the script works
 
 The PetaLinux directory contains a `build-petalinux` shell script which can be run in Linux to automatically
