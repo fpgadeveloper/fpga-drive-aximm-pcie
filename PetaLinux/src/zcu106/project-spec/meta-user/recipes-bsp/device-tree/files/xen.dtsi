@@ -3,7 +3,7 @@
 		#address-cells = <2>;
 		#size-cells = <1>;
 
-		xen,xen-bootargs = "console=dtuart dtuart=serial0 dom0_mem=768M bootscrub=0 maxcpus=1 timer_slop=0";
+		xen,xen-bootargs = "console=dtuart dtuart=serial0 dom0_mem=1G bootscrub=0 maxcpus=1 timer_slop=0";
 		xen,dom0-bootargs = "console=hvc0 earlycon=xen earlyprintk=xen maxcpus=1 clk_ignore_unused";
 
 		dom0 {

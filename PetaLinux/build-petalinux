@@ -95,7 +95,7 @@ do
     echo "> PetaLinux project already configured with hardware description"
   else
     echo "> Configuring PetaLinux project with hardware description"
-    petalinux-config --get-hw-description ../$f --oldconfig
+    petalinux-config --get-hw-description ../$f --silentconfig
   fi
 
   # Get the board name
@@ -129,7 +129,7 @@ do
     # File to indicate that config files have been transferred
     touch configdone.txt
     # Run petalinux-config again to register the config files
-    petalinux-config --oldconfig
+    petalinux-config --silentconfig
   fi
 
   # Build PetaLinux project if not built already
