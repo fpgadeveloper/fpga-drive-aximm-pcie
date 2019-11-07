@@ -7,13 +7,13 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 ## Requirements
 
-This project is designed for Vivado 2018.2. If you are using an older version of Vivado, then you *MUST* use an older version
+This project is designed for Vivado 2019.2. If you are using an older version of Vivado, then you *MUST* use an older version
 of this repository. Refer to the [list of commits](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/commits/master "list of commits")
 to find links to the older versions of this repository.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2018.2
+* Vivado 2019.2
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed above
@@ -130,7 +130,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2018.2\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2019.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2
