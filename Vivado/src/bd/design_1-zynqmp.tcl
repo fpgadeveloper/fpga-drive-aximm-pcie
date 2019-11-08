@@ -182,6 +182,10 @@ CONFIG.pf3_class_code_base_mqdma {06} \
 CONFIG.pf3_class_code_mqdma {068000}] [get_bd_cells xdma_0]
 
 if {$dual_design} {
+  # Change selection of xdma_0's PCIe block to X0Y1
+  set_property -dict [list CONFIG.pcie_blk_locn {X0Y1}] [get_bd_cells xdma_0]
+  
+  # Create xdma_1 and place it at PCIe block X0Y0
   set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
   CONFIG.mode_selection {Advanced} \
   CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
@@ -200,7 +204,7 @@ if {$dual_design} {
   CONFIG.pf0_class_code_interface {00} \
   CONFIG.pf0_class_code {060400} \
   CONFIG.xdma_axilite_slave {true} \
-  CONFIG.pcie_blk_locn {X0Y1} \
+  CONFIG.pcie_blk_locn {X0Y0} \
   CONFIG.select_quad {GTH_Quad_227} \
   CONFIG.INS_LOSS_NYQ {5} \
   CONFIG.plltype {QPLL1} \
