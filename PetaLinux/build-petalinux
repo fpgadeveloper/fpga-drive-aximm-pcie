@@ -4,7 +4,7 @@
 
 # Get a list of all the exported projects
 
-filelist=(`find ../Vivado/ -name "*.sdk"`)
+filelist=(`find ../Vivado/ -name "*.xsa"`)
 
 # Iterate through all of those files
 
@@ -13,26 +13,15 @@ do
   # Get the project name
   proj=$(echo $f | tr "/" "\n" | sed -n '3p')
   echo "INFO: Exported Vivado project found: $proj"
-  echo "> Export location [$f]"
-
-  # Name of the HDF file
-  hdf="$f/${proj}_wrapper.hdf"
-  if [ -f "$hdf" ]; then
-    echo "> HDF file exists [$hdf]"
-  else
-    echo "> HDF file does not exist"
-    echo "> PetaLinux will not be built for this project"
-    echo
-    continue
-  fi
+  echo "> Exported hardware spec [$f]"
 
   # Name of the BIT file
-  runs=$(echo $f | sed -e "s/.sdk/.runs/g")
+  runs=$(echo $f | sed -e "s/_wrapper.xsa/.runs/g")
   bit="$runs/impl_1/${proj}_wrapper.bit"
   if [ -f "$bit" ]; then
     echo "> BIT file exists [$bit]"
   else
-    echo "> BIT file does not exist"
+    echo "> BIT file does not exist [$bit]"
     echo "> PetaLinux will not be built for this project"
     echo
     continue
@@ -95,7 +84,7 @@ do
     echo "> PetaLinux project already configured with hardware description"
   else
     echo "> Configuring PetaLinux project with hardware description"
-    petalinux-config --get-hw-description ../$f --silentconfig
+    petalinux-config --get-hw-description ../$(dirname "${f}") --silentconfig
   fi
 
   # Get the board name
