@@ -83,9 +83,6 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie3 axi_pcie3_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0
 
-# BAR0 set to 512MB
-create_bd_addr_seg -range 0x20000000 -offset 0x60000000 [get_bd_addr_spaces microblaze_0/Data] [get_bd_addr_segs axi_pcie3_0/S_AXI/BAR0] SEG_axi_pcie3_0_BAR0
-
 # Use Automation features
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "Auto" }  [get_bd_intf_pins axi_uart16550_0/S_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "rs232_uart ( UART ) " }  [get_bd_intf_pins axi_uart16550_0/UART]
@@ -142,6 +139,10 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/axi_pcie3_0/axi_aclk (125 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Master {/axi_pcie3_0/M_AXI} Slave {/ddr4_0/C0_DDR4_S_AXI} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins axi_pcie3_0/M_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/axi_pcie3_0/axi_aclk (125 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_pcie3_0/S_AXI} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_pcie3_0/S_AXI]
 
+# BAR0 set to 512MB
+set_property offset 0x60000000 [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
+set_property range 512M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie3_0_BAR0}]
+
 # Add MGT external port for PCIe
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp
 connect_bd_intf_net [get_bd_intf_pins axi_pcie3_0/pcie_7x_mgt] [get_bd_intf_ports pci_exp]
@@ -161,7 +162,7 @@ set_property -dict [ list CONFIG.C_FIFO_DEPTH {256} CONFIG.C_SPI_MEMORY {2} CONF
 connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout1]
 
 # Configure Microblaze for 4 interrupts and connect them
-set_property -dict [list CONFIG.NUM_PORTS {4}] [get_bd_cells microblaze_0_xlconcat]
+set_property -dict [list CONFIG.NUM_PORTS {5}] [get_bd_cells microblaze_0_xlconcat]
 connect_bd_net [get_bd_pins axi_uart16550_0/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In0]
 connect_bd_net [get_bd_pins axi_timer_0/interrupt] [get_bd_pins microblaze_0_xlconcat/In1]
 connect_bd_net [get_bd_pins axi_pcie3_0/interrupt_out] [get_bd_pins microblaze_0_xlconcat/In2]
@@ -183,6 +184,19 @@ connect_bd_net [get_bd_ports reset] [get_bd_pins axi_pcie3_0/sys_rst_n]
 
 # Create external port connections
 connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
+
+# Add IIC
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_iic iic_main
+apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {iic_main ( IIC ) } Manual_Source {Auto}}  [get_bd_intf_pins iic_main/IIC]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/iic_main/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins iic_main/S_AXI]
+connect_bd_net [get_bd_pins iic_main/iic2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In4]
+
+# Reset GPIO
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio reset_gpio
+set_property -dict [list CONFIG.C_GPIO_WIDTH {1} CONFIG.C_ALL_OUTPUTS {1}] [get_bd_cells reset_gpio]
+set_property -dict [list CONFIG.C_AUX_RST_WIDTH {1} CONFIG.C_AUX_RESET_HIGH {1}] [get_bd_cells rst_ddr4_0_100M]
+connect_bd_net [get_bd_pins reset_gpio/gpio_io_o] [get_bd_pins rst_ddr4_0_100M/aux_reset_in]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {Auto} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/reset_gpio/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins reset_gpio/S_AXI]
 
 # Restore current instance
 current_bd_instance $oldCurInst

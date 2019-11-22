@@ -40,10 +40,10 @@ When executed, the build script searches the Vivado directory for all projects c
 This locates all projects that have been exported to SDK. Then for every exported project, the script
 does the following:
 
-1. Verifies that the `.hdf` and the `.bit` files exist.
+1. Verifies that the `.xsa` and the `.bit` files exist.
 2. Determines the CPU type: Microblaze, Zynq or ZynqMP. It currently does this
 by looking at the first 3 letters of the project name.
-3. Creates a PetaLinux project, referencing the exported hardware design (.hdf).
+3. Creates a PetaLinux project, referencing the exported hardware design (.xsa).
 4. Copies the relevant configuration files from the `src` directory into the created
 PetaLinux project.
 5. Builds the PetaLinux project.
