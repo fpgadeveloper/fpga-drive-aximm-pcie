@@ -47,3 +47,5 @@
 			};
 		};
 	};
+
+#include "bsp.dtsi"
