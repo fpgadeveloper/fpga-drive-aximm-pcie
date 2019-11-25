@@ -7,16 +7,17 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 ## Requirements
 
-This project is designed for Vivado 2019.2. If you are using an older version of Vivado, then you *MUST* use an older version
-of this repository. Refer to the [list of commits](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/commits/master "list of commits")
-to find links to the older versions of this repository.
+This project is designed for version 2019.2 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
+If you are using an older version of the Xilinx tools, then refer to the 
+[release tags](https://github.com/fpgadeveloper/ethernet96/releases "releases")
+to find the version of this repository that matches your version of the tools.
 
 In order to test this design on hardware, you will need the following:
 
 * Vivado 2019.2
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
-* One of the supported carriers listed above
+* One of the supported carriers listed below
 
 ## Supported carrier boards
 
