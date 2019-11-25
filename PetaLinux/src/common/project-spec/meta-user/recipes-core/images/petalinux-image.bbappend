@@ -2,7 +2,6 @@
 #      cascaded representation with line breaks are not valid in this file.
 IMAGE_INSTALL_append = " peekpoke"
 IMAGE_INSTALL_append = " gpio-demo"
-IMAGE_INSTALL_append = " bootscript"
 
 IMAGE_INSTALL_append = " e2fsprogs"
 IMAGE_INSTALL_append = " e2fsprogs-mke2fs"

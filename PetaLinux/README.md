@@ -59,13 +59,14 @@ use the following commands in a Linux command terminal:
 1. Change current directory to the PetaLinux project directory:
 `cd <petalinux-project-dir>`
 2. Download bitstream to the FPGA:
-`petalinux-boot --jtag --fpga`
-Note that you don't have to specify the bitstream because this command will use the one that it finds
-in the `./images/linux` directory.
+`petalinux-boot --jtag --fpga --bitstream ./images/linux/system.bit`
+If you don't use the --bitstream option to specify the bitstream, then PetaLinux will download the
+./images/linux/download.bit bitstream containing the FSBL. We don't want to run the FSBL when
+booting via JTAG.
 3. Download the PetaLinux kernel to the FPGA:
 `petalinux-boot --jtag --kernel`
 
-#### Via SD card (Zynq)
+#### Via SD card (Zynq and ZynqMP)
 
 To launch the PetaLinux project on hardware via SD card, copy the following files to the root of the
 SD card:
@@ -74,29 +75,6 @@ SD card:
 * `/<petalinux-project>/images/linux/image.ub`
 
 Then connect and power your hardware.
-
-### Device Tree Issue using PetaLinux 2018.2
-
-In PetaLinux 2018.2, the auto-generation of the device tree for the PCIe core (AXI PCIe Gen3 Subsystem IP
-or DMA/Bridge Subsystem for PCI Express) does not result in a working device tree. This repo contains fixes
-for this issue that essentially replace the erroneous device tree or part of it.
-
-The fix can be found in the following directories and it gets automatically applied by the build script:
-
-* `PetaLinux/src/axi_pcie3/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
-* `PetaLinux/src/axi_pcie3_2x/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
-* `PetaLinux/src/xdma/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
-* `PetaLinux/src/xdma_2x/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
-
-### ZCU106 MMC High Speed mode broken
-
-The ZCU106 design requires a fix to successfully boot from SD card:
-
-https://forums.xilinx.com/t5/Embedded-Linux/ZYNQ-Ultrascale-running-Petalinux-2017-1-SD-card-problem/td-p/806787
-
-The fix can be found in the following file and is applied automatically by the build script:
-
-`PetaLinux/src/zcu106/project-spec/meta-user/recipes-bsp/device-tree/files/broken-mmc-highspeed.dtsi`
 
 ### Kernel Start Address for AXI PCIe Gen3 Subsystem
 
