@@ -9,7 +9,7 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 This project is designed for version 2019.2 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
 If you are using an older version of the Xilinx tools, then refer to the 
-[release tags](https://github.com/fpgadeveloper/ethernet96/releases "releases")
+[release tags](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/releases "releases")
 to find the version of this repository that matches your version of the tools.
 
 In order to test this design on hardware, you will need the following:
