@@ -36,11 +36,10 @@ to the Unix format.
 The PetaLinux directory contains a `build-petalinux` shell script which can be run in Linux to automatically
 generate a PetaLinux project for each of the generated/exported Vivado projects in the Vivado directory.
 
-When executed, the build script searches the Vivado directory for all projects containing `*.sdk` sub-directories.
-This locates all projects that have been exported to SDK. Then for every exported project, the script
-does the following:
+When executed, the build script searches the Vivado directory for all projects containing a `.xsa` exported
+hardware design file. Then for every exported project, the script does the following:
 
-1. Verifies that the `.xsa` and the `.bit` files exist.
+1. Verifies that the `.bit` file exists.
 2. Determines the CPU type: Microblaze, Zynq or ZynqMP. It currently does this
 by looking at the first 3 letters of the project name.
 3. Creates a PetaLinux project, referencing the exported hardware design (.xsa).
