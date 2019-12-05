@@ -14,7 +14,12 @@ SDK workspace using the provided `build-sdk.tcl` script.
 
 The SDK directory contains a `build-sdk.tcl` script which can be run to automatically
 generate the SDK workspace. Windows users can run the `build-sdk.bat` file which
-launches the Tcl script.
+launches the Tcl script. Linux users must use the following commands to run the build
+script:
+```
+cd <path-to-repo>/SDK
+/<path-to-xilinx-tools>/SDK/2019.1/bin/xsdk -batch -source build-sdk.tcl
+```
 
 The build script does four things:
 
@@ -42,6 +47,18 @@ once, each time you power up your hardware platform.
 and click Run as many times as you like, without going through
 the other steps.
 
+### Linker script modifications for Zynq designs
+
+For the Zynq designs, the SDK's linker script generator automatically assigns all sections
+to the BAR0 memory space, instead of assigning them to the DDR memory space. This causes 
+failure of the application to run, when booted from SD card or JTAG. To overcome this problem,
+the SDK build script modifies the generated linker script and correctly assigns the sections
+to DDR memory.
+
+If you want to manually create an application in the SDK for one of the Zynq designs,
+you will have to manually modify the automatically generated linker script, and set all sections
+to DDR memory.
+
 ### Driver for AXI Bridge for PCIe Gen3 IP
 
 Some of the Vivado designs in this project use the AXI Memory Mapped to PCIe Gen2 IP
@@ -67,5 +84,5 @@ directory.
 ### UART configurations
 
 * Zynq & ZynqMP designs: 115200 baud
-* Microblaze designs: 9600 baud
+* Microblaze designs: 115200 baud
 

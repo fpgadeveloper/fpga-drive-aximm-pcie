@@ -197,6 +197,47 @@ proc linker_script_to_local_mem {linker_filename} {
   return 0
 }
 
+# Modifies the linker script such that all sections are relocated to DDR mem.
+# This is needed for the Zynq designs because the Linker script generator tries
+# to assign all sections to BAR0 instead of the DDR, resulting in failure of
+# the application to run.
+proc linker_script_to_ddr_mem {linker_filename} {
+  set fd [open "$linker_filename" "r"]
+  set file_data [read $fd]
+  close $fd
+  
+  set ddr_mem ""
+  
+  # Find the DDR memory name
+  set data [split $file_data "\n"]
+  foreach line $data {
+    if {[str_contains $line "ps7_ddr"]} {
+      set words [regexp -all -inline {\S+} $line]
+      set ddr_mem [lindex $words 0]
+      break
+    }
+  }
+  
+  # Write to new linker script and assign all sections to DDR mem
+  set new_filename "$linker_filename.txt"
+  set fd [open "$new_filename" "w"]
+  foreach line $data {
+    if {[str_contains $line ">"]} {
+      puts $fd "\} > $ddr_mem"
+    } else {
+      puts $fd $line
+    }
+  }
+  close $fd
+  
+  # Delete the old linker script
+  file delete $linker_filename
+  
+  file rename $new_filename $linker_filename
+  
+  return 0
+}
+
 
 # ============================================================
 #                IP NAME       DRIVER NAME  DRIVER VERSION
@@ -397,8 +438,11 @@ proc create_sdk_ws {} {
 	    }
       # For Microblaze designs, modify the linker script to put
       # all sections in local mem
+      # For Zynq designs, modify linker script to put all sections in DDR
       if {[str_contains $proc_instance "microblaze"]} {
         linker_script_to_local_mem ${app_name}/src/lscript.ld
+      } else {
+        linker_script_to_ddr_mem ${app_name}/src/lscript.ld
       }
       # Generate the FSBL for Zynq and Zynq MP designs
       # For Zynq MP designs
