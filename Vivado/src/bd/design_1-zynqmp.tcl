@@ -2,6 +2,34 @@
 # Block design build script for Zynq US+ designs
 ################################################################
 
+# Returns true if str contains substr
+proc str_contains {str substr} {
+  if {[string first $substr $str] == -1} {
+    return 0
+  } else {
+    return 1
+  }
+}
+
+# Board specific PCIe and GT LOCs
+if {[str_contains $design_name "zcu104"]} {
+  set select_quad_0 "GTH_Quad_226"
+  set pcie_blk_locn_0 "X0Y0"
+} elseif {[str_contains $design_name "zcu106_hpc0"]} {
+  set select_quad_0 "GTH_Quad_226"
+  set select_quad_1 "GTH_Quad_227"
+  set pcie_blk_locn_0 "X0Y1"
+  set pcie_blk_locn_1 "X0Y0"
+} elseif {[str_contains $design_name "zcu106_hpc1"]} {
+  set select_quad_0 "GTH_Quad_223"
+  set pcie_blk_locn_0 "X0Y0"
+} elseif {[str_contains $design_name "zcu111"]} {
+  set select_quad_0 "GTY_Quad_129"
+  set select_quad_1 "GTY_Quad_130"
+  set pcie_blk_locn_0 "X0Y0"
+  set pcie_blk_locn_1 "X0Y1"
+}
+
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {
    puts "ERROR: Please open or create a project!"
@@ -134,8 +162,9 @@ CONFIG.pf0_class_code_sub {04} \
 CONFIG.pf0_class_code_interface {00} \
 CONFIG.pf0_class_code {060400} \
 CONFIG.xdma_axilite_slave {true} \
-CONFIG.pcie_blk_locn {X0Y0} \
-CONFIG.select_quad {GTH_Quad_226} \
+CONFIG.pcie_blk_locn $pcie_blk_locn_0 \
+CONFIG.en_gt_selection {true} \
+CONFIG.select_quad $select_quad_0 \
 CONFIG.INS_LOSS_NYQ {5} \
 CONFIG.plltype {QPLL1} \
 CONFIG.ins_loss_profile {Chip-to-Chip} \
@@ -182,9 +211,6 @@ CONFIG.pf3_class_code_base_mqdma {06} \
 CONFIG.pf3_class_code_mqdma {068000}] [get_bd_cells xdma_0]
 
 if {$dual_design} {
-  # Change selection of xdma_0's PCIe block to X0Y1
-  set_property -dict [list CONFIG.pcie_blk_locn {X0Y1}] [get_bd_cells xdma_0]
-  
   # Create xdma_1 and place it at PCIe block X0Y0
   set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
   CONFIG.mode_selection {Advanced} \
@@ -204,8 +230,9 @@ if {$dual_design} {
   CONFIG.pf0_class_code_interface {00} \
   CONFIG.pf0_class_code {060400} \
   CONFIG.xdma_axilite_slave {true} \
-  CONFIG.pcie_blk_locn {X0Y0} \
-  CONFIG.select_quad {GTH_Quad_227} \
+  CONFIG.pcie_blk_locn $pcie_blk_locn_1 \
+  CONFIG.en_gt_selection {true} \
+  CONFIG.select_quad $select_quad_1 \
   CONFIG.INS_LOSS_NYQ {5} \
   CONFIG.plltype {QPLL1} \
   CONFIG.ins_loss_profile {Chip-to-Chip} \
