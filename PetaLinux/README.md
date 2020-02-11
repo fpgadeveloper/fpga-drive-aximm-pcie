@@ -86,3 +86,45 @@ Find the modification here:
 
 `PetaLinux/src/axi_pcie3/project-spec/meta-user/recipes-kernel/linux/linux-xlnx/kernel-options.cfg`
 
+### Known Issues
+
+#### KCU105 Dual design fails to boot when one or both SSDs are not connected
+
+In the case where only one or neither SSD is connected, the PetaLinux boot freezes during the PCIe
+enumeration. For example, if we connect SSD1 but not SSD2, PetaLinux boot stops after the following
+lines:
+
+```
+xilinx-pcie 10000000.axi-pcie: PCIe Link is UP
+xilinx-pcie 10000000.axi-pcie: host bridge /amba_pl/axi-pcie@10000000 ranges:
+xilinx-pcie 10000000.axi-pcie:   MEM 0x60000000..0x6fffffff -> 0x60000000
+xilinx-pcie 10000000.axi-pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff]
+pci 0000:00:00.0: [10ee:8134] type 01 class 0x060400
+pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x000007ff pref]
+pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:01:00.0: [144d:a808] type 00 class 0x010802
+pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
+pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
+pci 0000:00:00.0: BAR 6: assigned [mem 0x60100000-0x601007ff pref]
+pci 0000:01:00.0: BAR 0: assigned [mem 0x60000000-0x60003fff 64bit]
+pci 0000:00:00.0: PCI bridge to [bus 01]
+pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+xilinx-pcie 20000000.axi-pcie: PCIe Link is DOWN
+xilinx-pcie 20000000.axi-pcie: host bridge /amba_pl/axi-pcie@20000000 ranges:
+xilinx-pcie 20000000.axi-pcie:   MEM 0x70000000..0x7fffffff -> 0x70000000
+xilinx-pcie 20000000.axi-pcie: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [bus 00-ff]
+pci_bus 0001:00: root bus resource [mem 0x70000000-0x7fffffff]
+pci 0001:00:00.0: [10ee:8134] type 01 class 0x060400
+```
+
+We suspect that this is caused by a mishandling of the "PCIe Link is DOWN" case by the AXI PCIe
+driver. The correct behavior should be that the enumeration is skipped and boot continues when the
+down link is detected.
+
+It is worth noting that our ZCU102 Dual design does NOT fail to boot under these conditions,
+suggesting that the XDMA driver IS designed to properly handle the "PCIe Link is DOWN" case.
+We are still looking for a solution to this issue.
