@@ -15,6 +15,8 @@ to find the version of this repository that matches your version of the tools.
 In order to test this design on hardware, you will need the following:
 
 * Vivado 2019.2
+* Vitis 2019.2
+* PetaLinux SDK 2019.2
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed below
@@ -98,16 +100,15 @@ To use the sources in this repository, please follow these steps:
 5. Click Generate bitstream.
 6. When the bitstream is successfully generated, select `File->Export->Export Hardware`.
    In the window that opens, tick "Include bitstream" and "Local to project".
-7. Return to Windows Explorer and browse to the SDK directory in the repo.
-8. Double click the `build-sdk.bat` batch file. The batch file will run the
-   `build-sdk.tcl` script and build the SDK workspace containing the hardware
+7. Return to Windows Explorer and browse to the Vitis directory in the repo.
+8. Double click the `build-vitis.bat` batch file. The batch file will run the
+   `build-vitis.tcl` script and build the Vitis workspace containing the hardware
    design and the software application.
-9. Run Xilinx SDK (DO NOT use the Launch SDK option from Vivado) and select the workspace to be the SDK directory of the repo.
-10. Select `Project->Build automatically`.
-11. Connect and power up the hardware.
-12. Open a Putty terminal to view the UART output.
-13. In the SDK, select `Xilinx Tools->Program FPGA`.
-14. Right-click on the application and select `Run As->Launch on Hardware (System Debugger)`
+9. Run Xilinx Vitis and select the workspace to be the Vitis directory of the repo.
+10. Connect and power up the hardware.
+11. Open a Putty terminal to view the UART output.
+12. In Vitis, select `Xilinx Tools->Program FPGA`.
+13. Right-click on the application and select `Run As->Launch on Hardware (Single Application Debug)`
 
 ### Linux users
 
@@ -122,18 +123,17 @@ To use the sources in this repository, please follow these steps:
 4. Vivado will run the script and generate the project. When it's finished, click Generate bitstream.
 5. When the bitstream is successfully generated, select `File->Export->Export Hardware`.
    In the window that opens, tick "Include bitstream" and "Local to project".
-6. To build the SDK workspace, open a Linux command terminal and `cd` to the SDK directory in the repo.
-7. The SDK directory contains the `build-sdk.tcl` script that will build the SDK workspace containing the hardware design and
+6. To build the Vitis workspace, open a Linux command terminal and `cd` to the Vitis directory in the repo.
+7. The Vitis directory contains the `build-vitis.tcl` script that will build the Vitis workspace containing the hardware design and
    the software application. Run the build script by typing the following command: 
-   `<path-of-xilinx-sdk>/bin/xsdk -batch -source build-sdk.tcl`. Note that you must replace `<path-of-xilinx-sdk>` with the 
-   actual path to your Xilinx SDK installation.
-8. Run Xilinx SDK (DO NOT use the Launch SDK option from Vivado) and select the workspace to be the SDK subdirectory of the 
+   `<path-of-xilinx-vitis>/bin/xsct build-vitis.tcl`. Note that you must replace `<path-of-xilinx-vitis>` with the 
+   actual path to your Xilinx Vitis installation.
+8. Run Xilinx Vitis and select the workspace to be the Vitis subdirectory of the 
    repo.
-10. Select `Project->Build automatically`.
-11. Connect and power up the hardware.
-12. Open a Putty terminal to view the UART output.
-13. In the SDK, select `Xilinx Tools->Program FPGA`.
-14. Right-click on the application and select `Run As->Launch on Hardware (System Debugger)`
+9. Connect and power up the hardware.
+10. Open a Putty terminal to view the UART output.
+11. In Vitis, select `Xilinx Tools->Program FPGA`.
+12. Right-click on the application and select `Run As->Launch on Hardware (Single Application Debug)`
 
 ## Board Specific Notes
 
@@ -146,7 +146,7 @@ KCU105's Ethernet PHY has an SGMII interface which is not supported by the free 
 
 These designs are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v3_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v3.0")
 . To generate an example stand-alone application for these boards,
-the SDK build script makes a local copy of the driver for the [AXI Memory Mapped to PCIe Gen2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html "AXI Memory Mapped to PCIe Gen2 IP")
+the Vitis build script makes a local copy of the driver for the [AXI Memory Mapped to PCIe Gen2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html "AXI Memory Mapped to PCIe Gen2 IP")
 with a few small modifications to make it work with the Gen3 core. If you use or modify these applications, be aware
 that they refer to the locally copied and modified driver located in `EmbeddedSw/XilinxProcessorIPLib/drivers`, and that
 that driver is actually designed for the Gen2 core. In other words, you can expect the driver to work for the example
@@ -193,17 +193,9 @@ The ZCU106 has two HPC FMC connectors, HPC0 and HPC1. The HPC0 connector has eno
 2x SSDs, each with an independent 4-lane PCIe interface. The HPC1 connector has only 1x connected gigabit transceiver, so it can only
 support 1x SSD (SSD1) with a 1-lane PCIe interface. This repo contains designs for both of these connectors.
 
-The designs for the ZCU106 are based on the DMA/Bridge Subsystem for PCIe IP, for which there is no standalone driver at the time
-of writing. For this reason, this repo does not contain standalone applications for these designs. The designs can however be used
-with PetaLinux, and the scripts contained in this repo will generate PetaLinux projects for them.
-
 ### ZCU111
 
 The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an independent 4-lane PCIe interface.
-
-The designs for the ZCU111 are based on the DMA/Bridge Subsystem for PCIe IP, for which there is no standalone driver at the time
-of writing. For this reason, this repo does not contain standalone applications for these designs. The designs can however be used
-with PetaLinux, and the scripts contained in this repo will generate PetaLinux projects for them.
 
 ## Troubleshooting
 
