@@ -91,5 +91,5 @@ directory.
 ### UART configurations
 
 * Zynq & ZynqMP designs: 115200 baud
-* Microblaze designs: 115200 baud
+* Microblaze designs: 9600 baud
 
