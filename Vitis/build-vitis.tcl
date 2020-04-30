@@ -394,7 +394,7 @@ proc create_vitis_ws {} {
       # Copy the already generated BOOT.bin file
       set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.bin"
       if {[file exists $bootbin_file] == 1} {
-        file copy $bootbin_file "./boot/${board_name}"
+        file copy -force $bootbin_file "./boot/${board_name}"
       } else {
         puts "No BOOT.bin file for ${app_name}."
       }

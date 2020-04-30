@@ -135,6 +135,24 @@ To use the sources in this repository, please follow these steps:
 11. In Vitis, select `Xilinx Tools->Program FPGA`.
 12. Right-click on the application and select `Run As->Launch on Hardware (Single Application Debug)`
 
+## Stand-alone software application
+
+A stand-alone software application can be built for this project using the build script contained in the Vitis subdirectory
+of this repo. The build script creates a Vitis workspace containing the hardware platform (exported from Vivado) and a stand-alone
+application. The application originates from an example provided by Xilinx which is located in the Vitis installation files.
+The program demonstrates basic usage of the stand-alone driver including how to check link-up, link speed, the number of 
+lanes used, as well as how to perform PCIe enumeration. The original example applications can be found here:
+
+* For the AXI PCIe designs:
+`C:\Xilinx\Vitis\2019.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1\examples\xaxipcie_rc_enumerate_example.c`
+* For the XDMA designs:
+`C:\Xilinx\Vitis\2019.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_0\examples\xdmapcie_rc_enumerate_example.c`
+
+## PetaLinux
+
+This repo contains a script and configuration files for a PetaLinux project for each one of the hardware platforms. To build
+the PetaLinux project, please refer to the "README.md" file in the PetaLinux subdirectory of this repo.
+
 ## Board Specific Notes
 
 ### KCU105
