@@ -319,26 +319,25 @@ proc create_vitis_ws {} {
       -proc $proc_instance \
       -runtime {cpp} \
       -arch $arch_bit \
-      -support-app {hello_world}
+      -support-app {empty_application}
     platform write
     platform active ${hw_project_name}
     # Enable the FSBL for Zynq
     if {[str_contains $proc_instance "ps7_cortex"]} {
       domain active {zynq_fsbl}
-    # Enable the FSBL for ZynqMP
+    # Enable the FSBL and PMU FW for ZynqMP
     } elseif {[str_contains $proc_instance "psu_cortex"]} {
       domain active {zynqmp_fsbl}
+      domain active {zynqmp_pmufw}
     }
     domain active {standalone_domain}
     platform generate
-    # Generate the example application
+    # Generate the empty application
     puts "Creating application $app_name."
     app create -name $app_name \
-      -template {Hello World} \
+      -template {Empty Application} \
       -platform ${hw_project_name} \
       -domain {standalone_domain}
-    # Delete the hello.c application
-    file delete $app_name/src/helloworld.c
     # If the hardware contains the AXI MM PCIe block
     if {[design_contains_ip ${xsa_file} "axi_pcie"] == 1} {
       # Copy the Gen2 application from common/src

@@ -28,7 +28,7 @@ cd <path-to-repo>/Vitis
 /<path-to-xilinx-tools>/Vitis/2019.2/bin/xsct build-vitis.tcl
 ```
 
-The build script does four things:
+The build script does three things:
 
 1. Makes a copy of the `axipcie` driver from 
 `{Vitis Install Dir}\data\embeddedsw\XilinxProcessorIPLib\drivers\` to the repo's local 
@@ -36,11 +36,10 @@ directory `\EmbeddedSw\XilinxProcessorIPLib\drivers\`. Files that are already th
 as part of the repo are not overwritten, which allows us to keep a modified version
 of the driver. This modified version of the driver is used by the projects using the
 Gen3 core (AXI Bridge for PCIe Gen3 IP). See below for more information.
-2. Generates a Hello World example application for each exported Vivado design
+2. Generates an empty application for each exported Vivado design
 that is found in the ../Vivado directory. Most users will only have one exported
 Vivado design.
-3. Deletes the `helloworld.c` source file from the application.
-4. Copies the appropriate enumeration application source file from the
+3. Copies the appropriate enumeration application source file from the
 `\Vitis\common\src\` directory of this repo into the application source directory.
 
 ### Run the application
