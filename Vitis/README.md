@@ -47,11 +47,26 @@ Vivado design.
 1. Open Xilinx Vitis.
 2. Power up your hardware platform and ensure that the JTAG is
 connected properly.
-3. Select Xilinx Tools->Program FPGA. You only have to do this
-once, each time you power up your hardware platform.
-4. Click Run from the toolbar to run your application. You can modify the code
-and click Run as many times as you like, without going through
-the other steps.
+3. In the Vitis Explorer panel, double-click on the System project that you want to run -
+this will reveal the applications contained in the project. The System project will have 
+the postfix "_system".
+4. Now click on the application that you want to run. It should have the postfix "_ssd_test".
+5. Select the option "Run Configurations" from the drop-down menu contained under the Run
+button on the toolbar (play symbol).
+6. Double-click on "Single Application Debug" to create a run configuration for this 
+application. Then click "Run".
+
+The run configuration will first program the FPGA with the bitstream, then load and run the 
+application. You can view the UART output of the application in a console window.
+
+### UART settings
+
+To receive the UART output of this standalone application, you will need to connect the
+USB-UART of the development board to your PC and run a console program such as 
+[Putty](https://www.putty.org "Putty"). The follow UART settings must be used:
+
+* Microblaze designs: 9600 baud
+* Zynq and ZynqMP designs: 115200 baud
 
 ### Linker script modifications for Zynq designs
 
@@ -86,9 +101,4 @@ For Vitis to be aware of our locally copied driver, we set the Vitis's repositor
 of the driver. The `build-sdk.tcl` script handles the copying and modification of the 
 `axipcie` driver, which is stored locally in the `EmbeddedSw/XilinxProcessorIPLib/drivers` 
 directory.
-
-### UART configurations
-
-* Zynq & ZynqMP designs: 115200 baud
-* Microblaze designs: 9600 baud
 
