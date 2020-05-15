@@ -162,6 +162,7 @@ connect_bd_net -net mig_0_init_calib_complete [get_bd_ports init_calib_complete]
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie_0_CTL0}]
+set_property range 128M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_emc_0_Mem0}]
 
 # Add IIC
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_iic iic_main
