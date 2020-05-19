@@ -137,6 +137,13 @@ do
       echo "> Packaging PetaLinux project"
       petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 32 --flash-intf SPIx4
     fi
+  elif [[ $board == kc705 ]]; then
+    if [ -f "./images/linux/boot.mcs" ]; then
+      echo "> PetaLinux project already packaged"
+    else
+      echo "> Packaging PetaLinux project"
+      petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 128 --flash-intf BPIx16
+    fi
   elif [[ $cpu_type == microblaze ]]; then
     # Do nothing for now
     :
