@@ -93,7 +93,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 #apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "Auto" Clk_xbar "Auto" Clk_master "Auto" Clk_slave "Auto" }  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
 #apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/mig_0/ui_clk (100 MHz)" }  [get_bd_pins axi_quad_spi_0/ext_spi_clk]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {linear_flash ( Linear flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_emc_0/EMC_INTF]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Cached)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_xbar {/mig_0/ui_addn_clk_0 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
 
 # Add slices to the interconnects that connect to PCIe to help pass timing
 set_property -dict [list CONFIG.S02_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
@@ -162,6 +162,7 @@ connect_bd_net -net mig_0_init_calib_complete [get_bd_ports init_calib_complete]
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie_0_CTL0}]
+set_property range 128M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_emc_0_Mem0}]
 
 # Add IIC
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_iic iic_main
