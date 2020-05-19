@@ -78,3 +78,20 @@ set_property IOSTANDARD LVCMOS15 [get_ports init_calib_complete]
 
 set_property DCI_CASCADE {32 34} [get_iobanks 33]
 
+# Configuration via Quad SPI settings for KC705
+#set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+#set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
+#set_property CONFIG_VOLTAGE 2.8 [current_design]
+#set_property CFGBVS GND [current_design]
+#set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR YES [current_design]
+#set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES [current_design]
+
+# Configuration via BPI flash for KC705
+set_property BITSTREAM.CONFIG.BPI_SYNC_MODE DISABLE [current_design]
+set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN DISABLE [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup [current_design]
+set_property CONFIG_MODE BPI16 [current_design]
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 2.5 [current_design]
+

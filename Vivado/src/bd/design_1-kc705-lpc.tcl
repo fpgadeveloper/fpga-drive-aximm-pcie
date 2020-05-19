@@ -59,7 +59,28 @@ set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} 
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550 axi_uart16550_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie axi_pcie_0
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0
+#create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_emc axi_emc_0
+
+# Configure BPI flash
+set_property -dict [list CONFIG.USE_BOARD_FLOW {true} \
+CONFIG.EMC_BOARD_INTERFACE {linear_flash} \
+CONFIG.C_MEM0_TYPE {2} \
+CONFIG.C_S_AXI_MEM_ID_WIDTH.VALUE_SRC {USER} \
+CONFIG.C_S_AXI_MEM_ID_WIDTH {0} \
+CONFIG.C_WR_REC_TIME_MEM_0 {0} \
+CONFIG.C_TLZWE_PS_MEM_0 {0} \
+CONFIG.C_TWPH_PS_MEM_0 {20000} \
+CONFIG.C_TWP_PS_MEM_0 {50000} \
+CONFIG.C_TWC_PS_MEM_0 {19000} \
+CONFIG.C_THZOE_PS_MEM_0 {15000} \
+CONFIG.C_THZCE_PS_MEM_0 {20000} \
+CONFIG.C_TPACC_PS_FLASH_0 {25000} \
+CONFIG.C_TAVDV_PS_MEM_0 {100000} \
+CONFIG.C_TCEDV_PS_MEM_0 {100000}] [get_bd_cells axi_emc_0]
+connect_bd_net [get_bd_pins mig_0/ui_addn_clk_0] [get_bd_pins axi_emc_0/s_axi_aclk]
+connect_bd_net [get_bd_pins mig_0/ui_addn_clk_0] [get_bd_pins axi_emc_0/rdclk]
+connect_bd_net [get_bd_pins rst_mig_0_100M/peripheral_aresetn] [get_bd_pins axi_emc_0/s_axi_aresetn]
 
 # Use automation feature
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "Auto" }  [get_bd_intf_pins axi_uart16550_0/S_AXI]
@@ -68,9 +89,11 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/mig_0/S_AXI" Clk "/axi_pcie_0/axi_aclk_out (62 MHz)" }  [get_bd_intf_pins axi_pcie_0/M_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "/axi_pcie_0/axi_aclk_out (62 MHz)" }  [get_bd_intf_pins axi_pcie_0/S_AXI]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" Clk "/axi_pcie_0/axi_ctl_aclk_out (62 MHz)" }  [get_bd_intf_pins axi_pcie_0/S_AXI_CTL]
-apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "spi_flash ( SPI flash ) " }  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "Auto" Clk_xbar "Auto" Clk_master "Auto" Clk_slave "Auto" }  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
-apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/mig_0/ui_clk (100 MHz)" }  [get_bd_pins axi_quad_spi_0/ext_spi_clk]
+#apply_bd_automation -rule xilinx.com:bd_rule:board -config {Board_Interface "spi_flash ( SPI flash ) " }  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/microblaze_0 (Periph)" intc_ip "Auto" Clk_xbar "Auto" Clk_master "Auto" Clk_slave "Auto" }  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
+#apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/mig_0/ui_clk (100 MHz)" }  [get_bd_pins axi_quad_spi_0/ext_spi_clk]
+apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {linear_flash ( Linear flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_emc_0/EMC_INTF]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_xbar {/mig_0/ui_addn_clk_0 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
 
 # Add slices to the interconnects that connect to PCIe to help pass timing
 set_property -dict [list CONFIG.S02_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
@@ -111,11 +134,11 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 re
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
 
 # Configure Microblaze for 4 interrupts and connect them
-set_property -dict [list CONFIG.NUM_PORTS {6}] [get_bd_cells microblaze_0_xlconcat]
+set_property -dict [list CONFIG.NUM_PORTS {5}] [get_bd_cells microblaze_0_xlconcat]
 connect_bd_net [get_bd_pins axi_uart16550_0/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In0]
 connect_bd_net [get_bd_pins axi_timer_0/interrupt] [get_bd_pins microblaze_0_xlconcat/In1]
 connect_bd_net [get_bd_pins axi_pcie_0/interrupt_out] [get_bd_pins microblaze_0_xlconcat/In2]
-connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In3]
+#connect_bd_net [get_bd_pins axi_quad_spi_0/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In3]
 
 # Complete wiring of the proc system reset for axi_pcie_0/axi_aclk_out
 connect_bd_net [get_bd_pins axi_pcie_0/mmcm_lock] [get_bd_pins rst_axi_pcie_0_62M/dcm_locked]
@@ -139,19 +162,20 @@ connect_bd_net -net mig_0_init_calib_complete [get_bd_ports init_calib_complete]
 
 # Microblaze address segments
 set_property range 64M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_pcie_0_CTL0}]
+set_property range 128M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_emc_0_Mem0}]
 
 # Add IIC
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_iic iic_main
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {iic_main ( IIC ) } Manual_Source {Auto}}  [get_bd_intf_pins iic_main/IIC]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {Auto} Clk_xbar {/mig_0/ui_addn_clk_0 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/iic_main/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins iic_main/S_AXI]
-connect_bd_net [get_bd_pins iic_main/iic2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In4]
+connect_bd_net [get_bd_pins iic_main/iic2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In3]
 
 # Add EthernetLite (on-board port)
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernetlite axi_ethernetlite
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mdio_mdc ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MDIO]
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mii ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MII]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {Auto} Clk_xbar {/mig_0/ui_addn_clk_0 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/axi_ethernetlite/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_ethernetlite/S_AXI]
-connect_bd_net [get_bd_pins axi_ethernetlite/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In5]
+connect_bd_net [get_bd_pins axi_ethernetlite/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In4]
 
 # Reset GPIO
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio reset_gpio
