@@ -1,4 +1,4 @@
-SET vivado=C:\Xilinx\Vivado\2019.2\bin\vivado.bat
+SET vivado=C:\Xilinx\Vivado\2020.2\bin\vivado.bat
 @ECHO OFF
 if exist %vivado% (
   %vivado% -mode batch -source build-kc705-hpc.tcl

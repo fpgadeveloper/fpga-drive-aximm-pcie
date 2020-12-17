@@ -7,16 +7,16 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 ## Requirements
 
-This project is designed for version 2019.2 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
+This project is designed for version 2020.2 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
 If you are using an older version of the Xilinx tools, then refer to the 
 [release tags](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/releases "releases")
 to find the version of this repository that matches your version of the tools.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2019.2
-* Vitis 2019.2
-* PetaLinux SDK 2019.2
+* Vivado 2020.2
+* Vitis 2020.2
+* PetaLinux SDK 2020.2
 * [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed below
@@ -144,9 +144,9 @@ The program demonstrates basic usage of the stand-alone driver including how to 
 lanes used, as well as how to perform PCIe enumeration. The original example applications can be found here:
 
 * For the AXI PCIe designs:
-`C:\Xilinx\Vitis\2019.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1\examples\xaxipcie_rc_enumerate_example.c`
+`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1\examples\xaxipcie_rc_enumerate_example.c`
 * For the XDMA designs:
-`C:\Xilinx\Vitis\2019.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_0\examples\xdmapcie_rc_enumerate_example.c`
+`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_0\examples\xdmapcie_rc_enumerate_example.c`
 
 ## PetaLinux
 
@@ -185,7 +185,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
 
-Copy those folders and their contents into the `C:\Xilinx\Vivado\2019.2\data\boards\board_files` folder (this may
+Copy those folders and their contents into the `C:\Xilinx\Vivado\2020.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
 
 ### PicoZed FMC Carrier Card V2

@@ -4,7 +4,7 @@
 #*****************************************************************************************
 
 # Check the version of Vivado used
-set version_required "2019.2"
+set version_required "2020.2"
 set ver [lindex [split $::env(XILINX_VIVADO) /] end]
 if {![string equal $ver $version_required]} {
   puts "###############################"
@@ -33,7 +33,7 @@ set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [get_projects $design_name]
-set_property -name "board_part" -value "xilinx.com:zcu111:part0:1.2" -objects $obj
+set_property -name "board_part" -value "xilinx.com:zcu111:part0:1.4" -objects $obj
 set_property -name "default_lib" -value "xil_defaultlib" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj
 set_property -name "ip_output_repo" -value "$proj_dir/$design_name.cache/ip" -objects $obj
@@ -84,10 +84,10 @@ set_property "top" "${design_name}_wrapper" $obj
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
-    create_run -name synth_1 -part xczu28dr-ffvg1517-2-e -flow {Vivado Synthesis 2019} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
+    create_run -name synth_1 -part xczu28dr-ffvg1517-2-e -flow {Vivado Synthesis 2020} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_1]
-  set_property flow "Vivado Synthesis 2019" [get_runs synth_1]
+  set_property flow "Vivado Synthesis 2020" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
 
@@ -96,10 +96,10 @@ current_run -synthesis [get_runs synth_1]
 
 # Create 'impl_1' run (if not found)
 if {[string equal [get_runs -quiet impl_1] ""]} {
-    create_run -name impl_1 -part xczu28dr-ffvg1517-2-e -flow {Vivado Implementation 2019} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
+    create_run -name impl_1 -part xczu28dr-ffvg1517-2-e -flow {Vivado Implementation 2020} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_1]
-  set_property flow "Vivado Implementation 2019" [get_runs impl_1]
+  set_property flow "Vivado Implementation 2020" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
