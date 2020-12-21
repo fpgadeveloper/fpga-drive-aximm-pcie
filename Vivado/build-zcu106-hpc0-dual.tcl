@@ -32,7 +32,7 @@ create_project $design_name $origin_dir/$design_name -part xc7z045ffg900-2
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
-set obj [get_projects $design_name]
+set obj [current_project]
 set_property -name "board_part" -value "xilinx.com:zcu106:part0:2.6" -objects $obj
 set_property -name "default_lib" -value "xil_defaultlib" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj

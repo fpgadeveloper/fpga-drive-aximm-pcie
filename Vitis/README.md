@@ -1,13 +1,6 @@
 Vitis Project files
 ===================
 
-### Important patch for Vitis 2019.2
-
-To use the build script in this directory, you must first apply the following patch
-to your Vitis installation:
-
-https://www.xilinx.com/support/answers/73252.html
-
 ### How to build the Vitis workspace
 
 In order to make use of these source files, you must first generate

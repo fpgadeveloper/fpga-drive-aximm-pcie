@@ -1,0 +1,6 @@
+Vivado/.Xil/
+Vivado/*.log
+Vivado/*.jou
+Vivado/*_pcie/
+Vivado/*_dual/
+Vivado/*_hpc*/
