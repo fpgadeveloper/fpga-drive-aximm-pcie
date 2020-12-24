@@ -1,3 +1,21 @@
+#GPIO LEDs
+set_property PACKAGE_PIN AP8 [get_ports init_calib_complete]
+set_property IOSTANDARD LVCMOS18 [get_ports init_calib_complete]
+set_property PACKAGE_PIN H23 [get_ports user_link_up_0]
+set_property IOSTANDARD LVCMOS18 [get_ports user_link_up_0]
+set_property PACKAGE_PIN P20 [get_ports user_link_up_1]
+set_property IOSTANDARD LVCMOS18 [get_ports user_link_up_1]
+#set_property PACKAGE_PIN P21 [get_ports gpio_led_3_ls]
+#set_property IOSTANDARD LVCMOS18 [get_ports gpio_led_3_ls]
+#set_property PACKAGE_PIN N22 [get_ports gpio_led_4_ls]
+#set_property IOSTANDARD LVCMOS18 [get_ports gpio_led_4_ls]
+#set_property PACKAGE_PIN M22 [get_ports gpio_led_5_ls]
+#set_property IOSTANDARD LVCMOS18 [get_ports gpio_led_5_ls]
+#set_property PACKAGE_PIN R23 [get_ports gpio_led_6_ls]
+#set_property IOSTANDARD LVCMOS18 [get_ports gpio_led_6_ls]
+#set_property PACKAGE_PIN P23 [get_ports gpio_led_7_ls]
+#set_property IOSTANDARD LVCMOS18 [get_ports gpio_led_7_ls]
+
 # PCI Express reset (perst_0) - IOSTANDARD determined by VADJ which is fixed to 1.8V on KCU105
 set_property PACKAGE_PIN H11 [get_ports {perst_0[0]}]
 set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]

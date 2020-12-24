@@ -112,7 +112,7 @@ current_run -implementation [get_runs impl_1]
 puts "INFO: Project created:${design_name}"
 
 # Create block design
-source $origin_dir/src/bd/design_1-kcu105-hpc.tcl
+source $origin_dir/src/bd/design_1-mb.tcl
 
 # Generate the wrapper
 make_wrapper -files [get_files *${design_name}.bd] -top

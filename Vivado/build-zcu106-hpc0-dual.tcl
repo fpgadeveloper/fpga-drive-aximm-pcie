@@ -26,7 +26,7 @@ set origin_dir "."
 set orig_proj_dir "[file normalize "$origin_dir/$design_name"]"
 
 # Create project
-create_project $design_name $origin_dir/$design_name -part xc7z045ffg900-2
+create_project $design_name $origin_dir/$design_name -part xczu7ev-ffvc1156-2-e
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
