@@ -14,7 +14,7 @@ set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]
 # IOSTANDARD for GT reference clock does not need to be specified
 set_property PACKAGE_PIN K6 [get_ports {ref_clk_0_clk_p[0]}]
 set_property PACKAGE_PIN K5 [get_ports {ref_clk_0_clk_n[0]}]
-create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
+create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
 
 # MGT locations
 set_property LOC GTHE3_CHANNEL_X0Y16 [get_cells {*_i/axi_pcie_0/inst/pcie3_ip_i/inst/*_gt_top_i/gt_wizard.gtwizard_top_i/*_axi_pcie_0_0_pcie3_ip_gt_i/inst/gen_gtwizard_gthe3_top.*_axi_pcie_0_0_pcie3_ip_gt_gtwizard_gthe3_inst/gen_gtwizard_gthe3.gen_channel_container[4].gen_enabled_channel.gthe3_channel_wrapper_inst/channel_inst/gthe3_channel_gen.gen_gthe3_channel_inst[0].GTHE3_CHANNEL_PRIM_INST}]

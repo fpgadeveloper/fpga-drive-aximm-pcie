@@ -37,8 +37,10 @@ set oldCurInst [current_bd_instance .]
 # Set parent object as current
 current_bd_instance $parentObj
 
-# Board specific PCIe and GT LOCs
+# Board specific parameters, PCIe and GT LOCs
+set perst_is_output 1
 if {$design_name == "kc705_pcie"} {
+  set perst_is_output 0
   set ddr_name "ddr3_sdram"
   set board_name "KC705_REVC"
   set pcie_ip "axi_pcie"
@@ -65,6 +67,16 @@ if {$design_name == "kc705_pcie"} {
   set haddr {0x13FFFFFF}
   set axi2pci {0x0000000070000000}
   set barsize {256M}
+} elseif {[string match "vc707_pcie" $design_name]} {
+  set perst_is_output 0
+  set ddr_name "ddr3_sdram"
+  set board_name "VC707"
+  set pcie_ip "axi_pcie"
+  set nlanes {X4}
+  set baddr {0x10000000}
+  set haddr {0x13FFFFFF}
+  set axi2pci {0x0000000070000000}
+  set barsize {256M}
 } elseif {[string match "vc707*" $design_name]} {
   set ddr_name "ddr3_sdram"
   set board_name "VC707"
@@ -75,6 +87,7 @@ if {$design_name == "kc705_pcie"} {
   set axi2pci {0x0000000070000000}
   set barsize {256M}
 } elseif {$design_name == "vc709_pcie"} {
+  set perst_is_output 0
   set ddr_name "ddr3_sdram_socket_j1"
   set pcie_ip "axi_pcie3"
   set nlanes {X4}
@@ -159,10 +172,18 @@ if {[string match "kcu105*" $design_name]} {
 # Configure Microblaze for Linux
 set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} CONFIG.C_USE_MSR_INSTR {1} CONFIG.C_USE_PCMP_INSTR {1} CONFIG.C_USE_BARREL {1} CONFIG.C_USE_DIV {1} CONFIG.C_USE_HW_MUL {2} CONFIG.C_UNALIGNED_EXCEPTIONS {1} CONFIG.C_ILL_OPCODE_EXCEPTION {1} CONFIG.C_M_AXI_I_BUS_EXCEPTION {1} CONFIG.C_M_AXI_D_BUS_EXCEPTION {1} CONFIG.C_DIV_ZERO_EXCEPTION {1} CONFIG.C_PVR {2} CONFIG.C_OPCODE_0x0_ILLEGAL {1} CONFIG.C_ICACHE_LINE_LEN {8} CONFIG.C_ICACHE_VICTIMS {8} CONFIG.C_ICACHE_STREAMS {1} CONFIG.C_DCACHE_VICTIMS {8} CONFIG.C_USE_MMU {3} CONFIG.C_MMU_ZONES {2}] [get_bd_cells microblaze_0]
 
-# Reset for AXI PCIe blocks (IP reset is active low, but board reset is active high, so we use an inverter)
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic reset_invert
-set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells reset_invert]
-connect_bd_net [get_bd_ports reset] [get_bd_pins reset_invert/Op1]
+# 
+if {$perst_is_output} {
+  # Reset for AXI PCIe blocks (IP reset is active low, but board reset is active high, so we use an inverter)
+  create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic reset_invert
+  set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells reset_invert]
+  connect_bd_net [get_bd_ports reset] [get_bd_pins reset_invert/Op1]
+  set system_rst [get_bd_pins reset_invert/Res]
+} else {
+  # PERST_N is an input on the legacy FPGA Drive product, so we create the input port and use it as the system reset
+  set system_rst [ create_bd_port -dir I -type rst perst_n ]
+  set_property -dict [ list CONFIG.POLARITY {ACTIVE_LOW}  ] $system_rst
+}
 
 # For each SSD (maximum of 2)
 set reset_index 0
@@ -249,18 +270,6 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI_CTL" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_CTL]
     
   } else {
-    ############################################################
-    # Configure AXI Bridge for PCIe Gen3 Subsystem IP
-    ############################################################
-    # Notes:
-    # (1) The high speed PCIe traces on the FPGA Drive FMC are very
-    #    short, so there is very low signal loss between the FPGA
-    #    and the SSD. For this reason, it is best to use the
-    #    "Chip-to-Chip" loss profile in the "GT Settings" (the
-    #    default is "Add-on card"). Also, the "Chip-to-Chip"
-    #    profile is the only one that disables the DFE, a feature
-    #    that is better suited for longer and more lossy traces.
-    
     ################################################################################################
     # Notes on 2020.2 update:
     ################################################################################################
@@ -338,34 +347,61 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/refclk]
   }
 
-  # Create PERST port
-  create_bd_port -dir O -from 0 -to 0 -type rst perst_$i
-
-  # Connect PCIe resets
+  # Connect PCIe core resets
   if {$pcie_ip == "axi_pcie"} {
-    # Core reset
-    connect_bd_net [get_bd_pins reset_invert/Res] [get_bd_pins axi_pcie_$i/axi_aresetn]
+    connect_bd_net $system_rst [get_bd_pins axi_pcie_$i/axi_aresetn]
     # Automation will create proc system reset rst_axi_pcie_0_125M and use the peripheral_aresetn to drive
     # axi_mem_intercon and microblaze_0_axi_periph ARESETN for all 3 AXI PCIe interfaces: M_AXI, S_AXI and S_AXI_CTL
-    # In previous versions, we created another proc system reset for the axi_ctl_aclk_out clock and
-    # used its output to drive the ARESETN of the S_AXI_CTL interface
-    connect_bd_net [get_bd_ports reset] [get_bd_pins rst_axi_pcie_${i}_125M/ext_reset_in]
-    connect_bd_net [get_bd_pins rst_axi_pcie_${i}_125M/peripheral_reset] [get_bd_ports perst_$i]
+    # We created another proc system reset for the axi_ctl_aclk_out clock and use its output to drive the ARESETN 
+    # of the S_AXI_CTL interface
+    connect_bd_net $system_rst [get_bd_pins rst_axi_pcie_${i}_125M/ext_reset_in]
+    connect_bd_net [get_bd_pins axi_pcie_$i/mmcm_lock] [get_bd_pins rst_axi_pcie_${i}_125M/dcm_locked]
+    # Add proc system reset to drive M0X_ARESETN
+    create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_axi_ctl_aclk_$i
+    connect_bd_net [get_bd_pins axi_pcie_$i/axi_ctl_aclk_out] [get_bd_pins rst_pcie_axi_ctl_aclk_$i/slowest_sync_clk]
+    connect_bd_net $system_rst [get_bd_pins rst_pcie_axi_ctl_aclk_$i/ext_reset_in]
+    connect_bd_net [get_bd_pins axi_pcie_$i/mmcm_lock] [get_bd_pins rst_pcie_axi_ctl_aclk_$i/dcm_locked]
+    # Disconnect M0X_ARESETN and connect the correct one
+    disconnect_bd_net /rst_axi_pcie_${i}_125M_peripheral_aresetn [get_bd_pins microblaze_0_axi_periph/M0${reset_index}_ARESETN]
+    connect_bd_net [get_bd_pins rst_pcie_axi_ctl_aclk_$i/peripheral_aresetn] [get_bd_pins microblaze_0_axi_periph/M0${reset_index}_ARESETN]
     
   } else {
-    # Core reset
-    connect_bd_net [get_bd_pins reset_invert/Res] [get_bd_pins axi_pcie_$i/sys_rst_n]
+    connect_bd_net $system_rst [get_bd_pins axi_pcie_$i/sys_rst_n]
     # Automation will connect ARESETN of the S_AXI_CTL interface to the wrong reset signal (axi_aresetn)
     # so we need to disconnect it and connect it to the correct one: axi_ctl_aresetn
     disconnect_bd_net /axi_pcie_${i}_axi_aresetn [get_bd_pins microblaze_0_axi_periph/M0${reset_index}_ARESETN]
     connect_bd_net [get_bd_pins axi_pcie_$i/axi_ctl_aresetn] [get_bd_pins microblaze_0_axi_periph/M0${reset_index}_ARESETN]
-
-    # Add proc system reset to drive PERST
-    create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_axi_aclk_$i
-    connect_bd_net [get_bd_pins axi_pcie_$i/axi_aclk] [get_bd_pins rst_pcie_axi_aclk_$i/slowest_sync_clk]
-    connect_bd_net [get_bd_pins axi_pcie_$i/axi_ctl_aresetn] [get_bd_pins rst_pcie_axi_aclk_$i/ext_reset_in]
-    connect_bd_net [get_bd_pins /rst_pcie_axi_aclk_$i/peripheral_reset] [get_bd_ports perst_$i]
   }
+
+  # Create PERST output port
+  if {$perst_is_output} {
+    create_bd_port -dir O -from 0 -to 0 -type rst perst_$i
+    if {$pcie_ip == "axi_pcie"} {
+      # Use proc system reset we created earlier to drive PERST
+      connect_bd_net [get_bd_pins /rst_pcie_axi_ctl_aclk_$i/peripheral_reset] [get_bd_ports perst_$i]
+      
+    } else {
+      # Add proc system reset to drive PERST
+      create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset rst_pcie_axi_aclk_$i
+      connect_bd_net [get_bd_pins axi_pcie_$i/axi_aclk] [get_bd_pins rst_pcie_axi_aclk_$i/slowest_sync_clk]
+      connect_bd_net [get_bd_pins axi_pcie_$i/axi_ctl_aresetn] [get_bd_pins rst_pcie_axi_aclk_$i/ext_reset_in]
+      connect_bd_net [get_bd_pins /rst_pcie_axi_aclk_$i/peripheral_reset] [get_bd_ports perst_$i]
+    }
+  }
+
+  # Add register slices on the axi_mem_intercon slave interface to PCIe to help timing closure
+  if {$design_name == "kcu105_lpc_pcie"} {
+    set mem_intercon_pcie_slave [expr {2 + $i}]
+    set_property -dict [list CONFIG.S0${mem_intercon_pcie_slave}_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
+  }
+}
+
+# Constant LOW to enable 3.3V power supply of SSD2 and clock source (dual designs only)
+if {[llength $nlanes] > 1} {
+  set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+  set_property -dict [list CONFIG.CONST_VAL {0}] $const_dis_ssd2_pwr
+  create_bd_port -dir O disable_ssd2_pwr
+  connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 }
 
 # Add UART
@@ -388,6 +424,8 @@ append ints "iic_main/iic2intc_irpt "
 # Ethernet (on-board port)
 if {[string match "vc709*" $design_name]} {
   # TODO: Add Ethernet via SFP
+} elseif {[string match "vc707*" $design_name]} {
+  # TODO: Add Ethernet via PCS/PMA or SGMII IP core
 } elseif {[string match "kcu105*" $design_name]} {
   # TODO: Add Ethernet via PCS/PMA or SGMII IP core
 } else {
@@ -438,8 +476,10 @@ if {[string match "kcu105*" $design_name]} {
     CONFIG.C_TCEDV_PS_MEM_0 {100000}] [get_bd_cells axi_emc_0]
   }
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {linear_flash ( Linear flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_emc_0/EMC_INTF]
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Cached)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
-  #set_property range 128M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_emc_0_Mem0}]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
+  if {[string match "kc705*" $design_name]} {
+    set_property range 128M [get_bd_addr_segs {microblaze_0/Data/SEG_axi_emc_0_Mem0}]
+  }
 }
 
 # Configure Microblaze interrupt concat
