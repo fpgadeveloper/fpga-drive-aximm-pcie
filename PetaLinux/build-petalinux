@@ -94,9 +94,7 @@ do
   if [[ -f "configdone.txt" ]]; then
     echo "> PetaLinux config files already transferred"
   else
-    echo "> Transferring PetaLinux config files"
-    cp -R ../src/common/* .
-    cp -R ../src/$cpu_type/* .
+    echo "> Transferring PetaLinux BSPs and config files"
     if [ -d "../src/$pcie_ip" ]; then
       cp -R ../src/$pcie_ip/* .
     fi

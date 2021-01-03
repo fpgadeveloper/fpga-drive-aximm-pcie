@@ -1,0 +1,14 @@
+CONFIG_canutils=n
+CONFIG_packagegroup-core-ssh-dropbear=n
+CONFIG_e2fsprogs=y
+CONFIG_e2fsprogs-mke2fs=y
+CONFIG_e2fsprogs-badblocks=y
+CONFIG_mtd-utils=y
+CONFIG_util-linux=y
+CONFIG_util-linux-mount=y
+CONFIG_util-linux-mkfs=y
+CONFIG_util-linux-blkid=y
+CONFIG_util-linux-fdisk=y
+CONFIG_pciutils=y
+CONFIG_bridge-utils=y
+CONFIG_bootscript=y

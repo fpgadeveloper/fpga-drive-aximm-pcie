@@ -1,5 +1,0 @@
-/include/ "system-conf.dtsi"
-/ {
-};
-
-#include "bsp.dtsi"
