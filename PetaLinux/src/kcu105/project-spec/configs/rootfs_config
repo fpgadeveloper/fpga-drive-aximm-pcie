@@ -1,0 +1,774 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# Configuration
+#
+CONFIG_system-microblaze=y
+
+#
+# Filesystem Packages 
+#
+
+#
+# base 
+#
+
+#
+# base-files 
+#
+# CONFIG_base-files is not set
+# CONFIG_base-files-dbg is not set
+# CONFIG_base-files-dev is not set
+
+#
+# base-passwd 
+#
+# CONFIG_base-passwd is not set
+# CONFIG_base-passwd-dev is not set
+# CONFIG_base-passwd-dbg is not set
+# CONFIG_base-passwd-update is not set
+
+#
+# bc 
+#
+# CONFIG_bc is not set
+# CONFIG_bc-dbg is not set
+# CONFIG_bc-dev is not set
+
+#
+# busybox 
+#
+# CONFIG_busybox is not set
+# CONFIG_busybox-udhcpd is not set
+# CONFIG_busybox-udhcpc is not set
+# CONFIG_busybox-inetd is not set
+# CONFIG_busybox-hwclock is not set
+# CONFIG_busybox-dev is not set
+# CONFIG_busybox-dbg is not set
+# CONFIG_busybox-httpd is not set
+# CONFIG_busybox-syslog is not set
+
+#
+# diffutils 
+#
+# CONFIG_diffutils is not set
+# CONFIG_diffutils-dbg is not set
+# CONFIG_diffutils-dev is not set
+
+#
+# e2fsprogs 
+#
+# CONFIG_e2fsprogs is not set
+# CONFIG_e2fsprogs-tune2fs is not set
+# CONFIG_e2fsprogs-mke2fs is not set
+# CONFIG_libe2p is not set
+# CONFIG_e2fsprogs-dev is not set
+# CONFIG_libcomerr is not set
+# CONFIG_libext2fs is not set
+# CONFIG_e2fsprogs-dbg is not set
+# CONFIG_e2fsprogs-badblocks is not set
+# CONFIG_libss is not set
+# CONFIG_e2fsprogs-e2fsck is not set
+# CONFIG_e2fsprogs-resize2fs is not set
+
+#
+# elfutils 
+#
+# CONFIG_elfutils is not set
+# CONFIG_elfutils-dev is not set
+# CONFIG_libelf is not set
+# CONFIG_elfutils-binutils is not set
+# CONFIG_libdw is not set
+# CONFIG_libasm is not set
+# CONFIG_elfutils-dbg is not set
+
+#
+# init-ifupdown 
+#
+# CONFIG_init-ifupdown is not set
+# CONFIG_init-ifupdown-dbg is not set
+# CONFIG_init-ifupdown-dev is not set
+
+#
+# initscripts 
+#
+# CONFIG_initscripts is not set
+# CONFIG_initscripts-dbg is not set
+# CONFIG_initscripts-dev is not set
+# CONFIG_initscripts-functions is not set
+
+#
+# iproute2 
+#
+# CONFIG_iproute2 is not set
+# CONFIG_iproute2-rtacct is not set
+# CONFIG_iproute2-tc is not set
+# CONFIG_iproute2-ifstat is not set
+# CONFIG_iproute2-nstat is not set
+# CONFIG_iproute2-dbg is not set
+# CONFIG_iproute2-ss is not set
+# CONFIG_iproute2-lnstat is not set
+# CONFIG_iproute2-dev is not set
+# CONFIG_iproute2-genl is not set
+# CONFIG_iproute2-bash-completion is not set
+
+#
+# kmod 
+#
+# CONFIG_kmod is not set
+# CONFIG_kmod-dev is not set
+# CONFIG_kmod-dbg is not set
+# CONFIG_libkmod is not set
+# CONFIG_kmod-bash-completion is not set
+
+#
+# libpam 
+#
+# CONFIG_libpam is not set
+# CONFIG_libpam-dbg is not set
+# CONFIG_libpam-xtests is not set
+# CONFIG_libpam-runtime is not set
+# CONFIG_libpam-dev is not set
+
+#
+# linuxptp 
+#
+# CONFIG_linuxptp is not set
+# CONFIG_linuxptp-dev is not set
+# CONFIG_linuxptp-dbg is not set
+
+#
+# modutils-initscripts 
+#
+# CONFIG_modutils-initscripts is not set
+# CONFIG_modutils-initscripts-dbg is not set
+# CONFIG_modutils-initscripts-dev is not set
+
+#
+# mtd-utils 
+#
+CONFIG_mtd-utils=y
+# CONFIG_mtd-utils-ubifs is not set
+# CONFIG_mtd-utils-jffs2 is not set
+# CONFIG_mtd-utils-dev is not set
+# CONFIG_mtd-utils-dbg is not set
+# CONFIG_mtd-utils-misc is not set
+
+#
+# netbase 
+#
+# CONFIG_netbase is not set
+# CONFIG_netbase-dbg is not set
+# CONFIG_netbase-dev is not set
+
+#
+# opkg-utils 
+#
+# CONFIG_opkg-utils is not set
+# CONFIG_opkg-utils-dbg is not set
+# CONFIG_update-alternatives-opkg is not set
+
+#
+# procps 
+#
+# CONFIG_procps is not set
+# CONFIG_procps-dbg is not set
+# CONFIG_procps-dev is not set
+
+#
+# shell 
+#
+
+#
+# bash 
+#
+# CONFIG_bash is not set
+# CONFIG_bash-dbg is not set
+# CONFIG_bash-dev is not set
+
+#
+# sysvinit 
+#
+# CONFIG_sysvinit is not set
+# CONFIG_sysvinit-sulogin is not set
+# CONFIG_sysvinit-dev is not set
+# CONFIG_sysvinit-dbg is not set
+# CONFIG_sysvinit-pidof is not set
+
+#
+# update-rc.d 
+#
+# CONFIG_update-rc.d is not set
+# CONFIG_update-rc.d-dev is not set
+# CONFIG_update-rc.d-dbg is not set
+
+#
+# util-linux 
+#
+# CONFIG_util-linux is not set
+# CONFIG_util-linux-mount is not set
+# CONFIG_util-linux-mountpoint is not set
+# CONFIG_util-linux-losetup is not set
+# CONFIG_util-linux-dbg is not set
+# CONFIG_util-linux-mkfs is not set
+# CONFIG_util-linux-hwclock is not set
+# CONFIG_util-linux-fsck is not set
+# CONFIG_util-linux-partx is not set
+# CONFIG_util-linux-blkid is not set
+# CONFIG_util-linux-uuidd is not set
+# CONFIG_util-linux-prlimit is not set
+# CONFIG_util-linux-fdisk is not set
+# CONFIG_util-linux-fsck.cramfs is not set
+# CONFIG_util-linux-swaponoff is not set
+# CONFIG_util-linux-cfdisk is not set
+# CONFIG_util-linux-runuser is not set
+# CONFIG_util-linux-uuidgen is not set
+# CONFIG_util-linux-readprofile is not set
+# CONFIG_util-linux-getopt is not set
+# CONFIG_util-linux-sulogin is not set
+# CONFIG_util-linux-mcookie is not set
+# CONFIG_util-linux-sfdisk is not set
+# CONFIG_util-linux-fstrim is not set
+# CONFIG_util-linux-findfs is not set
+# CONFIG_util-linux-umount is not set
+# CONFIG_util-linux-lscpu is not set
+# CONFIG_util-linux-mkfs.cramfs is not set
+# CONFIG_util-linux-dev is not set
+# CONFIG_util-linux-bash-completion is not set
+# CONFIG_util-linux-agetty is not set
+
+#
+# utils 
+#
+
+#
+# shadow 
+#
+# CONFIG_shadow is not set
+# CONFIG_shadow-dbg is not set
+# CONFIG_shadow-dev is not set
+# CONFIG_shadow-base is not set
+
+#
+# baseutils 
+#
+
+#
+# shadow-securetty 
+#
+# CONFIG_shadow-securetty is not set
+# CONFIG_shadow-securetty-dbg is not set
+# CONFIG_shadow-securetty-dev is not set
+
+#
+# bootgen 
+#
+# CONFIG_bootgen is not set
+# CONFIG_bootgen-dev is not set
+# CONFIG_bootgen-dbg is not set
+
+#
+# console 
+#
+
+#
+# network 
+#
+
+#
+# canutils 
+#
+# CONFIG_canutils is not set
+# CONFIG_canutils-dev is not set
+# CONFIG_canutils-dbg is not set
+
+#
+# can-utils 
+#
+CONFIG_can-utils=y
+# CONFIG_can-utils-dbg is not set
+# CONFIG_can-utils-dev is not set
+
+#
+# dropbear 
+#
+# CONFIG_dropbear is not set
+# CONFIG_dropbear-dev is not set
+# CONFIG_dropbear-dbg is not set
+
+#
+# openssh 
+#
+# CONFIG_openssh is not set
+# CONFIG_openssh-dev is not set
+# CONFIG_openssh-sftp is not set
+# CONFIG_openssh-ssh is not set
+# CONFIG_openssh-scp is not set
+# CONFIG_openssh-misc is not set
+# CONFIG_openssh-keygen is not set
+# CONFIG_openssh-dbg is not set
+CONFIG_openssh-sftp-server=y
+# CONFIG_openssh-sshd is not set
+
+#
+# utils 
+#
+
+#
+# bash-completion 
+#
+# CONFIG_bash-completion is not set
+# CONFIG_bash-completion-extra is not set
+# CONFIG_bash-completion-dbg is not set
+# CONFIG_bash-completion-dev is not set
+
+#
+# bzip2 
+#
+# CONFIG_bzip2 is not set
+# CONFIG_bzip2-dev is not set
+# CONFIG_bzip2-dbg is not set
+# CONFIG_libbz2 is not set
+
+#
+# gawk 
+#
+# CONFIG_gawk is not set
+# CONFIG_gawk-dbg is not set
+# CONFIG_gawk-dev is not set
+
+#
+# grep 
+#
+# CONFIG_grep is not set
+# CONFIG_grep-dbg is not set
+# CONFIG_grep-dev is not set
+
+#
+# ltp 
+#
+# CONFIG_ltp is not set
+# CONFIG_ltp-dev is not set
+# CONFIG_ltp-dbg is not set
+
+#
+# pciutils 
+#
+CONFIG_pciutils=y
+# CONFIG_libpci is not set
+# CONFIG_pciutils-dev is not set
+# CONFIG_pciutils-ids is not set
+# CONFIG_pciutils-dbg is not set
+
+#
+# sed 
+#
+# CONFIG_sed is not set
+# CONFIG_sed-dbg is not set
+# CONFIG_sed-dev is not set
+
+#
+# devel 
+#
+
+#
+# flex 
+#
+# CONFIG_flex is not set
+# CONFIG_flex-dev is not set
+# CONFIG_flex-dbg is not set
+
+#
+# gmp 
+#
+# CONFIG_gmp is not set
+# CONFIG_gmp-dbg is not set
+# CONFIG_libgmpxx is not set
+# CONFIG_gmp-dev is not set
+
+#
+# make 
+#
+# CONFIG_make is not set
+# CONFIG_make-dbg is not set
+# CONFIG_make-dev is not set
+
+#
+# perl 
+#
+# CONFIG_perl is not set
+# CONFIG_perl-pod is not set
+# CONFIG_perl-modules is not set
+# CONFIG_perl-module-cpan is not set
+# CONFIG_perl-module-unicore is not set
+# CONFIG_perl-dbg is not set
+# CONFIG_perl-dev is not set
+# CONFIG_perl-misc is not set
+
+#
+# python3 
+#
+
+#
+# python3 
+#
+# CONFIG_python3 is not set
+# CONFIG_python3-crypt is not set
+# CONFIG_python3-threading is not set
+# CONFIG_python3-difflib is not set
+# CONFIG_python3-stringold is not set
+# CONFIG_python3-codecs is not set
+# CONFIG_python3-email is not set
+# CONFIG_python3-ctypes is not set
+# CONFIG_python3-audio is not set
+# CONFIG_python3-datetime is not set
+# CONFIG_python3-dev is not set
+# CONFIG_python3-pydoc is not set
+# CONFIG_python3-unixadmin is not set
+# CONFIG_python3-unittest is not set
+# CONFIG_python3-curses is not set
+# CONFIG_python3-profile is not set
+# CONFIG_python3-netclient is not set
+# CONFIG_python3-mmap is not set
+# CONFIG_python3-logging is not set
+# CONFIG_python3-io is not set
+# CONFIG_python3-db is not set
+# CONFIG_python3-plistlib is not set
+# CONFIG_python3-xml is not set
+# CONFIG_python3-gdbm is not set
+# CONFIG_python3-compile is not set
+# CONFIG_python3-distutils is not set
+# CONFIG_python3-image is not set
+# CONFIG_python3-resource is not set
+# CONFIG_python3-syslog is not set
+# CONFIG_python3-multiprocessing is not set
+# CONFIG_python3-numbers is not set
+# CONFIG_python3-xmlrpc is not set
+# CONFIG_python3-sqlite3 is not set
+# CONFIG_python3-mime is not set
+# CONFIG_python3-math is not set
+# CONFIG_python3-debugger is not set
+# CONFIG_python3-html is not set
+# CONFIG_python3-core is not set
+# CONFIG_python3-smtpd is not set
+# CONFIG_python3-fcntl is not set
+# CONFIG_python3-2to3 is not set
+# CONFIG_python3-pkgutil is not set
+# CONFIG_python3-terminal is not set
+# CONFIG_python3-pprint is not set
+# CONFIG_python3-netserver is not set
+# CONFIG_python3-mailbox is not set
+# CONFIG_python3-idle is not set
+# CONFIG_python3-pickle is not set
+# CONFIG_python3-tests is not set
+# CONFIG_python3-misc is not set
+# CONFIG_python3-modules is not set
+# CONFIG_python3-dbg is not set
+# CONFIG_python3-shell is not set
+# CONFIG_python3-tkinter is not set
+# CONFIG_python3-compression is not set
+# CONFIG_python3-json is not set
+
+#
+# run-postinsts 
+#
+CONFIG_run-postinsts=y
+# CONFIG_run-postinsts-dbg is not set
+# CONFIG_run-postinsts-dev is not set
+
+#
+# libs 
+#
+
+#
+# acl 
+#
+# CONFIG_acl is not set
+# CONFIG_acl-dev is not set
+# CONFIG_libacl is not set
+# CONFIG_acl-dbg is not set
+
+#
+# attr 
+#
+# CONFIG_attr is not set
+# CONFIG_attr-dev is not set
+# CONFIG_libattr is not set
+# CONFIG_attr-dbg is not set
+
+#
+# db 
+#
+# CONFIG_db is not set
+# CONFIG_db-bin is not set
+# CONFIG_db-dev is not set
+# CONFIG_db-cxx is not set
+# CONFIG_db-dbg is not set
+
+#
+# expat 
+#
+# CONFIG_expat is not set
+# CONFIG_expat-dev is not set
+# CONFIG_expat-dbg is not set
+# CONFIG_expat-bin is not set
+
+#
+# gdbm 
+#
+# CONFIG_gdbm is not set
+# CONFIG_gdbm-bin is not set
+# CONFIG_gdbm-dbg is not set
+# CONFIG_gdbm-dev is not set
+# CONFIG_gdbm-compat is not set
+
+#
+# gettext 
+#
+# CONFIG_gettext is not set
+# CONFIG_libgettextsrc is not set
+# CONFIG_libgettextlib is not set
+# CONFIG_gettext-dev is not set
+# CONFIG_gettext-dbg is not set
+# CONFIG_gettext-runtime is not set
+
+#
+# libcap 
+#
+# CONFIG_libcap is not set
+# CONFIG_libcap-dbg is not set
+# CONFIG_libcap-dev is not set
+# CONFIG_libcap-bin is not set
+
+#
+# libffi 
+#
+# CONFIG_libffi is not set
+# CONFIG_libffi-dev is not set
+# CONFIG_libffi-dbg is not set
+
+#
+# libgcc-xilinx 
+#
+# CONFIG_libgcc-dbg is not set
+# CONFIG_libgcc-dev is not set
+# CONFIG_libgcc is not set
+
+#
+# libtool 
+#
+# CONFIG_libtool is not set
+# CONFIG_libltdl is not set
+# CONFIG_libtool-dbg is not set
+# CONFIG_libtool-dev is not set
+
+#
+# lzo 
+#
+# CONFIG_lzo is not set
+# CONFIG_lzo-dbg is not set
+# CONFIG_lzo-dev is not set
+
+#
+# ncurses 
+#
+# CONFIG_ncurses is not set
+# CONFIG_ncurses-terminfo-base is not set
+# CONFIG_ncurses-dbg is not set
+# CONFIG_ncurses-terminfo is not set
+# CONFIG_ncurses-dev is not set
+# CONFIG_ncurses-tools is not set
+
+#
+# network 
+#
+
+#
+# libsocketcan 
+#
+# CONFIG_libsocketcan is not set
+# CONFIG_libsocketcan-dev is not set
+# CONFIG_libsocketcan-dbg is not set
+
+#
+# openssl 
+#
+# CONFIG_openssl is not set
+# CONFIG_openssl-bin is not set
+# CONFIG_libcrypto is not set
+# CONFIG_openssl-misc is not set
+# CONFIG_libssl is not set
+# CONFIG_openssl-conf is not set
+# CONFIG_openssl-dbg is not set
+# CONFIG_openssl-dev is not set
+# CONFIG_openssl-engines is not set
+
+#
+# readline 
+#
+# CONFIG_readline is not set
+# CONFIG_readline-dbg is not set
+# CONFIG_readline-dev is not set
+
+#
+# sqlite3 
+#
+# CONFIG_sqlite3 is not set
+# CONFIG_libsqlite3 is not set
+# CONFIG_sqlite3-dbg is not set
+# CONFIG_libsqlite3-dev is not set
+
+#
+# zlib 
+#
+# CONFIG_zlib is not set
+# CONFIG_zlib-dbg is not set
+# CONFIG_zlib-dev is not set
+
+#
+# misc 
+#
+
+#
+# coreutils 
+#
+# CONFIG_coreutils is not set
+# CONFIG_coreutils-dev is not set
+# CONFIG_coreutils-dbg is not set
+
+#
+# cracklib 
+#
+# CONFIG_cracklib is not set
+# CONFIG_cracklib-dev is not set
+# CONFIG_cracklib-dbg is not set
+
+#
+# cryptodev-linux 
+#
+# CONFIG_cryptodev-linux is not set
+# CONFIG_cryptodev-linux-dbg is not set
+# CONFIG_cryptodev-linux-dev is not set
+
+#
+# gcc-runtime-xilinx 
+#
+# CONFIG_libstdcPLUSPLUS is not set
+# CONFIG_libatomic is not set
+# CONFIG_libatomic-dev is not set
+# CONFIG_libstdcPLUSPLUS-dev is not set
+
+#
+# glibc-xilinx 
+#
+# CONFIG_catchsegv is not set
+# CONFIG_nscd is not set
+# CONFIG_glibc-thread-db is not set
+# CONFIG_sln is not set
+# CONFIG_glibc-extra-nss is not set
+# CONFIG_libsotruss is not set
+# CONFIG_ldd is not set
+# CONFIG_tzcode is not set
+# CONFIG_libmemusage is not set
+# CONFIG_libsegfault is not set
+
+#
+# iptables 
+#
+# CONFIG_iptables is not set
+# CONFIG_iptables-dbg is not set
+# CONFIG_iptables-dev is not set
+
+#
+# m4 
+#
+# CONFIG_m4 is not set
+# CONFIG_m4-dev is not set
+# CONFIG_m4-dbg is not set
+
+#
+# packagegroup-core-boot 
+#
+CONFIG_packagegroup-core-boot=y
+# CONFIG_packagegroup-core-boot-dev is not set
+# CONFIG_packagegroup-core-boot-dbg is not set
+
+#
+# packagegroup-core-ssh-dropbear 
+#
+CONFIG_packagegroup-core-ssh-dropbear=y
+# CONFIG_packagegroup-core-ssh-dropbear-dbg is not set
+# CONFIG_packagegroup-core-ssh-dropbear-dev is not set
+
+#
+# ptest-runner 
+#
+# CONFIG_ptest-runner is not set
+# CONFIG_ptest-runner-dbg is not set
+# CONFIG_ptest-runner-dev is not set
+
+#
+# sysfsutils 
+#
+# CONFIG_sysfsutils is not set
+# CONFIG_libsysfs is not set
+# CONFIG_sysfsutils-dev is not set
+# CONFIG_sysfsutils-dbg is not set
+
+#
+# sysvinit-inittab 
+#
+# CONFIG_sysvinit-inittab is not set
+# CONFIG_sysvinit-inittab-dbg is not set
+# CONFIG_sysvinit-inittab-dev is not set
+
+#
+# tcf-agent 
+#
+CONFIG_tcf-agent=y
+# CONFIG_tcf-agent-dbg is not set
+# CONFIG_tcf-agent-dev is not set
+
+#
+# net 
+#
+
+#
+# bridge-utils 
+#
+CONFIG_bridge-utils=y
+# CONFIG_bridge-utils-dev is not set
+# CONFIG_bridge-utils-dbg is not set
+
+#
+# apps 
+#
+# CONFIG_gpio-demo is not set
+# CONFIG_peekpoke is not set
+
+#
+# user packages 
+#
+
+#
+# PetaLinux RootFS Settings
+#
+CONFIG_ROOTFS_ROOT_PASSWD="root"
+CONFIG_ADD_EXTRA_USERS="petalinux:petalinux;"
+
+# Tools for FPGA Drive FMC
+
+CONFIG_canutils=n
+CONFIG_packagegroup-core-ssh-dropbear=n
+CONFIG_e2fsprogs=y
+CONFIG_e2fsprogs-mke2fs=y
+CONFIG_e2fsprogs-badblocks=y
+CONFIG_mtd-utils=y
+CONFIG_util-linux=y
+CONFIG_util-linux-mount=y
+CONFIG_util-linux-mkfs=y
+CONFIG_util-linux-blkid=y
+CONFIG_util-linux-fdisk=y
+CONFIG_pciutils=y
+CONFIG_bridge-utils=y
+CONFIG_bootscript=y
+

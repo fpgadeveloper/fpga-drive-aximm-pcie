@@ -1,3 +1,0 @@
-CONFIG_libdrm=y
-CONFIG_libdrm-tests=y
-CONFIG_libdrm-kms=y

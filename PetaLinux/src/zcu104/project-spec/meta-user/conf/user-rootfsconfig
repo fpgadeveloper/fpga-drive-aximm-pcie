@@ -7,3 +7,16 @@ CONFIG_gstreamer-vcu-examples
 CONFIG_packagegroup-petalinux-v4lutils
 CONFIG_packagegroup-petalinux-audio
 CONFIG_gstreamer-vcu-notebooks
+
+CONFIG_e2fsprogs
+CONFIG_e2fsprogs-mke2fs
+CONFIG_e2fsprogs-badblocks
+CONFIG_mtd-utils
+CONFIG_util-linux
+CONFIG_util-linux-mount
+CONFIG_util-linux-mkfs
+CONFIG_util-linux-blkid
+CONFIG_util-linux-fdisk
+CONFIG_pciutils
+CONFIG_bridge-utils
+

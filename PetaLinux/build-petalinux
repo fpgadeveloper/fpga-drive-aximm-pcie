@@ -36,10 +36,12 @@ do
     echo
     continue
   fi
-  if grep -Fq "axi_pcie3_1" $vivadosynthtcl; then
-    pcie_ip="axi_pcie3_2x"
-  elif grep -Fq "axi_pcie3_0" $vivadosynthtcl; then
-    pcie_ip="axi_pcie3"
+  if grep -Fq "axi_pcie3" $vivadosynthtcl; then
+    if grep -Fq "axi_pcie_1" $vivadosynthtcl; then
+      pcie_ip="axi_pcie3_2x"
+    else
+      pcie_ip="axi_pcie3"
+    fi
   elif grep -Fq "axi_pcie_0" $vivadosynthtcl; then
     pcie_ip="axi_pcie"
   elif grep -Fq "xdma_1" $vivadosynthtcl; then
@@ -101,18 +103,6 @@ do
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
     fi
-    # Append mods to config file
-    config_mod_list=(`find ./project-spec/configs/ -name "config_*.append"`)
-    for f in ${config_mod_list[*]}
-    do
-      cat $f >> ./project-spec/configs/config
-    done
-    # Append mods to rootfs_config file
-    rootfs_config_mod_list=(`find ./project-spec/configs/ -name "rootfs_config_*.append"`)
-    for f in ${rootfs_config_mod_list[*]}
-    do
-      cat $f >> ./project-spec/configs/rootfs_config
-    done
     # File to indicate that config files have been transferred
     touch configdone.txt
     # Run petalinux-config again to register the config files
