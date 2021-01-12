@@ -36,17 +36,17 @@ do
     echo
     continue
   fi
-  if grep -Fq "axi_pcie3" $vivadosynthtcl; then
-    if grep -Fq "axi_pcie_1" $vivadosynthtcl; then
+  if grep -Fq axi_pcie3 "$vivadosynthtcl"; then
+    if grep -Fq axi_pcie_1 "$vivadosynthtcl"; then
       pcie_ip="axi_pcie3_2x"
     else
       pcie_ip="axi_pcie3"
     fi
-  elif grep -Fq "axi_pcie_0" $vivadosynthtcl; then
+  elif grep -Fq axi_pcie_0 "$vivadosynthtcl"; then
     pcie_ip="axi_pcie"
-  elif grep -Fq "xdma_1" $vivadosynthtcl; then
+  elif grep -Fq xdma_1 "$vivadosynthtcl"; then
     pcie_ip="xdma_2x"
-  elif grep -Fq "xdma_0" $vivadosynthtcl; then
+  elif grep -Fq xdma_0 "$vivadosynthtcl"; then
     pcie_ip="xdma"
   else
     echo "> Failed to determine the PCIe IP used in this design"
@@ -54,16 +54,13 @@ do
     continue
   fi
 
-  # Get CPU type from first letters of project name
-  type=$(echo $proj | cut -c1-3)
-  if [[ $type == *z* ]]; then
-    if [[ $type == "zcu" ]]; then
-      cpu_type="zynqMP"
-      fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
-    else
-      cpu_type="zynq"
-      fsbl_option="--fsbl ./images/linux/zynq_fsbl.elf"
-    fi
+  # Get CPU type from Vivado project file
+  if grep -q Part=\"xczu "$vivadoprj"; then
+    cpu_type="zynqMP"
+    fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
+  elif grep -q Part=\"xc7z "$vivadoprj"; then
+    cpu_type="zynq"
+    fsbl_option="--fsbl ./images/linux/zynq_fsbl.elf"
   else
     cpu_type="microblaze"
     fsbl_option="--fsbl ./images/linux/fs-boot.elf"
@@ -97,11 +94,11 @@ do
     echo "> PetaLinux config files already transferred"
   else
     echo "> Transferring PetaLinux BSPs and config files"
-    if [ -d "../src/$pcie_ip" ]; then
-      cp -R ../src/$pcie_ip/* .
-    fi
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
+    fi
+    if [ -d "../src/$pcie_ip" ]; then
+      cp -R ../src/$pcie_ip/* .
     fi
     # File to indicate that config files have been transferred
     touch configdone.txt

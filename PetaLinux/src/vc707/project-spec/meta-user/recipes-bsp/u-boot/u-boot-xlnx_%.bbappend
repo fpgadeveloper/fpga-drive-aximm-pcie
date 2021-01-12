@@ -1,5 +1,6 @@
 SRC_URI_append = " file://platform-top.h"
 SRC_URI += "file://bsp.cfg"
+SRC_URI += "file://remove-pxe.patch"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 

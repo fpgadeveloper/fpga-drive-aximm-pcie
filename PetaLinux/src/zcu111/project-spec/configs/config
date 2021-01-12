@@ -304,7 +304,3 @@ CONFIG_YOCTO_NETWORK_SSTATE_FEEDS_URL="http://petalinux.xilinx.com/sswreleases/r
 CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_BOOTARGS_GENERATED=" earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/ram0 rw"
 
-# ZCU111 configs
-
-CONFIG_SUBSYSTEM_MACHINE_NAME="template"
-

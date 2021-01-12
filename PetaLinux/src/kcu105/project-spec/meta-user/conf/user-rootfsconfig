@@ -14,5 +14,4 @@ CONFIG_util-linux-mkfs
 CONFIG_util-linux-blkid
 CONFIG_util-linux-fdisk
 CONFIG_pciutils
-CONFIG_bridge-utils
 
