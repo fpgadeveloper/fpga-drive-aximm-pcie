@@ -40,8 +40,8 @@ When executed, the build script searches the Vivado directory for all projects c
 hardware design file. Then for every exported project, the script does the following:
 
 1. Verifies that the `.bit` file exists.
-2. Determines the CPU type: Microblaze, Zynq or ZynqMP. It currently does this
-by looking at the first 3 letters of the project name.
+2. Determines the CPU type: Microblaze, Zynq or ZynqMP. It does this
+by reading the Vivado project file.
 3. Creates a PetaLinux project, referencing the exported hardware design (.xsa).
 4. Copies the relevant configuration files from the `src` directory into the created
 PetaLinux project.
