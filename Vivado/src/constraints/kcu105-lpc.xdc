@@ -22,8 +22,9 @@ set_property LOC GTHE3_CHANNEL_X0Y8 [get_cells {*_i/axi_pcie_0/inst/pcie3_ip_i/i
 # KCU105 LPC transceiver is best aligned with PCIE_3_1_X0Y1
 set_property LOC PCIE_3_1_X0Y1 [get_cells *_i/axi_pcie_0/inst/pcie3_ip_i/inst/*_pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst]
 
-# Configuration via Quad SPI settings for KCU105
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+# Configuration via Dual Quad SPI settings for KCU105
+set_property CONFIG_MODE SPIx8 [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 8 [current_design]
 set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
 set_property CONFIG_VOLTAGE 1.8 [current_design]
 set_property CFGBVS GND [current_design]

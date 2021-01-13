@@ -137,6 +137,8 @@ set ints {}
 # Ultrascale boards use DDR4
 if {[string match "kcu105*" $design_name]} {
   set mig_name "ddr4_0"
+  set mig_slave_interface "/ddr4_0/C0_DDR4_S_AXI"
+  set mig_ui_clk "/ddr4_0/c0_ddr4_ui_clk"
   create_bd_cell -type ip -vlnv xilinx.com:ip:ddr4 $mig_name
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {default_sysclk_300 ( 300 MHz System differential clock ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_SYS_CLK]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {ddr4_sdram_062 ( DDR4 SDRAM ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_DDR4]
@@ -144,6 +146,8 @@ if {[string match "kcu105*" $design_name]} {
 # Series-7 boards use DDR3
 } else {
   set mig_name "mig_0"
+  set mig_slave_interface "/mig_0/S_AXI"
+  set mig_ui_clk "/mig_0/ui_clk"
   create_bd_cell -type ip -vlnv xilinx.com:ip:mig_7series $mig_name
   apply_bd_automation -rule xilinx.com:bd_rule:mig_7series -config "Board_Interface $ddr_name "  [get_bd_cells mig_0]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_HIGH)}}  [get_bd_pins mig_0/sys_rst]
@@ -421,14 +425,56 @@ apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {ii
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/iic_main/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins iic_main/S_AXI]
 append ints "iic_main/iic2intc_irpt "
 
-# Ethernet (on-board port)
-if {[string match "vc709*" $design_name]} {
-  # TODO: Add Ethernet via SFP
-} elseif {[string match "vc707*" $design_name]} {
-  # TODO: Add Ethernet via PCS/PMA or SGMII IP core
-} elseif {[string match "kcu105*" $design_name]} {
-  # TODO: Add Ethernet via PCS/PMA or SGMII IP core
-} else {
+# Ethernet for VC707, VC709 and KCU105 boards use AXI Ethernet SGMII
+# We are not adding Ethernet to these designs because AXI Ethernet Subsystem requires a licence,
+# but if you would like to use Ethernet, just uncomment the following code block
+if 0 {
+  if {[string match "vc707*" $design_name] || [string match "vc709*" $design_name] || [string match "kcu105*" $design_name]} {
+    create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernet axi_ethernet_0
+    if {[string match "kcu105*" $design_name]} {
+      create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma axi_ethernet_0_dma
+      connect_bd_intf_net [get_bd_intf_pins axi_ethernet_0_dma/M_AXIS_MM2S] [get_bd_intf_pins axi_ethernet_0/s_axis_txd]
+      connect_bd_intf_net [get_bd_intf_pins axi_ethernet_0_dma/M_AXIS_CNTRL] [get_bd_intf_pins axi_ethernet_0/s_axis_txc]
+      connect_bd_intf_net [get_bd_intf_pins axi_ethernet_0/m_axis_rxd] [get_bd_intf_pins axi_ethernet_0_dma/S_AXIS_S2MM]
+      connect_bd_intf_net [get_bd_intf_pins axi_ethernet_0/m_axis_rxs] [get_bd_intf_pins axi_ethernet_0_dma/S_AXIS_STS]
+      connect_bd_net [get_bd_pins axi_ethernet_0_dma/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_0/axi_txd_arstn]
+      connect_bd_net [get_bd_pins axi_ethernet_0_dma/mm2s_cntrl_reset_out_n] [get_bd_pins axi_ethernet_0/axi_txc_arstn]
+      connect_bd_net [get_bd_pins axi_ethernet_0_dma/s2mm_prmry_reset_out_n] [get_bd_pins axi_ethernet_0/axi_rxd_arstn]
+      connect_bd_net [get_bd_pins axi_ethernet_0_dma/s2mm_sts_reset_out_n] [get_bd_pins axi_ethernet_0/axi_rxs_arstn]
+      set_property -dict [list CONFIG.ETHERNET_BOARD_INTERFACE {sgmii_lvds} CONFIG.PHY_TYPE {SGMII} CONFIG.PHYRST_BOARD_INTERFACE {phy_reset_out} CONFIG.DIFFCLK_BOARD_INTERFACE {sgmii_phyclk} CONFIG.MDIO_BOARD_INTERFACE {mdio_mdc} CONFIG.ENABLE_LVDS {true} CONFIG.lvdsclkrate {625}] [get_bd_cells axi_ethernet_0]
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sgmii_phyclk ( 625 MHz SGMII differential clock from Marvell PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/lvds_clk]
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mdio_mdc ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/mdio]
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {phy_reset_out ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_pins axi_ethernet_0/phy_rst_n]
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sgmii_lvds ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/sgmii]
+      # Clocks
+      connect_bd_net [get_bd_pins $mig_ui_clk] [get_bd_pins axi_ethernet_0/axis_clk]
+    } elseif {[string match "vc707*" $design_name]} {
+      apply_bd_automation -rule xilinx.com:bd_rule:axi_ethernet -config { FIFO_DMA {DMA} PHY_TYPE {SGMII}}  [get_bd_cells axi_ethernet_0]
+      # Clocks
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sgmii_mgt_clk ( SGMII MGT clock ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/mgt_clk]
+    } else {
+      apply_bd_automation -rule xilinx.com:bd_rule:axi_ethernet -config { FIFO_DMA {DMA} PHY_TYPE {SGMII}}  [get_bd_cells axi_ethernet_0]
+      make_bd_pins_external  [get_bd_pins axi_ethernet_0/phy_rst_n]
+      # Clocks
+      apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sfp_mgt_clk ( SFP MGT clock ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/mgt_clk]
+    }
+    # Connection automation: AXI Lite and AXI Streaming interfaces
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_ethernet_0/s_axi} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_ethernet_0/s_axi]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_MM2S} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_MM2S]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_S2MM} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_S2MM]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_SG} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_SG]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_ethernet_0_dma/S_AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_ethernet_0_dma/S_AXI_LITE]
+    # Interrupts
+    append ints "axi_ethernet_0/interrupt "
+    append ints "axi_ethernet_0/mac_irq "
+    append ints "axi_ethernet_0_dma/mm2s_introut "
+    append ints "axi_ethernet_0_dma/s2mm_introut "
+  }
+}
+
+# Ethernet for AC701 and KC705 (AXI Ethernet Lite, no license required)
+if {[string match "ac701*" $design_name] || [string match "kc705*" $design_name]} {
+  # AC701 and KC705 use AXI Ethernet Lite (smaller footprint, doesn't require license but only supports 100Mbps)
   create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernetlite axi_ethernetlite
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mdio_mdc ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MDIO]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mii ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MII]
