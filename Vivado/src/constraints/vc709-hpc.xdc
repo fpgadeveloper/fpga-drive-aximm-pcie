@@ -30,3 +30,12 @@ set_property BEL PCIE_3_0 [get_cells *_i/axi_pcie_0/inst/pcie3_ip_i/inst/pcie_to
 set_property LOC PCIE3_X0Y2 [get_cells *_i/axi_pcie_0/inst/pcie3_ip_i/inst/pcie_top_i/pcie_7vx_i/PCIE_3_0_i]
 
 
+# Configuration via BPI flash for VC709
+set_property BITSTREAM.CONFIG.BPI_SYNC_MODE DISABLE [current_design]
+set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN DISABLE [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup [current_design]
+set_property CONFIG_MODE BPI16 [current_design]
+set_property CFGBVS GND [current_design]
+set_property CONFIG_VOLTAGE 1.8 [current_design]
+
