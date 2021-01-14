@@ -210,3 +210,9 @@ CONFIG_YOCTO_NETWORK_SSTATE_FEEDS_URL="http://petalinux.xilinx.com/sswreleases/r
 #
 CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_BOOTARGS_GENERATED="console=ttyUL0,115200 earlycon root=/dev/ram0 rw"
+
+# VC707 configs
+
+# Increase kernel partition size
+CONFIG_SUBSYSTEM_FLASH_AXI_EMC_0_BANK0_PART3_SIZE=0xF00000
+

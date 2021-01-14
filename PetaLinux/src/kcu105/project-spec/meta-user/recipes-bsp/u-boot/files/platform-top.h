@@ -23,7 +23,7 @@
 	"bootenvsize=0x40000\0" \ 
 	"bootenvstart=0x1180000\0" \ 
 	"eraseenv=sf probe 0 && sf erase ${bootenvstart} ${bootenvsize}\0" \ 
-	"kernelsize=0xc00000\0" \ 
+	"kernelsize=0xf00000\0" \ 
 	"kernelstart=0x11c0000\0" \ 
 	"kernel_img=image.ub\0" \ 
 	"install_kernel=sf probe 0 && sf erase ${kernelstart} ${kernelsize} && " \ 
