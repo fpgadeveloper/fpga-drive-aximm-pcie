@@ -26,7 +26,8 @@
 # which is stored locally in the "EmbeddedSw/XilinxProcessorIPLib/drivers" directory.
 
 # Set the Vivado directory containing the Vivado projects
-set vivado_dir "../Vivado"
+set vivado_dir [file join [pwd] "../Vivado"]
+set vivado_dir [file normalize $vivado_dir]
 # Set the application postfix
 set app_postfix "_ssd_test"
 
@@ -61,21 +62,6 @@ proc copy-r {{dir .} target_dir} {
     }
   }
 } ;# RS
-
-# Fill in the local libraries with original sources without overwriting existing code
-proc fill_local_libraries {} {
-  # Xilinx Vitis install directory
-  set vitis_dir $::env(XILINX_VITIS)
-  # For each of the custom driver versions in our local repo
-  foreach drv_dir [glob -type d "../EmbeddedSw/XilinxProcessorIPLib/drivers/*"] {
-    # Work out the original version library directory name by removing the appended "9"
-    set lib_name [string trimright [lindex [split $drv_dir /] end] "9"]
-    set orig_dir "$vitis_dir/data/embeddedsw/XilinxProcessorIPLib/drivers/$lib_name"
-    puts "Copying files from $orig_dir to $drv_dir"
-    # Copy the original files to local repo, without overwriting existing code
-    copy-r $orig_dir $drv_dir
-  }
-}
 
 # Get the first processor name from a hardware design
 # We use the "getperipherals" command to get the name of the processor that
@@ -277,10 +263,6 @@ proc create_vitis_ws {} {
   set vitis_dir [pwd]
   setws $vitis_dir
   
-  # Add local Vitis repo for our locally copied driver for the Gen3 designs
-  puts "Adding Vitis repo to the workspace."
-  repo -set "../EmbeddedSw"
-
   # Add each Vivado project to Vitis workspace
   foreach {vivado_folder} $vivado_proj_list {
     # Get the name of the board
@@ -391,7 +373,7 @@ proc create_vitis_ws {} {
     } else {
       puts "Copying the BOOT.BIN file to the ./boot/${board_name} directory."
       # Copy the already generated BOOT.bin file
-      set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.bin"
+      set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.BIN"
       if {[file exists $bootbin_file] == 1} {
         file copy -force $bootbin_file "./boot/${board_name}"
       } else {
@@ -419,10 +401,6 @@ proc check_apps {} {
   }
 }
   
-# Copy original driver sources into the local Vitis repo
-puts "Building the local Vitis repo from original sources"
-fill_local_libraries
-
 # Create the Vitis workspace
 puts "Creating the Vitis workspace"
 create_vitis_ws
