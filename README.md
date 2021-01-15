@@ -144,9 +144,9 @@ The program demonstrates basic usage of the stand-alone driver including how to 
 lanes used, as well as how to perform PCIe enumeration. The original example applications can be found here:
 
 * For the AXI PCIe designs:
-`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1\examples\xaxipcie_rc_enumerate_example.c`
+`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_3\examples\xaxipcie_rc_enumerate_example.c`
 * For the XDMA designs:
-`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_0\examples\xdmapcie_rc_enumerate_example.c`
+`C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_2\examples\xdmapcie_rc_enumerate_example.c`
 
 ## PetaLinux
 
@@ -155,21 +155,20 @@ the PetaLinux project, please refer to the "README.md" file in the PetaLinux sub
 
 ## Board Specific Notes
 
+### AC701 and KC705
+
+* These designs use the AXI EthernetLite IP for their onboard Ethernet ports. This IP does not require a license, but 
+limits the link speed to 100Mbps.
+
+### KCU105, VC707, VC709
+
+* The on-board Ethernet port for these boards is not connected in these designs because they are not supported by
+the free AXI EthernetLite IP. The block design build script (design_1-mb.tcl) contains the code to add the AXI Ethernet IP
+for these boards and can be uncommented if Ethernet is desired.
+
 ### KCU105
 
-* To keep these designs free of paid IP, the KCU105's on-board Ethernet port is not connected in this design. The 
-KCU105's Ethernet PHY has an SGMII interface which is not supported by the free AXI EthernetLite IP.
-
-### VC709 and KCU105
-
-These designs are based on the [AXI Bridge for PCI Express Gen3 Subsystem](http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v3_0/pg194-axi-bridge-pcie-gen3.pdf "AXI Bridge for PCI Express Gen3 Subsystem v3.0")
-. To generate an example stand-alone application for these boards,
-the Vitis build script makes a local copy of the driver for the [AXI Memory Mapped to PCIe Gen2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html "AXI Memory Mapped to PCIe Gen2 IP")
-with a few small modifications to make it work with the Gen3 core. If you use or modify these applications, be aware
-that they refer to the locally copied and modified driver located in `EmbeddedSw/XilinxProcessorIPLib/drivers`, and that
-that driver is actually designed for the Gen2 core. In other words, you can expect the driver to work for the example
-application that checks link-up, link speed/width and enumerates the end points, but anything else may fail due to
-differences between the driver code and the Gen3 IP specs.
+* This design uses the Quad SPI flash in dual mode with SPIx8 interface (64MB total storage).
 
 ### PicoZed
 
