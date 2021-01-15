@@ -359,28 +359,28 @@ proc create_vitis_ws {} {
     
     # If all required files exist, then generate boot files
     # Create directory for the boot file if it doesn't already exist
-    if {[file exists "./boot/$board_name"] == 0} {
-      file mkdir "./boot/$board_name"
+    if {[file exists "./boot/$vivado_folder"] == 0} {
+      file mkdir "./boot/$vivado_folder"
     }
 	
     # For Microblaze designs
     if {[str_contains $proc_instance "microblaze"]} {
-      puts "Generating combined bitstream/elf file for $board_name project."
+      puts "Generating combined bitstream/elf file for $vivado_folder project."
       # Generate the download.bit file with .elf
       exec updatemem --bit "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.bit" \
         --meminfo "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.mmi" \
         --data "./${app_name}/Debug/${app_name}.elf" \
         --proc "${vivado_folder}_i/microblaze_0" \
-        -force --out "./boot/${board_name}/${board_name}.bit"
+        -force --out "./boot/${vivado_folder}/${vivado_folder}.bit"
     # For Zynq and Zynq MP designs
     } else {
-      puts "Copying the BOOT.BIN file to the ./boot/${board_name} directory."
-      # Copy the already generated BOOT.bin file
+      puts "Copying the BOOT.BIN file to the ./boot/${vivado_folder} directory."
+      # Copy the already generated BOOT.BIN file
       set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.BIN"
       if {[file exists $bootbin_file] == 1} {
-        file copy -force $bootbin_file "./boot/${board_name}"
+        file copy -force $bootbin_file "./boot/${vivado_folder}"
       } else {
-        puts "No BOOT.bin file for ${app_name}."
+        puts "No BOOT.BIN file for ${app_name}."
       }
     }
   }
