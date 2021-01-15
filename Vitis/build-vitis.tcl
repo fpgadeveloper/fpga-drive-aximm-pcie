@@ -5,26 +5,6 @@
 # This Tcl script will create Vitis workspace with software applications for each of the
 # exported hardware designs in the ../Vivado directory.
 
-# axipcie Driver modifications
-# ----------------------------
-# Some of the Vivado designs in this project use the AXI Memory Mapped to PCIe Gen2 IP
-# and others use the AXI Bridge for PCIe Gen3 IP. Vitis comes with a driver for the Gen2
-# core that is called "axipcie". The BSPs for projects using the Gen2 core refer to that 
-# driver. You can find the driver sources in the Vitis installation files:
-#
-# C:\Xilinx\Vitis\<version>\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1
-#
-# The Vitis does not currently supply a driver for the Gen3 core. However, there are enough
-# similarities between the Gen2 and Gen3 cores that we can get away with using a modified 
-# version of the "axipcie" driver, for doing some simple things such as link-up detection,
-# determining link speed and width, and enumerating PCIe devices with the Gen3 core.
-# 
-# We create this "Gen3 version" of the driver by making a local copy of the "axipcie" driver
-# sources and modifying the ".mdd" file, specifying that the driver supports the Gen3 core.
-# For Vitis to be aware of our locally copied driver, we set Vitis's "repo" path to the path 
-# of the driver. This script handles the copying and modification of the "axipcie" driver, 
-# which is stored locally in the "EmbeddedSw/XilinxProcessorIPLib/drivers" directory.
-
 # Set the Vivado directory containing the Vivado projects
 set vivado_dir [file join [pwd] "../Vivado"]
 set vivado_dir [file normalize $vivado_dir]
@@ -62,6 +42,24 @@ proc copy-r {{dir .} target_dir} {
     }
   }
 } ;# RS
+
+# Create the local software repository (embeddedsw) for the modified drivers
+proc create_local_embeddedsw {} {
+  # Xilinx Vitis install directory
+  set vitis_dir $::env(XILINX_VITIS)
+  # Copy the EmbeddedSw folder into the Vitis workspace
+  file mkdir "embeddedsw"
+  copy-r "../EmbeddedSw" "embeddedsw"
+  # For each of the custom driver versions in our local repo
+  foreach drv_dir [glob -type d "embeddedsw/XilinxProcessorIPLib/drivers/*"] {
+    # Work out the original version library directory name by removing the appended "9"
+    set lib_name [string trimright [lindex [split $drv_dir /] end] "9"]
+    set orig_dir "$vitis_dir/data/embeddedsw/XilinxProcessorIPLib/drivers/$lib_name"
+    puts "Copying files from $orig_dir to $drv_dir"
+    # Copy the original files to local repo, without overwriting existing code
+    copy-r $orig_dir $drv_dir
+  }
+}
 
 # Get the first processor name from a hardware design
 # We use the "getperipherals" command to get the name of the processor that
@@ -263,6 +261,11 @@ proc create_vitis_ws {} {
   set vitis_dir [pwd]
   setws $vitis_dir
   
+  # Add local Vitis repo for our locally copied driver for the Gen3 designs
+  puts "Adding Vitis repo to the workspace."
+  set embsw [file normalize "${vitis_dir}/embeddedsw"]
+  repo -set [list $embsw]
+
   # Add each Vivado project to Vitis workspace
   foreach {vivado_folder} $vivado_proj_list {
     # Get the name of the board
@@ -401,6 +404,10 @@ proc check_apps {} {
   }
 }
   
+# Copy original driver sources into the local Vitis software repo (embeddedsw)
+puts "Building the local Vitis software repo (embeddedsw) from original sources"
+create_local_embeddedsw
+
 # Create the Vitis workspace
 puts "Creating the Vitis workspace"
 create_vitis_ws

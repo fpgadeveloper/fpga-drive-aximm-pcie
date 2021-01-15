@@ -9,15 +9,9 @@ Vitis/*_wrapper/
 Vitis/.*/
 Vitis/.*
 Vitis/*.log
+Vitis/*.jou
 Vitis/boot/
+Vitis/embeddedsw/
 PetaLinux/*_pcie/
 PetaLinux/*_dual/
 PetaLinux/zcu106*/
-EmbeddedSw/ThirdParty/sw_services/*/doc/
-EmbeddedSw/ThirdParty/sw_services/*/examples/
-EmbeddedSw/ThirdParty/sw_services/*/src/lwip*/
-EmbeddedSw/ThirdParty/sw_services/*/src/ChangeLog
-EmbeddedSw/ThirdParty/sw_services/*/src/Make*
-EmbeddedSw/XilinxProcessorIPLib/drivers/*/doc/
-EmbeddedSw/XilinxProcessorIPLib/drivers/*/examples/
-
