@@ -55,6 +55,7 @@ do
   fi
 
   # Get CPU type from Vivado project file
+  vivadoprj="../Vivado/$proj/$proj.xpr"
   if grep -q Part=\"xczu "$vivadoprj"; then
     cpu_type="zynqMP"
     fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
@@ -116,7 +117,7 @@ do
 
   # Package PetaLinux project if not packaged
   if [[ $board == kcu105 ]]; then
-    if [ -f "./images/linux/boot.mcs" ]; then
+    if [ -f "./images/linux/boot_primary.mcs" ]; then
       echo "> PetaLinux project already packaged"
     else
       echo "> Packaging PetaLinux project"
