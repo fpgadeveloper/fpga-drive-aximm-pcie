@@ -304,3 +304,6 @@ CONFIG_YOCTO_NETWORK_SSTATE_FEEDS_URL="http://petalinux.xilinx.com/sswreleases/r
 CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_BOOTARGS_GENERATED=" earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/ram0 rw"
 
+CONFIG_SUBSYSTEM_HOSTNAME="zcu111_fpgadrv_2020_2"
+CONFIG_SUBSYSTEM_PRODUCT="zcu111_fpgadrv_2020_2"
+
