@@ -18,19 +18,20 @@ launches the Tcl script. Linux users must use the following commands to run the 
 script:
 ```
 cd <path-to-repo>/Vitis
-/<path-to-xilinx-tools>/Vitis/2019.2/bin/xsct build-vitis.tcl
+/<path-to-xilinx-tools>/Vitis/2020.2/bin/xsct build-vitis.tcl
 ```
 
 The build script does three things:
 
-1. Makes a copy of the `axipcie` driver from 
-`{Vitis Install Dir}\data\embeddedsw\XilinxProcessorIPLib\drivers\` to the repo's local 
-directory `\EmbeddedSw\XilinxProcessorIPLib\drivers\`. Files that are already there
-as part of the repo are not overwritten, which allows us to keep a modified version
-of the driver. This modified version of the driver is used by the projects using the
-Gen3 core (AXI Bridge for PCIe Gen3 IP). See below for more information.
+1. Creates a local software repository inside the Vitis workspace called `embeddedsw`.
+It copies the modified driver sources from the Git repo's `EmbeddedSw` folder to the local 
+software repository `embeddedsw`. Then it copies the rest of the required sources from
+`{Vitis Install Dir}\data\embeddedsw\`. The `embeddedsw` local software repository holds
+a modified version of the BSP libraries that are required by the application. For more
+information about the modifications to the libraries, see the README in the `EmbeddedSw`
+folder of this Git repository.
 2. Generates an empty application for each exported Vivado design
-that is found in the ../Vivado directory. Most users will only have one exported
+that is found in the `../Vivado` directory. Most users will only have one exported
 Vivado design.
 3. Copies the appropriate enumeration application source file from the
 `\Vitis\common\src\` directory of this repo into the application source directory.
@@ -72,26 +73,3 @@ to DDR memory.
 If you want to manually create an application in the Vitis for one of the Zynq designs,
 you will have to manually modify the automatically generated linker script, and set all sections
 to DDR memory.
-
-### Driver for AXI Bridge for PCIe Gen3 IP
-
-Some of the Vivado designs in this project use the AXI Memory Mapped to PCIe Gen2 IP
-and others use the AXI Bridge for PCIe Gen3 IP. Vitis comes with a driver for the Gen2
-core that is called `axipcie`. The BSPs for projects using the Gen2 core refer to that 
-driver. You can find the driver sources in the Vitis installation files:
-
-`{Vitis Install Dir}\data\embeddedsw\XilinxProcessorIPLib\drivers\`
-
-The Vitis does not currently supply a driver for the Gen3 core, so we have to create our
-own. Luckily, there are enough similarities between the Gen2 and Gen3 cores that we can 
-get away with using a modified version of the `axipcie` driver on the Gen3 core. This 
-will allow us to do some simple things such as link-up detection, determining link speed
-and width, and enumerating PCIe devices.
-
-We create this "Gen3 version" of the driver by making a local copy of the `axipcie` driver
-sources and modifying the `.mdd` file, specifying that the driver supports the Gen3 core.
-For Vitis to be aware of our locally copied driver, we set the Vitis's repository path to the path 
-of the driver. The `build-sdk.tcl` script handles the copying and modification of the 
-`axipcie` driver, which is stored locally in the `EmbeddedSw/XilinxProcessorIPLib/drivers` 
-directory.
-
