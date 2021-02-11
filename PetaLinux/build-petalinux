@@ -27,33 +27,6 @@ do
     continue
   fi
 
-  # Determine the AXI PCIe IP core used in this project
-  # and whether there are 1 or 2 cores in the design
-  vivadosynthtcl="../Vivado/$proj/${proj}.runs/synth_1/${proj}_wrapper.tcl"
-  if [ ! -f "$vivadosynthtcl" ]; then
-    echo "> Synthesis Tcl file not found ($vivadosynthtcl)"
-    echo "> PetaLinux will not be built for this project"
-    echo
-    continue
-  fi
-  if grep -Fq axi_pcie3 "$vivadosynthtcl"; then
-    if grep -Fq axi_pcie_1 "$vivadosynthtcl"; then
-      pcie_ip="axi_pcie3_2x"
-    else
-      pcie_ip="axi_pcie3"
-    fi
-  elif grep -Fq axi_pcie_0 "$vivadosynthtcl"; then
-    pcie_ip="axi_pcie"
-  elif grep -Fq xdma_1 "$vivadosynthtcl"; then
-    pcie_ip="xdma_2x"
-  elif grep -Fq xdma_0 "$vivadosynthtcl"; then
-    pcie_ip="xdma"
-  else
-    echo "> Failed to determine the PCIe IP used in this design"
-    echo
-    continue
-  fi
-
   # Get CPU type from Vivado project file
   vivadoprj="../Vivado/$proj/$proj.xpr"
   if grep -q Part=\"xczu "$vivadoprj"; then
@@ -98,8 +71,8 @@ do
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
     fi
-    if [ -d "../src/$pcie_ip" ]; then
-      cp -R ../src/$pcie_ip/* .
+    if [ -d "../src/$cpu_type" ]; then
+      cp -R ../src/$cpu_type/* .
     fi
     # File to indicate that config files have been transferred
     touch configdone.txt
@@ -121,7 +94,7 @@ do
       echo "> PetaLinux project already packaged"
     else
       echo "> Packaging PetaLinux project"
-      petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 64 --flash-intf SPIx8
+      petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 32 --flash-intf SPIx4
     fi
   elif [[ $cpu_type == microblaze ]]; then
     if [ -f "./images/linux/boot.mcs" ]; then

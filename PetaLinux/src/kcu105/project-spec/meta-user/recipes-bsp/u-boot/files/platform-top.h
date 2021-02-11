@@ -3,6 +3,9 @@
 
 #define CONFIG_SYS_BOOTM_LEN 0xF000000
 
+/* BOOTCOMMAND */
+#define CONFIG_BOOTCOMMAND	"sf probe 0 && sf read ${netstartaddr} ${kernelstart} ${kernelsize} && bootm ${netstartaddr}"
+
 /* Extra U-Boot Env settings */
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	SERIAL_MULTI \ 
@@ -13,7 +16,7 @@
 	"clobstart=0x80000000\0" \ 
 	"netstart=0x80000000\0" \ 
 	"dtbnetstart=0x81e00000\0" \ 
-	"netstartaddr=0x81000000\0"  "bootcmd=run cp_kernel2ram && bootm ${netstartaddr}\0"  "loadaddr=0x80000000\0" \ 
+	"netstartaddr=0x81000000\0"  "loadaddr=0x80000000\0" \ 
 	"initrd_high=0x0\0" \ 
 	"bootsize=0x180000\0" \ 
 	"bootstart=0x1000000\0" \ 
@@ -23,7 +26,7 @@
 	"bootenvsize=0x40000\0" \ 
 	"bootenvstart=0x1180000\0" \ 
 	"eraseenv=sf probe 0 && sf erase ${bootenvstart} ${bootenvsize}\0" \ 
-	"kernelsize=0xf00000\0" \ 
+	"kernelsize=0xd00000\0" \ 
 	"kernelstart=0x11c0000\0" \ 
 	"kernel_img=image.ub\0" \ 
 	"install_kernel=sf probe 0 && sf erase ${kernelstart} ${kernelsize} && " \ 

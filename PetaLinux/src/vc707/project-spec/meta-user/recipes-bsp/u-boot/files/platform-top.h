@@ -3,6 +3,9 @@
 
 #define CONFIG_SYS_BOOTM_LEN 0xF000000
 
+/* BOOTCOMMAND */
+#define CONFIG_BOOTCOMMAND	"cp.b ${kernelstart} ${netstartaddr} ${kernelsize} && bootm ${netstartaddr}"
+
 /* Extra U-Boot Env settings */
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	SERIAL_MULTI \ 
@@ -13,7 +16,7 @@
 	"clobstart=0x80000000\0" \ 
 	"netstart=0x80000000\0" \ 
 	"dtbnetstart=0x81e00000\0" \ 
-	"netstartaddr=0x81000000\0"  "bootcmd=run cp_kernel2ram && bootm ${netstartaddr}\0"  "loadaddr=0x80000000\0" \ 
+	"netstartaddr=0x81000000\0"  "loadaddr=0x80000000\0" \ 
 	"initrd_high=0x0\0" \ 
 	"bootsize=0x180000\0" \ 
 	"bootstart=0x60b00000\0" \ 
@@ -26,7 +29,7 @@
 	"kernelstart=0x60ca0000\0" \ 
 	"kernel_img=image.ub\0" \ 
 	"install_kernel=protect off ${kernelstart} +${kernelsize} && erase ${kernelstart} +${kernelsize} && "  "cp.b ${clobstart} ${kernelstart} ${filesize}\0" \ 
-	"cp_kernel2ram=cp.b ${kernelstart} ${netstartaddr} ${kernelsize}\0" \ 
+	"cp_kernel2ram=cp.b ${kernelstart} ${netstart} ${kernelsize}\0" \ 
 	"fpgasize=0xb00000\0" \ 
 	"fpgastart=0x60000000\0" \ 
 	"fpga_img=system.bit.bin\0" \ 
