@@ -1,0 +1,17 @@
+Vivado/.Xil/
+Vivado/*.log
+Vivado/*.jou
+Vivado/*_pcie/
+Vivado/*_dual/
+Vivado/*_hpc*/
+Vitis/*_ssd_*/
+Vitis/*_wrapper/
+Vitis/.*/
+Vitis/.*
+Vitis/*.log
+Vitis/*.jou
+Vitis/boot/
+Vitis/embeddedsw/
+PetaLinux/*_pcie/
+PetaLinux/*_dual/
+PetaLinux/zcu106*/

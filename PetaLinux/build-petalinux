@@ -27,41 +27,14 @@ do
     continue
   fi
 
-  # Determine the AXI PCIe IP core used in this project
-  # and whether there are 1 or 2 cores in the design
-  vivadosynthtcl="../Vivado/$proj/${proj}.runs/synth_1/${proj}_wrapper.tcl"
-  if [ ! -f "$vivadosynthtcl" ]; then
-    echo "> Synthesis Tcl file not found ($vivadosynthtcl)"
-    echo "> PetaLinux will not be built for this project"
-    echo
-    continue
-  fi
-  if grep -Fq "axi_pcie3_1" $vivadosynthtcl; then
-    pcie_ip="axi_pcie3_2x"
-  elif grep -Fq "axi_pcie3_0" $vivadosynthtcl; then
-    pcie_ip="axi_pcie3"
-  elif grep -Fq "axi_pcie_0" $vivadosynthtcl; then
-    pcie_ip="axi_pcie"
-  elif grep -Fq "xdma_1" $vivadosynthtcl; then
-    pcie_ip="xdma_2x"
-  elif grep -Fq "xdma_0" $vivadosynthtcl; then
-    pcie_ip="xdma"
-  else
-    echo "> Failed to determine the PCIe IP used in this design"
-    echo
-    continue
-  fi
-
-  # Get CPU type from first letters of project name
-  type=$(echo $proj | cut -c1-3)
-  if [[ $type == *z* ]]; then
-    if [[ $type == "zcu" ]]; then
-      cpu_type="zynqMP"
-      fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
-    else
-      cpu_type="zynq"
-      fsbl_option="--fsbl ./images/linux/zynq_fsbl.elf"
-    fi
+  # Get CPU type from Vivado project file
+  vivadoprj="../Vivado/$proj/$proj.xpr"
+  if grep -q Part=\"xczu "$vivadoprj"; then
+    cpu_type="zynqMP"
+    fsbl_option="--fsbl ./images/linux/zynqmp_fsbl.elf"
+  elif grep -q Part=\"xc7z "$vivadoprj"; then
+    cpu_type="zynq"
+    fsbl_option="--fsbl ./images/linux/zynq_fsbl.elf"
   else
     cpu_type="microblaze"
     fsbl_option="--fsbl ./images/linux/fs-boot.elf"
@@ -94,27 +67,13 @@ do
   if [[ -f "configdone.txt" ]]; then
     echo "> PetaLinux config files already transferred"
   else
-    echo "> Transferring PetaLinux config files"
-    cp -R ../src/common/* .
-    cp -R ../src/$cpu_type/* .
-    if [ -d "../src/$pcie_ip" ]; then
-      cp -R ../src/$pcie_ip/* .
-    fi
+    echo "> Transferring PetaLinux BSPs and config files"
     if [ -d "../src/$board" ]; then
       cp -R ../src/$board/* .
     fi
-    # Append mods to config file
-    config_mod_list=(`find ./project-spec/configs/ -name "config_*.append"`)
-    for f in ${config_mod_list[*]}
-    do
-      cat $f >> ./project-spec/configs/config
-    done
-    # Append mods to rootfs_config file
-    rootfs_config_mod_list=(`find ./project-spec/configs/ -name "rootfs_config_*.append"`)
-    for f in ${rootfs_config_mod_list[*]}
-    do
-      cat $f >> ./project-spec/configs/rootfs_config
-    done
+    if [ -d "../src/$cpu_type" ]; then
+      cp -R ../src/$cpu_type/* .
+    fi
     # File to indicate that config files have been transferred
     touch configdone.txt
     # Run petalinux-config again to register the config files
@@ -131,33 +90,19 @@ do
 
   # Package PetaLinux project if not packaged
   if [[ $board == kcu105 ]]; then
-    if [ -f "./images/linux/boot.mcs" ]; then
+    if [ -f "./images/linux/boot_primary.mcs" ]; then
       echo "> PetaLinux project already packaged"
     else
       echo "> Packaging PetaLinux project"
       petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 32 --flash-intf SPIx4
     fi
-  elif [[ $board == kc705 ]]; then
+  elif [[ $cpu_type == microblaze ]]; then
     if [ -f "./images/linux/boot.mcs" ]; then
       echo "> PetaLinux project already packaged"
     else
       echo "> Packaging PetaLinux project"
       petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 128 --flash-intf BPIx16
     fi
-  elif [[ $cpu_type == microblaze ]]; then
-    # Do nothing for now
-    :
-    # if [ -f "./images/linux/boot.mcs" ]; then
-    #   echo "> PetaLinux project already packaged"
-    # else
-    #   echo "> Packaging PetaLinux project"
-    #   petalinux-package --boot --force \
-    #   --fpga ../$bit --offset 0x000000 \
-    #   $fsbl_option --u-boot --offset 0x1400000 \
-    #   --kernel --offset 0x1600000 \
-    #   --flash-size 128 \
-    #   --flash-intf BPIx16
-    # fi
   else
     if [[ -f "./images/linux/BOOT.BIN" && -f "./images/linux/image.ub" ]]; then
       echo "> PetaLinux project already packaged"

@@ -5,28 +5,9 @@
 # This Tcl script will create Vitis workspace with software applications for each of the
 # exported hardware designs in the ../Vivado directory.
 
-# axipcie Driver modifications
-# ----------------------------
-# Some of the Vivado designs in this project use the AXI Memory Mapped to PCIe Gen2 IP
-# and others use the AXI Bridge for PCIe Gen3 IP. Vitis comes with a driver for the Gen2
-# core that is called "axipcie". The BSPs for projects using the Gen2 core refer to that 
-# driver. You can find the driver sources in the Vitis installation files:
-#
-# C:\Xilinx\Vitis\<version>\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_1
-#
-# The Vitis does not currently supply a driver for the Gen3 core. However, there are enough
-# similarities between the Gen2 and Gen3 cores that we can get away with using a modified 
-# version of the "axipcie" driver, for doing some simple things such as link-up detection,
-# determining link speed and width, and enumerating PCIe devices with the Gen3 core.
-# 
-# We create this "Gen3 version" of the driver by making a local copy of the "axipcie" driver
-# sources and modifying the ".mdd" file, specifying that the driver supports the Gen3 core.
-# For Vitis to be aware of our locally copied driver, we set Vitis's "repo" path to the path 
-# of the driver. This script handles the copying and modification of the "axipcie" driver, 
-# which is stored locally in the "EmbeddedSw/XilinxProcessorIPLib/drivers" directory.
-
 # Set the Vivado directory containing the Vivado projects
-set vivado_dir "../Vivado"
+set vivado_dir [file join [pwd] "../Vivado"]
+set vivado_dir [file normalize $vivado_dir]
 # Set the application postfix
 set app_postfix "_ssd_test"
 
@@ -62,12 +43,15 @@ proc copy-r {{dir .} target_dir} {
   }
 } ;# RS
 
-# Fill in the local libraries with original sources without overwriting existing code
-proc fill_local_libraries {} {
+# Create the local software repository (embeddedsw) for the modified drivers
+proc create_local_embeddedsw {} {
   # Xilinx Vitis install directory
   set vitis_dir $::env(XILINX_VITIS)
+  # Copy the EmbeddedSw folder into the Vitis workspace
+  file mkdir "embeddedsw"
+  copy-r "../EmbeddedSw" "embeddedsw"
   # For each of the custom driver versions in our local repo
-  foreach drv_dir [glob -type d "../EmbeddedSw/XilinxProcessorIPLib/drivers/*"] {
+  foreach drv_dir [glob -type d "embeddedsw/XilinxProcessorIPLib/drivers/*"] {
     # Work out the original version library directory name by removing the appended "9"
     set lib_name [string trimright [lindex [split $drv_dir /] end] "9"]
     set orig_dir "$vitis_dir/data/embeddedsw/XilinxProcessorIPLib/drivers/$lib_name"
@@ -279,7 +263,8 @@ proc create_vitis_ws {} {
   
   # Add local Vitis repo for our locally copied driver for the Gen3 designs
   puts "Adding Vitis repo to the workspace."
-  repo -set "../EmbeddedSw"
+  set embsw [file normalize "${vitis_dir}/embeddedsw"]
+  repo -set [list $embsw]
 
   # Add each Vivado project to Vitis workspace
   foreach {vivado_folder} $vivado_proj_list {
@@ -374,28 +359,28 @@ proc create_vitis_ws {} {
     
     # If all required files exist, then generate boot files
     # Create directory for the boot file if it doesn't already exist
-    if {[file exists "./boot/$board_name"] == 0} {
-      file mkdir "./boot/$board_name"
+    if {[file exists "./boot/$vivado_folder"] == 0} {
+      file mkdir "./boot/$vivado_folder"
     }
 	
     # For Microblaze designs
     if {[str_contains $proc_instance "microblaze"]} {
-      puts "Generating combined bitstream/elf file for $board_name project."
+      puts "Generating combined bitstream/elf file for $vivado_folder project."
       # Generate the download.bit file with .elf
       exec updatemem --bit "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.bit" \
         --meminfo "../Vivado/${vivado_folder}/${vivado_folder}.runs/impl_1/${vivado_folder}_wrapper.mmi" \
         --data "./${app_name}/Debug/${app_name}.elf" \
         --proc "${vivado_folder}_i/microblaze_0" \
-        -force --out "./boot/${board_name}/${board_name}.bit"
+        -force --out "./boot/${vivado_folder}/${vivado_folder}.bit"
     # For Zynq and Zynq MP designs
     } else {
-      puts "Copying the BOOT.BIN file to the ./boot/${board_name} directory."
-      # Copy the already generated BOOT.bin file
-      set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.bin"
+      puts "Copying the BOOT.BIN file to the ./boot/${vivado_folder} directory."
+      # Copy the already generated BOOT.BIN file
+      set bootbin_file "./${app_name}_system/Debug/sd_card/BOOT.BIN"
       if {[file exists $bootbin_file] == 1} {
-        file copy -force $bootbin_file "./boot/${board_name}"
+        file copy -force $bootbin_file "./boot/${vivado_folder}"
       } else {
-        puts "No BOOT.bin file for ${app_name}."
+        puts "No BOOT.BIN file for ${app_name}."
       }
     }
   }
@@ -419,9 +404,9 @@ proc check_apps {} {
   }
 }
   
-# Copy original driver sources into the local Vitis repo
-puts "Building the local Vitis repo from original sources"
-fill_local_libraries
+# Copy original driver sources into the local Vitis software repo (embeddedsw)
+puts "Building the local Vitis software repo (embeddedsw) from original sources"
+create_local_embeddedsw
 
 # Create the Vitis workspace
 puts "Creating the Vitis workspace"
