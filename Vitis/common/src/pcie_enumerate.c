@@ -160,7 +160,7 @@ int main(void)
 	UtilDelay(1);
 
 	xil_printf("=============================\r\n");
-	xil_printf("PCIe Gen3 Enumeration Example\r\n");
+	xil_printf("PCIe Enumeration Example\r\n");
 	xil_printf("=============================\r\n");
 	
 	/* Initialize Root Complex */
