@@ -28,6 +28,11 @@ if {[str_contains $design_name "zcu104"]} {
   set select_quad_1 "GTY_Quad_130"
   set pcie_blk_locn_0 "X0Y0"
   set pcie_blk_locn_1 "X0Y1"
+} elseif {[str_contains $design_name "uzev"]} {
+  set select_quad_0 "GTH_Quad_225"
+  set select_quad_1 "GTH_Quad_224"
+  set pcie_blk_locn_0 "X0Y1"
+  set pcie_blk_locn_1 "X0Y0"
 }
 
 # CHECKING IF PROJECT EXISTS
@@ -75,12 +80,14 @@ if {$dual_design} {
   CONFIG.PSU__USE__S_AXI_GP3 {1} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {1} \
+  CONFIG.PSU__USE__IRQ0 {1} \
   CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 } else {
   set_property -dict [list CONFIG.PSU__USE__S_AXI_GP2 {1} \
   CONFIG.PSU__USE__S_AXI_GP3 {0} \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
   CONFIG.PSU__USE__M_AXI_GP1 {0} \
+  CONFIG.PSU__USE__IRQ0 {1} \
   CONFIG.PSU__HIGH_ADDRESS__ENABLE {1}] [get_bd_cells zynq_ultra_ps_e_0]
 }
 
