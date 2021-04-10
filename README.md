@@ -51,6 +51,8 @@ In order to test this design on hardware, you will need the following:
   * HPC connector 1 - Single SSD
 * Zynq UltraScale+ RFSoC [ZCU111 Evaluation board](https://www.xilinx.com/products/boards-and-kits/zcu111.html "ZCU111 Evaluation board")
   * FMC+ connector - Single and Dual SSD designs
+* Zynq UltraScale+ MPSoC [Avnet UltraZed-EV Starter Kit](https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html "Avnet UltraZed-EV Starter Kit")
+  * HPC connector - Dual SSD design
 
 ## Description
 
@@ -82,6 +84,7 @@ At the moment there are dual designs for these carriers:
 * KCU105
 * ZCU106
 * ZCU111
+* Avnet UltraZed-EV Starter Kit
 
 ### Build instructions
 
@@ -170,12 +173,12 @@ for these boards and can be uncommented if Ethernet is desired.
 
 * This design uses the Quad SPI flash in dual mode with SPIx8 interface (64MB total storage).
 
-### PicoZed
+### PicoZed and UltraZed-EV
 
-#### Installation of PicoZed board definition files
+#### Installation of board definition files
 
-To use this project on the PicoZed, you must first install the board definition files
-for the PicoZed into your Vivado installation.
+To use this project on the PicoZed or UltraZed-EV, you must first install the board definition files
+for these boards into your Vivado installation.
 
 The following folders contain the board definition files and can be found in this project repository at this location:
 
@@ -183,6 +186,7 @@ https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tree/master/Vivado/boards
 
 * `picozed_7015_fmc2`
 * `picozed_7030_fmc2`
+* `ultrazed_7ev_cc`
 
 Copy those folders and their contents into the `C:\Xilinx\Vivado\2020.2\data\boards\board_files` folder (this may
 be different on your machine, depending on your Vivado installation directory).
