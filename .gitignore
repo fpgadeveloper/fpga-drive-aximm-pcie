@@ -14,3 +14,4 @@ Vitis/embeddedsw/
 PetaLinux/*_pcie/
 PetaLinux/*_dual/
 PetaLinux/zcu106*/
+docs/build/

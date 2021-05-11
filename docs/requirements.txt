@@ -1,0 +1,48 @@
+# How to create the Python virtual environment for this project
+# -------------------------------------------------------------
+#
+# (1) Install Python 3.6 64-bit to path C:\Python36-64
+#
+# (2) Update pip:
+#        $ cd \Python36-64\Scripts
+#        $ pip install --upgrade pip
+#
+# (3) Install virtualenv to the base Python installation:
+#        $ cd \Python36-64\Scripts
+#        $ pip install virtualenv
+#
+# (4) Create the virtual environment:
+#        $ cd \Python36-64\Scripts
+#        $ virtualenv <path-to-repo>\env
+#
+# (5) Install the requirements:
+#        $ cd <path-to-repo>
+#        $ env\Scripts\activate
+#        $ pip install --upgrade -r requirements.txt
+# 
+alabaster==0.7.12
+Babel==2.6.0
+certifi==2019.3.9
+chardet==3.0.4
+colorama==0.4.1
+docutils==0.14
+idna==2.8
+imagesize==1.1.0
+Jinja2==2.11.3
+MarkupSafe==1.1.1
+packaging==19.0
+Pygments==2.7.4
+pyparsing==2.3.1
+pytz==2018.9
+requests==2.21.0
+six==1.12.0
+snowballstemmer==1.2.1
+Sphinx==2.0.0
+sphinx-rtd-theme==0.4.3
+sphinxcontrib-applehelp==1.0.1
+sphinxcontrib-devhelp==1.0.1
+sphinxcontrib-htmlhelp==1.0.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.2
+sphinxcontrib-serializinghtml==1.1.1
+urllib3==1.24.2
