@@ -7,6 +7,13 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 ![FPGA Drive FMC top side](docs/source/images/fpga-drive-fmc.jpg "FPGA Drive FMC")
 
+Important links:
+
+* The user guide for these reference designs is hosted here: [Ref design for FPGA Drive FMC docs](https://refdesign.fpgadrive.com "Ref design for FPGA Drive FMC docs")
+* To report a bug: [Report an issue](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/issues "Report an issue").
+* For technical support: [Contact Opsero](https://opsero.com/contact-us "Contact Opsero").
+* To purchase the mezzanine card: [FPGA Drive FMC order page](https://opsero.com/product/fpga-drive-fmc-dual "FPGA Drive FMC order page").
+
 ## Requirements
 
 This project is designed for version 2020.2 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
