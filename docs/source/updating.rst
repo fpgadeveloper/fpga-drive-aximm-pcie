@@ -184,7 +184,15 @@ Mods for all Zynq-7000 designs
 
 The following modifications apply to all the Zynq-7000 based designs (PicoZed, ZC706).
 
-1. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
+1. Append the following lines to ``project-spec/configs/rootfs_config``:
+
+.. code-block::
+
+   # Add coreutils for full version of dd
+   
+   CONFIG_coreutils=y
+
+2. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
 
 .. code-block::
 
@@ -208,7 +216,15 @@ Mods for all Zynq UltraScale+ designs
 
 The following modifications apply to all the Zynq UltraScale+ based designs (UltraZed-EV, ZCU104, ZCU106, ZCU111).
 
-1. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
+1. Append the following lines to ``project-spec/configs/rootfs_config``:
+
+.. code-block::
+
+   # Add coreutils for full version of dd
+   
+   CONFIG_coreutils=y
+
+2. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
 
 .. code-block::
 
