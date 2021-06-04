@@ -4037,6 +4037,7 @@ CONFIG_ADD_EXTRA_USERS="petalinux:petalinux;"
 
 # Tools for FPGA Drive FMC
 
+CONFIG_coreutils=y
 CONFIG_canutils=n
 CONFIG_packagegroup-core-ssh-dropbear=n
 CONFIG_e2fsprogs=y
