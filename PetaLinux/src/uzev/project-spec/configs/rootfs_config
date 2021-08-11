@@ -4269,4 +4269,4 @@ CONFIG_util-linux-fdisk=y
 CONFIG_pciutils=y
 CONFIG_bridge-utils=y
 CONFIG_bootscript=y
-
+CONFIG_nvme-cli=y

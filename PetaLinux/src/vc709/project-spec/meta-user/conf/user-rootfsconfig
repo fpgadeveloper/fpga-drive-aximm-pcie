@@ -15,4 +15,5 @@ CONFIG_util-linux-blkid
 CONFIG_util-linux-fdisk
 CONFIG_pciutils
 CONFIG_bridge-utils
+CONFIG_nvme-cli
 

@@ -133,6 +133,7 @@ This BSP modification applies to all target platforms.
    CONFIG_util-linux-fdisk
    CONFIG_pciutils
    CONFIG_bridge-utils
+   CONFIG_nvme-cli
 
 Disable Use Virtual Terminal
 ----------------------------
@@ -188,9 +189,10 @@ The following modifications apply to all the Zynq-7000 based designs (PicoZed, Z
 
 .. code-block::
 
-   # Add coreutils for full version of dd
+   # Add coreutils for full version of dd, and nvme-cli for NVMe tools
    
    CONFIG_coreutils=y
+   CONFIG_nvme-cli=y
 
 2. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
 
@@ -220,9 +222,10 @@ The following modifications apply to all the Zynq UltraScale+ based designs (Ult
 
 .. code-block::
 
-   # Add coreutils for full version of dd
+   # Add coreutils for full version of dd, and nvme-cli for NVMe tools
    
    CONFIG_coreutils=y
+   CONFIG_nvme-cli=y
 
 2. Append the following lines to file ``project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg``:
 
