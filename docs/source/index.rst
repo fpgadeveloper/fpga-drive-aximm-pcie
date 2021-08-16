@@ -16,6 +16,7 @@ This is the documentation for the reference designs for the `FPGA Drive FMC`_.
    description
    requirements
    supported_carriers
+   supported_ssds
    build_instructions
    stand_alone
    petalinux
