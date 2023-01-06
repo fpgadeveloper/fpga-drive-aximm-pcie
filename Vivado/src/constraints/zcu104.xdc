@@ -4,7 +4,7 @@
 #       1x MGT. Consequently, it can only support 1-lane PCIe.
 
 # SSD1 PCI Express reset LA00_P_CC (perst_0) - IOSTANDARD determined by VADJ
-set_property PACKAGE_PIN H18 [get_ports {perst_0[0]}]
+set_property PACKAGE_PIN F17 [get_ports {perst_0[0]}]
 set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]
 
 # SSD2 PCI Express reset LA04_P (perst_1) - IOSTANDARD determined by VADJ
