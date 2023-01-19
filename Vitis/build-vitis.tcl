@@ -134,8 +134,8 @@ proc custom_platform_mods {platform_name} {
 
 proc custom_app_mods {platform_name app_name} {
   set proc_instance [get_processor_from_platform $platform_name]
-  # If the hardware contains the XDMA (all Zynq MP designs)
-  if {[str_contains $proc_instance "psu_cortex"]} {
+  # If the hardware contains the XDMA (all Zynq MP designs and VCU118 designs)
+  if {[str_contains $proc_instance "psu_cortex"] || [str_contains $platform_name "vcu118"]} {
     # Copy the XDMA application from common/src
     file copy "common/src/xdmapcie_rc_enumerate_example.c" ${app_name}/src
   } else {

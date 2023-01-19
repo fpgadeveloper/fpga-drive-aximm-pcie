@@ -129,12 +129,30 @@ if {$design_name == "kc705_pcie"} {
   set haddr {0x1FFFFFFF}
   set axi2pci {0x0000000060000000}
   set barsize {512M}
+} elseif {$design_name == "vcu118_pcie_dual"} {
+  set pcie_ip "xdma"
+  set nlanes {X4 X4}
+  set pcie_loc {X0Y1 X0Y3}
+  set select_quad {"GTY_Quad_121" "GTY_Quad_126"}
+  set baddr {0x10000000 0x20000000}
+  set haddr {0x1FFFFFFF 0x2FFFFFFF}
+  set axi2pci {0x0000000060000000 0x0000000070000000}
+  set barsize {256M 256M}
+} elseif {$design_name == "vcu118_pcie"} {
+  set pcie_ip "xdma"
+  set nlanes {X4}
+  set pcie_loc {X0Y1}
+  set select_quad "GTY_Quad_121"
+  set baddr {0x10000000}
+  set haddr {0x1FFFFFFF}
+  set axi2pci {0x0000000060000000}
+  set barsize {512M}
 }
 
 # Create the list of interrupts
 set ints {}
 
-# Ultrascale boards use DDR4
+# KCU105 board MIG setup
 if {[string match "kcu105*" $design_name]} {
   set mig_name "ddr4_0"
   set mig_slave_interface "/ddr4_0/C0_DDR4_S_AXI"
@@ -145,7 +163,16 @@ if {[string match "kcu105*" $design_name]} {
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_HIGH)}}  [get_bd_pins ddr4_0/sys_rst]
   # Add the 50MHz additional clock output for Quad SPI clock
   set_property -dict [list CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {50}] [get_bd_cells ddr4_0]
-# Series-7 boards use DDR3
+# VCU118 board MIG setup
+} elseif {[string match "vcu118*" $design_name]} {
+  set mig_name "ddr4_0"
+  set mig_slave_interface "/ddr4_0/C0_DDR4_S_AXI"
+  set mig_ui_clk "/ddr4_0/c0_ddr4_ui_clk"
+  create_bd_cell -type ip -vlnv xilinx.com:ip:ddr4 $mig_name
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {default_250mhz_clk1 ( 250 MHz System differential clock1 ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_SYS_CLK]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {ddr4_sdram_c1_062 ( DDR4 SDRAM C1 ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_DDR4]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_HIGH)}}  [get_bd_pins ddr4_0/sys_rst]
+# Series-7 boards MIG setup
 } else {
   set mig_name "mig_0"
   set mig_slave_interface "/mig_0/S_AXI"
@@ -157,16 +184,16 @@ if {[string match "kcu105*" $design_name]} {
 
 # Add the MicroBlaze
 create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze microblaze_0
-if {[string match "kcu105*" $design_name]} {
+if {[string match "kcu105*" $design_name] || [string match "vcu118*" $design_name]} {
   apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { axi_intc {1} axi_periph {Enabled} cache {16KB} clk {/ddr4_0/addn_ui_clkout1 (100 MHz)} debug_module {Debug Only} ecc {None} local_mem {128KB} preset {None}}  [get_bd_cells microblaze_0]
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Cached)} Slave {/ddr4_0/C0_DDR4_S_AXI} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins ddr4_0/C0_DDR4_S_AXI]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Cached)} Slave {/ddr4_0/C0_DDR4_S_AXI} intc_ip {New AXI SmartConnect} master_apm {0}}  [get_bd_intf_pins ddr4_0/C0_DDR4_S_AXI]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_LOW)}}  [get_bd_pins rst_ddr4_0_100M/ext_reset_in]
   # Create ports
   create_bd_port -dir O init_calib_complete
   connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
 } else {
   apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { axi_intc {1} axi_periph {Enabled} cache {16KB} clk {/mig_0/ui_addn_clk_0 (100 MHz)} cores {1} debug_module {Debug Only} ecc {None} local_mem {128KB} preset {None}}  [get_bd_cells microblaze_0]
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {Auto} Master {/microblaze_0 (Cached)} Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins mig_0/S_AXI]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {Auto} Master {/microblaze_0 (Cached)} Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI SmartConnect} master_apm {0}}  [get_bd_intf_pins mig_0/S_AXI]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {Auto}}  [get_bd_pins rst_mig_0_100M/ext_reset_in]
   # Create ports
   create_bd_port -dir O mmcm_lock
@@ -204,7 +231,7 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
   
   # Add the AXI PCIe interrupt to the list of interrupts
   append ints "$ip_name/interrupt_out "
-
+  
   # Configure AXI PCIe IP
   if {$pcie_ip == "axi_pcie"} {
     set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} \
@@ -224,7 +251,7 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     CONFIG.S_AXI_DATA_WIDTH {128} \
     CONFIG.M_AXI_DATA_WIDTH {128}] [get_bd_cells $ip_name]
 
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk_out (62 MHz)" Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master "/$ip_name/M_AXI" Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk_out (62 MHz)" Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master "/$ip_name/M_AXI" Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave "/$ip_name/axi_aclk_out (62 MHz)" Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave "/$ip_name/axi_ctl_aclk_out (62 MHz)" Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI_CTL" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_CTL]
 
@@ -271,10 +298,82 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     CONFIG.pf0_class_code {060400}] [get_bd_cells $ip_name]
 
     # Use connection automation after configuration of the PCIe block - so it will assign 256MB to the S_AXI_CTL interface
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk (125 MHz)" Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master "/$ip_name/M_AXI" Slave {/ddr4_0/C0_DDR4_S_AXI} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk (125 MHz)" Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master "/$ip_name/M_AXI" Slave {/ddr4_0/C0_DDR4_S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI_CTL" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_CTL]
     
+  } elseif {$pcie_ip == "xdma"} {
+    set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
+    CONFIG.mode_selection {Advanced} \
+    CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
+    CONFIG.pl_link_cap_max_link_width {X4} \
+    CONFIG.pl_link_cap_max_link_speed {8.0_GT/s} \
+    CONFIG.axi_addr_width {49} \
+    CONFIG.axi_data_width {256_bit} \
+    CONFIG.axisten_freq {125} \
+    CONFIG.dedicate_perst {false} \
+    CONFIG.sys_reset_polarity {ACTIVE_LOW} \
+    CONFIG.pf0_base_class_menu {Bridge_device} \
+    CONFIG.pf0_class_code_base {06} \
+    CONFIG.pf0_sub_class_interface_menu {PCI_to_PCI_bridge} \
+    CONFIG.pf0_class_code_sub {04} \
+    CONFIG.pf0_class_code_interface {00} \
+    CONFIG.pf0_class_code {060400} \
+    CONFIG.xdma_axilite_slave {true} \
+    CONFIG.pcie_blk_locn [lindex $pcie_loc $i] \
+    CONFIG.en_gt_selection {true} \
+    CONFIG.select_quad [lindex $select_quad $i] \
+    CONFIG.INS_LOSS_NYQ {5} \
+    CONFIG.plltype {QPLL1} \
+    CONFIG.ins_loss_profile {Chip-to-Chip} \
+    CONFIG.type1_membase_memlimit_enable {Enabled} \
+    CONFIG.type1_prefetchable_membase_memlimit {64bit_Enabled} \
+    CONFIG.axibar_num {1} \
+    CONFIG.axibar2pciebar_0 [lindex $axi2pci $i] \
+    CONFIG.BASEADDR [lindex $baddr $i] \
+    CONFIG.HIGHADDR [lindex $haddr $i] \
+    CONFIG.pf0_bar0_enabled {false} \
+    CONFIG.pf1_class_code {060700} \
+    CONFIG.pf1_base_class_menu {Bridge_device} \
+    CONFIG.pf1_class_code_base {06} \
+    CONFIG.pf1_class_code_sub {07} \
+    CONFIG.pf1_sub_class_interface_menu {CardBus_bridge} \
+    CONFIG.pf1_class_code_interface {00} \
+    CONFIG.pf1_bar2_enabled {false} \
+    CONFIG.pf1_bar2_64bit {false} \
+    CONFIG.pf1_bar4_enabled {false} \
+    CONFIG.pf1_bar4_64bit {false} \
+    CONFIG.dma_reset_source_sel {Phy_Ready} \
+    CONFIG.pf0_bar0_type_mqdma {Memory} \
+    CONFIG.pf1_bar0_type_mqdma {Memory} \
+    CONFIG.pf2_bar0_type_mqdma {Memory} \
+    CONFIG.pf3_bar0_type_mqdma {Memory} \
+    CONFIG.pf0_sriov_bar0_type {Memory} \
+    CONFIG.pf1_sriov_bar0_type {Memory} \
+    CONFIG.pf2_sriov_bar0_type {Memory} \
+    CONFIG.pf3_sriov_bar0_type {Memory} \
+    CONFIG.pf0_base_class_menu_mqdma {Bridge_device} \
+    CONFIG.pf0_class_code_base_mqdma {06} \
+    CONFIG.pf0_class_code_mqdma {068000} \
+    CONFIG.pf1_base_class_menu_mqdma {Bridge_device} \
+    CONFIG.pf1_class_code_base_mqdma {06} \
+    CONFIG.pf1_class_code_mqdma {068000} \
+    CONFIG.pf2_base_class_menu_mqdma {Bridge_device} \
+    CONFIG.pf2_class_code_base_mqdma {06} \
+    CONFIG.pf2_class_code_mqdma {068000} \
+    CONFIG.pf3_base_class_menu_mqdma {Bridge_device} \
+    CONFIG.pf3_class_code_base_mqdma {06} \
+    CONFIG.pf3_class_code_mqdma {068000}] [get_bd_cells $ip_name]
+    
+    # Answer record 71106: Zynq Ultrascale+ MPSoC - PL PCIe Root Port Bridge (Vivado 2018.1)
+    # - MSI Interrupt handling causes downstream devices to time out
+    # https://www.xilinx.com/support/answers/71106.html
+    set_property -dict [list CONFIG.msi_rx_pin_en {true}] [get_bd_cells $ip_name]
+
+    # Use connection automation after configuration of the PCIe block - so it will assign 512MB to the S_AXI_CTL interfaces
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/$ip_name/axi_aclk (250 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/$ip_name/M_AXI_B} Slave {/ddr4_0/C0_DDR4_S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI_B]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/$ip_name/axi_aclk (250 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/$ip_name/S_AXI_B} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_B]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/$ip_name/axi_aclk (250 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/$ip_name/S_AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_LITE]
   } else {
     ################################################################################################
     # Notes on 2020.2 update:
@@ -316,10 +415,9 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     CONFIG.axibar2pciebar_0 [lindex $axi2pci $i] \
     CONFIG.pf0_class_code {060400}] [get_bd_cells $ip_name]
 
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk (125 MHz)" Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master "/$ip_name/M_AXI" Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk (125 MHz)" Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master "/$ip_name/M_AXI" Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI_CTL" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_CTL]
-
   }
   
   # Set BAR0 offset and size - we first set it to a small size to ensure that we can change the offset without
@@ -330,11 +428,19 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
   
   # Add MGT external port for PCIe
   create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp_$i
-  connect_bd_intf_net [get_bd_intf_pins axi_pcie_$i/pcie_7x_mgt] [get_bd_intf_ports pci_exp_$i]
+  if {[string match "vcu118*" $design_name]} {
+    connect_bd_intf_net [get_bd_intf_pins axi_pcie_$i/pcie_mgt] [get_bd_intf_ports pci_exp_$i]
+  } else {
+    connect_bd_intf_net [get_bd_intf_pins axi_pcie_$i/pcie_7x_mgt] [get_bd_intf_ports pci_exp_$i]
+  }
 
   # Add Link up output port
   create_bd_port -dir O user_link_up_$i
-  connect_bd_net [get_bd_ports user_link_up_$i] [get_bd_pins axi_pcie_$i/user_link_up]
+  if {[string match "vcu118*" $design_name]} {
+    connect_bd_net [get_bd_ports user_link_up_$i] [get_bd_pins axi_pcie_$i/user_lnk_up]
+  } else {
+    connect_bd_net [get_bd_ports user_link_up_$i] [get_bd_pins axi_pcie_$i/user_link_up]
+  }
 
   # Add differential buffer for the 100MHz PCIe reference clock
   create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf ref_clk_buf_$i
@@ -348,6 +454,9 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
   # http://www.xilinx.com/support/documentation/ip_documentation/axi_pcie3/v2_0/pg194-axi-bridge-pcie-gen3.pdf
   } elseif {[string match "kcu105*" $design_name]} {
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_DS_ODIV2] [get_bd_pins axi_pcie_$i/refclk]
+    connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/sys_clk_gt]
+  } elseif {[string match "vcu118*" $design_name]} {
+    connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_DS_ODIV2] [get_bd_pins axi_pcie_$i/sys_clk]
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/sys_clk_gt]
   } else {
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/refclk]
@@ -393,12 +502,6 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
       connect_bd_net [get_bd_pins axi_pcie_$i/axi_ctl_aresetn] [get_bd_pins rst_pcie_axi_aclk_$i/ext_reset_in]
       connect_bd_net [get_bd_pins /rst_pcie_axi_aclk_$i/peripheral_reset] [get_bd_ports perst_$i]
     }
-  }
-
-  # Add register slices on the axi_mem_intercon slave interface to PCIe to help timing closure
-  if {$design_name == "kcu105_lpc_pcie"} {
-    set mem_intercon_pcie_slave [expr {2 + $i}]
-    set_property -dict [list CONFIG.S0${mem_intercon_pcie_slave}_HAS_REGSLICE {4}] [get_bd_cells axi_mem_intercon]
   }
 }
 
@@ -462,9 +565,9 @@ if 0 {
     }
     # Connection automation: AXI Lite and AXI Streaming interfaces
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_ethernet_0/s_axi} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_ethernet_0/s_axi]
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_MM2S} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_MM2S]
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_S2MM} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_S2MM]
-    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_SG} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_SG]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_MM2S} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_MM2S]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_S2MM} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_S2MM]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config " Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_ethernet_0_dma/M_AXI_SG} Slave $mig_slave_interface ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}"  [get_bd_intf_pins axi_ethernet_0_dma/M_AXI_SG]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_ethernet_0_dma/S_AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_ethernet_0_dma/S_AXI_LITE]
     # Interrupts
     append ints "axi_ethernet_0/interrupt "
@@ -499,6 +602,50 @@ if {[string match "kcu105*" $design_name]} {
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {spi_flash ( QSPI flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_quad_spi_0/SPI_1]
   connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout2]
   append ints "axi_quad_spi_0/ip2intc_irpt "
+# VCU118 has linear flash needing AXI EMC
+# Vivado 2020.2 doesn't yet support auto-connect for the linear flash on these boards, so we must do it manually
+} elseif {[string match "vcu118*" $design_name]} {
+  create_bd_cell -type ip -vlnv xilinx.com:ip:axi_emc axi_emc_0
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_emc_0/S_AXI_MEM} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_emc_0/S_AXI_MEM]
+  connect_bd_net [get_bd_pins ddr4_0/addn_ui_clkout1] [get_bd_pins axi_emc_0/rdclk]
+  set_property -dict [list CONFIG.C_USE_STARTUP {1} CONFIG.C_USE_STARTUP_INT {1}] [get_bd_cells axi_emc_0]
+  set_property -dict [ list CONFIG.C_INCLUDE_DATAWIDTH_MATCHING_0 {1} \
+    CONFIG.C_MAX_MEM_WIDTH {16} \
+    CONFIG.C_MEM0_TYPE {2} \
+    CONFIG.C_MEM0_WIDTH {16} \
+    CONFIG.C_TAVDV_PS_MEM_0 {96000} \
+    CONFIG.C_TCEDV_PS_MEM_0 {96000} \
+    CONFIG.C_THZCE_PS_MEM_0 {9000} \
+    CONFIG.C_THZOE_PS_MEM_0 {9000} \
+    CONFIG.C_TLZWE_PS_MEM_0 {20000} \
+    CONFIG.C_TWC_PS_MEM_0 {40000} \
+    CONFIG.C_TWPH_PS_MEM_0 {20000} \
+    CONFIG.C_TWP_PS_MEM_0 {40000} \
+    CONFIG.C_WR_REC_TIME_MEM_0 {200000}  ] [get_bd_cells axi_emc_0]
+  # Create ports
+  set Linear_Flash_address [ create_bd_port -dir O -from 25 -to 0 Linear_Flash_address ]
+  set Linear_Flash_adv_ldn [ create_bd_port -dir O Linear_Flash_adv_ldn ]
+  set Linear_Flash_oe_n [ create_bd_port -dir O -from 0 -to 0 Linear_Flash_oe_n ]
+  set Linear_Flash_wait [ create_bd_port -dir I -from 0 -to 0 Linear_Flash_wait ]
+  set Linear_Flash_we_n [ create_bd_port -dir O Linear_Flash_we_n ]
+  set Linear_Flash_dq_io [ create_bd_port -dir IO -from 15 -to 4 -type data Linear_Flash_dq_io ]
+  # Create IOBUF
+  create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf axi_emc_iobuf
+  set_property -dict [list CONFIG.C_SIZE {12} CONFIG.C_BUF_TYPE {IOBUF}] [get_bd_cells axi_emc_iobuf]
+  connect_bd_net [get_bd_pins axi_emc_iobuf/IOBUF_IO_O] [get_bd_pins axi_emc_0/mem_dq_i]
+  connect_bd_net [get_bd_pins axi_emc_0/mem_dq_o] [get_bd_pins axi_emc_iobuf/IOBUF_IO_I]
+  connect_bd_net [get_bd_pins axi_emc_0/mem_dq_t] [get_bd_pins axi_emc_iobuf/IOBUF_IO_T]
+  # Create instance: axi_emc_slice, and set properties
+  set axi_emc_slice [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice axi_emc_slice ]
+  set_property -dict [ list CONFIG.DIN_FROM {26} CONFIG.DIN_TO {1}  ] $axi_emc_slice
+  # Create port connections
+  connect_bd_net [get_bd_pins axi_emc_0/mem_a] [get_bd_pins axi_emc_slice/Din]
+  connect_bd_net [get_bd_ports Linear_Flash_adv_ldn] [get_bd_pins axi_emc_0/mem_adv_ldn]
+  connect_bd_net [get_bd_ports Linear_Flash_oe_n] [get_bd_pins axi_emc_0/mem_oen]
+  connect_bd_net [get_bd_ports Linear_Flash_we_n] [get_bd_pins axi_emc_0/mem_wen]
+  connect_bd_net [get_bd_ports Linear_Flash_dq_io] [get_bd_pins axi_emc_iobuf/IOBUF_IO_IO]
+  connect_bd_net [get_bd_ports Linear_Flash_wait] [get_bd_pins axi_emc_0/mem_wait]
+  connect_bd_net [get_bd_ports Linear_Flash_address] [get_bd_pins axi_emc_slice/Dout]
 # Add linear flash on Series-7 boards
 } else {
   create_bd_cell -type ip -vlnv xilinx.com:ip:axi_emc axi_emc_0
