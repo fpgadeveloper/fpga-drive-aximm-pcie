@@ -64,7 +64,7 @@ Run the application
 #. In the Vitis Explorer panel, double-click on the System project that you want to run -
    this will reveal the applications contained in the project. The System project will have 
    the postfix "_system".
-#. Now click on the application that you want to run. It should have the postfix "_echo_server".
+#. Now click on the application that you want to run. It should have the postfix "_ssd_test_system".
 #. Select the option "Run Configurations" from the drop-down menu contained under the Run
    button on the toolbar (play symbol).
 #. Double-click on "Single Application Debug" to create a run configuration for this 
