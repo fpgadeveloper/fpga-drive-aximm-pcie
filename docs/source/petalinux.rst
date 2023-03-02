@@ -19,7 +19,8 @@ Instructions
 
 1. First generate the Vivado project hardware design(s) (the bitstream) and export the design(s).
 2. Launch PetaLinux by sourcing the ``settings.sh`` bash script, eg: ``source <path-to-installed-petalinux>/settings.sh``
-3. Build the PetaLinux project(s) by executing the ``build-petalinux`` script in Linux.
+3. Launch Vivado by sourcing the ``settings64.sh`` bash script, eg: ``source <vivado-install-dir>/settings64.sh``
+4. Build the PetaLinux project(s) by executing the ``build-petalinux`` script in Linux.
 
 The script will generate a separate PetaLinux project for all of the generated and exported Vivado projects that
 it finds in the Vivado directory of this repo.
