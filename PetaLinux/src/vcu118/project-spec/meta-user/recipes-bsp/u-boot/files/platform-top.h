@@ -22,22 +22,22 @@
 	"netstartaddr=0x81000000\0"  "loadaddr=0x80000000\0" \ 
 	"initrd_high=0x0\0" \ 
 	"bootsize=0x180000\0" \ 
-	"bootstart=0x61C00000\0" \ 
+	"bootstart=0x62400000\0" \ 
 	"boot_img=u-boot-s.bin\0" \ 
 	"load_boot=tftpboot ${clobstart} ${boot_img}\0" \ 
 	"update_boot=setenv img boot; setenv psize ${bootsize}; setenv installcmd \"install_boot\"; run load_boot test_img; setenv img; setenv psize; setenv installcmd\0" \ 
 	"install_boot=protect off ${bootstart} +${bootsize} && erase ${bootstart} +${bootsize} && "  "cp.b ${clobstart} ${bootstart} ${filesize}\0" \ 
 	"bootenvsize=0x20000\0" \ 
-	"bootenvstart=0x61D80000\0" \ 
+	"bootenvstart=0x62580000\0" \ 
 	"eraseenv=protect off ${bootenvstart} +${bootenvsize} && erase ${bootenvstart} +${bootenvsize}\0" \ 
-	"kernelsize=0xC00000\0" \ 
-	"kernelstart=0x61DA0000\0" \ 
+	"kernelsize=0xC40000\0" \ 
+	"kernelstart=0x625A0000\0" \ 
 	"kernel_img=image.ub\0" \ 
 	"load_kernel=tftpboot ${clobstart} ${kernel_img}\0" \ 
 	"update_kernel=setenv img kernel; setenv psize ${kernelsize}; setenv installcmd \"install_kernel\"; run load_kernel test_crc; setenv img; setenv psize; setenv installcmd\0" \ 
 	"install_kernel=protect off ${kernelstart} +${kernelsize} && erase ${kernelstart} +${kernelsize} && "  "cp.b ${clobstart} ${kernelstart} ${filesize}\0" \ 
 	"cp_kernel2ram=cp.b ${kernelstart} ${netstart} ${kernelsize}\0" \ 
-	"fpgasize=0x1C00000\0" \ 
+	"fpgasize=0x2400000\0" \ 
 	"fpgastart=0x60000000\0" \ 
 	"fpga_img=system.bit.bin\0" \ 
 	"load_fpga=tftpboot ${clobstart} ${fpga_img}\0" \ 
