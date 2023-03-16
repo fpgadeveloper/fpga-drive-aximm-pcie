@@ -11,7 +11,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	SERIAL_MULTI \ 
 	CONSOLE_ARG \ 
-	TTYUL0 \ 
+	ESERIAL0 \ 
 	"nc=setenv stdout nc;setenv stdin nc;\0" \ 
 	"ethaddr=00:0a:35:00:22:01\0" \
 	"autoload=no\0" \ 

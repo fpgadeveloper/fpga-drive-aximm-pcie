@@ -90,11 +90,18 @@ do
 
   # Package PetaLinux project if not packaged
   if [[ $board == kcu105 ]]; then
-    if [ -f "./images/linux/boot_primary.mcs" ]; then
+    if [ -f "./images/linux/boot.mcs" ]; then
       echo "> PetaLinux project already packaged"
     else
       echo "> Packaging PetaLinux project"
       petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 32 --flash-intf SPIx4
+    fi
+  elif [[ $board == vcu118 ]]; then
+    if [ -f "./images/linux/boot.mcs" ]; then
+      echo "> PetaLinux project already packaged"
+    else
+      echo "> Packaging PetaLinux project"
+      petalinux-package --boot --force --fpga ./images/linux/system.bit --u-boot --kernel --flash-size 128 --flash-intf SPIx4
     fi
   elif [[ $cpu_type == microblaze ]]; then
     if [ -f "./images/linux/boot.mcs" ]; then
