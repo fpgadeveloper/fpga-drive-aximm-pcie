@@ -562,6 +562,8 @@ if 0 {
       apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sgmii_lvds ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernet_0/sgmii]
       # Clocks
       connect_bd_net [get_bd_pins $mig_ui_clk] [get_bd_pins axi_ethernet_0/axis_clk]
+      # DMA config for Ethernet
+      set_property -dict [list CONFIG.c_sg_length_width {16} CONFIG.c_include_mm2s_dre {1} CONFIG.c_sg_use_stsapp_length {1} CONFIG.c_include_s2mm_dre {1}] [get_bd_cells axi_ethernet_0_dma]
     } elseif {[string match "vc707*" $design_name]} {
       apply_bd_automation -rule xilinx.com:bd_rule:axi_ethernet -config { FIFO_DMA {DMA} PHY_TYPE {SGMII}}  [get_bd_cells axi_ethernet_0]
       # Clocks
