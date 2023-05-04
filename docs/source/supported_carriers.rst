@@ -97,8 +97,8 @@ you must reprogram the EEPROM (U14) where the configuration is stored. Avnet pro
 reprogram the EEPROM to the configuration we need for this project. The boot files have been copied to the links below for your
 convenience:
 
-* `PicoZed 7015 BOOT.bin for FMC clock config <https://opsero.com/downloads/picozed/pz_7015_fmc_clock.zip>`_
-* `PicoZed 7030 BOOT.bin for FMC clock config <https://opsero.com/downloads/picozed/pz_7030_fmc_clock.zip>`_
+* `PicoZed 7015 BOOT.bin for FMC clock config <https://download.opsero.com/picozed/pz_7015_fmc_clock.zip>`_
+* `PicoZed 7030 BOOT.bin for FMC clock config <https://download.opsero.com/picozed/pz_7030_fmc_clock.zip>`_
 
 Just boot up your `PicoZed FMC Carrier Card V2`_
 using one of those boot files, and the EEPROM will be reprogrammed as required for this project. For more information,
@@ -120,7 +120,7 @@ The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an in
 
 
 .. _contact Opsero: https://opsero.com/contact-us
-.. _compatibility list: https://fpgadrive.com/technical-info/
+.. _compatibility list: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/
 .. _FPGA Drive FMC: https://fpgadrive.com
 .. _PicoZed FMC Carrier Card V2: http://zedboard.org/product/picozed-fmc-carrier-card-v2
 .. _PicoZed 7030: http://picozed.org

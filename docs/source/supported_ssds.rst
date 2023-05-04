@@ -5,8 +5,8 @@ Supported SSDs
 Selecting SSDs
 ==============
 
-The FPGA Drive FMC is an adapter that has been designed to support PCIe Gen1 to Gen3. If you are using an M2 SSD that supports
-PCIe Gen1,2 or 3, then it terms of the physical hardware, it is fully compatible with the FPGA Drive FMC. In reality there are other
+The FPGA Drive FMC Gen4 is an adapter that has been designed to support PCIe Gen1 to Gen4. If you are using an M2 SSD that supports
+PCIe Gen1,2,3 or 4, then it terms of the physical hardware, it is fully compatible with the FPGA Drive FMC. In reality there are other
 layers involved that can cause incompatibility or usage issues (eg. the version of PetaLinux used, the version of NVMe built 
 into the SSD, the transceiver settings in the Vivado design, etc).
 
