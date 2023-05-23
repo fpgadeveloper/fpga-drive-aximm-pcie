@@ -383,6 +383,10 @@ for {set i 0} {$i < [llength $nlanes]} {incr i} {
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/$ip_name/axi_aclk (250 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/$ip_name/M_AXI_B} Slave {/ddr4_0/C0_DDR4_S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI_B]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/$ip_name/axi_aclk (250 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/$ip_name/S_AXI_B} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_B]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/$ip_name/axi_aclk (250 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave {/$ip_name/S_AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_LITE]
+    
+    # Interrupts MSI
+    append ints "$ip_name/interrupt_out_msi_vec0to31 "
+    append ints "$ip_name/interrupt_out_msi_vec32to63 "
   } else {
     ################################################################################################
     # Notes on 2020.2 update:
