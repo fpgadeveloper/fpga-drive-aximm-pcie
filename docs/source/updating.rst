@@ -52,7 +52,7 @@ For example, the BSP files for the KC705 are located in ``PetaLinux/src/kc705``.
 #. Download and install the PetaLinux release that you intend to use.
 #. Download and install the BSP for the target platform for the release that you intend to use.
 
-   * For KC705, KCU105, ZC706, ZCU104, ZCU106 and ZCU111, download the BSP from the 
+   * For KC705, KCU105, ZC706, ZCU104, ZCU106, ZCU111, ZCU208 download the BSP from the 
      `PetaLinux download page <https://www.xilinx.com/petalinux>`_
    * For VC707 and VC709, download the BSP for the **KC705** from the 
      `PetaLinux download page <https://www.xilinx.com/petalinux>`_
@@ -216,7 +216,7 @@ The following modifications apply to all the Zynq-7000 based designs (PicoZed, Z
 Mods for all Zynq UltraScale+ designs
 -------------------------------------
 
-The following modifications apply to all the Zynq UltraScale+ based designs (UltraZed-EV, ZCU104, ZCU106, ZCU111).
+The following modifications apply to all the Zynq UltraScale+ based designs (UltraZed-EV, ZCU104, ZCU106, ZCU111, ZCU208).
 
 1. Append the following lines to ``project-spec/configs/rootfs_config``:
 

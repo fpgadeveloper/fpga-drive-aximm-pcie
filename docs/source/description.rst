@@ -37,6 +37,7 @@ block depends on the device.
 | `DMA for PCI Express (PCIe) Subsystem IP <https://www.xilinx.com/products/intellectual-property/pcie-dma.html>`_                        | | ZCU104         |
 |                                                                                                                                         | | ZCU106         |
 |                                                                                                                                         | | ZCU111         |
+|                                                                                                                                         | | ZCU208         |
 |                                                                                                                                         | | UltraZed EV    |
 +-----------------------------------------------------------------------------------------------------------------------------------------+------------------+
 
@@ -71,5 +72,6 @@ At the moment there are dual designs for these carriers:
 * KCU105
 * ZCU106
 * ZCU111
+* ZCU208
 * Avnet UltraZed-EV Starter Kit
 

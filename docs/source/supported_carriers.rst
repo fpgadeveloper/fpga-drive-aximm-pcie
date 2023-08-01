@@ -37,6 +37,8 @@ List of supported boards
 +-----------------------------------------------------------------------+------+---------------------+ 
 | Zynq UltraScale+ `ZCU111 Evaluation board`_                           | FMC+ | Single & dual SSD   |
 +-----------------------------------------------------------------------+------+---------------------+ 
+| Zynq UltraScale+ `ZCU208 Evaluation board`_                           | FMC+ | Single & dual SSD   |
++-----------------------------------------------------------------------+------+---------------------+ 
 | Zynq UltraScale+ `UltraZed EV Carrier Card`_                          | HPC  | Dual SSD design     |
 +-----------------------------------------------------------------------+------+---------------------+ 
 
@@ -116,6 +118,11 @@ ZCU111
 
 The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an independent 4-lane PCIe interface.
 
+ZCU208
+------
+
+The ZCU208 has a single FMC+ connector that can support 2x SSDs, each with an independent 4-lane PCIe interface.
+
 
 
 
@@ -129,6 +136,7 @@ The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an in
 .. _ZCU104 Evaluation board: https://www.xilinx.com/zcu104
 .. _ZCU106 Evaluation board: https://www.xilinx.com/zcu106
 .. _ZCU111 Evaluation board: https://www.xilinx.com/zcu111
+.. _ZCU208 Evaluation board: https://www.xilinx.com/zcu208
 .. _KC705 Evaluation board: https://www.xilinx.com/kc705
 .. _KCU105 Evaluation board: https://www.xilinx.com/kcu105
 .. _VC707 Evaluation board: https://www.xilinx.com/vc707
