@@ -9,10 +9,11 @@ This repo contains the example designs for the FPGA Drive FMC mated with several
 
 Important links:
 
+* Datasheet for the [FPGA Drive FMC Gen4](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/ "FPGA Drive FMC Gen4 Datasheet")
 * The user guide for these reference designs is hosted here: [Ref design for FPGA Drive FMC docs](https://refdesign.fpgadrive.com "Ref design for FPGA Drive FMC docs")
 * To report a bug: [Report an issue](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/issues "Report an issue").
 * For technical support: [Contact Opsero](https://opsero.com/contact-us "Contact Opsero").
-* To purchase the mezzanine card: [FPGA Drive FMC order page](https://opsero.com/product/fpga-drive-fmc-dual "FPGA Drive FMC order page").
+* To purchase the mezzanine card: [FPGA Drive FMC order page](https://opsero.com/product/fpga-drive-fmc-gen4/ "FPGA Drive FMC order page").
 
 ## Requirements
 
@@ -26,9 +27,9 @@ In order to test this design on hardware, you will need the following:
 * Vivado 2020.2
 * Vitis 2020.2
 * PetaLinux Tools 2020.2
-* [FPGA Drive](http://fpgadrive.com "FPGA Drive") - for connecting a PCIe SSD
+* [FPGA Drive FMC Gen4](http://fpgadrive.com "FPGA Drive FMC Gen4") - for connecting a PCIe SSD
 * M.2 PCIe Solid State Drive
-* One of the supported carriers listed below
+* One of the supported carriers listed [here](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/)
 
 ## Contribute
 

@@ -28,6 +28,11 @@ if {[str_contains $design_name "zcu104"]} {
   set select_quad_1 "GTY_Quad_130"
   set pcie_blk_locn_0 "X0Y0"
   set pcie_blk_locn_1 "X0Y1"
+} elseif {[str_contains $design_name "zcu208"]} {
+  set select_quad_0 "GTY_Quad_130"
+  set select_quad_1 "GTY_Quad_131"
+  set pcie_blk_locn_0 "PCIE4C_X0Y0"
+  set pcie_blk_locn_1 "PCIE4C_X0Y1"
 } elseif {[str_contains $design_name "uzev"]} {
   set select_quad_0 "GTH_Quad_225"
   set select_quad_1 "GTH_Quad_224"
