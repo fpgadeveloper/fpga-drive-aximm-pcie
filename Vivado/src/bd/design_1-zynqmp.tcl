@@ -12,28 +12,28 @@ proc str_contains {str substr} {
 }
 
 # Board specific PCIe and GT LOCs
-if {[str_contains $design_name "zcu104"]} {
+if {[str_contains $target "zcu104"]} {
   set select_quad_0 "GTH_Quad_226"
   set pcie_blk_locn_0 "X0Y0"
-} elseif {[str_contains $design_name "zcu106_hpc0"]} {
+} elseif {[str_contains $target "zcu106_hpc0"]} {
   set select_quad_0 "GTH_Quad_226"
   set select_quad_1 "GTH_Quad_227"
   set pcie_blk_locn_0 "X0Y1"
   set pcie_blk_locn_1 "X0Y0"
-} elseif {[str_contains $design_name "zcu106_hpc1"]} {
+} elseif {[str_contains $target "zcu106_hpc1"]} {
   set select_quad_0 "GTH_Quad_223"
   set pcie_blk_locn_0 "X0Y0"
-} elseif {[str_contains $design_name "zcu111"]} {
+} elseif {[str_contains $target "zcu111"]} {
   set select_quad_0 "GTY_Quad_129"
   set select_quad_1 "GTY_Quad_130"
   set pcie_blk_locn_0 "X0Y0"
   set pcie_blk_locn_1 "X0Y1"
-} elseif {[str_contains $design_name "zcu208"]} {
+} elseif {[str_contains $target "zcu208"]} {
   set select_quad_0 "GTY_Quad_130"
   set select_quad_1 "GTY_Quad_131"
   set pcie_blk_locn_0 "PCIE4C_X0Y0"
   set pcie_blk_locn_1 "PCIE4C_X0Y1"
-} elseif {[str_contains $design_name "uzev"]} {
+} elseif {[str_contains $target "uzev"]} {
   set select_quad_0 "GTH_Quad_225"
   set select_quad_1 "GTH_Quad_224"
   set pcie_blk_locn_0 "X0Y1"
@@ -49,9 +49,9 @@ if { [get_projects -quiet] eq "" } {
 set cur_design [current_bd_design -quiet]
 set list_cells [get_bd_cells -quiet]
 
-create_bd_design $design_name
+create_bd_design $block_name
 
-current_bd_design $design_name
+current_bd_design $block_name
 
 set parentCell [get_bd_cells /]
 
@@ -113,7 +113,7 @@ if {$dual_design} {
 # ZCU106 HPC0 has enough MGTs for all 4-lanes for SSD1 and SSD2
 # ZCU106 HPC1 has only 1x MGT for SSD1 (cannot support SSD2)
 # ZCU104 LPC has only 1x MGT for SSD1
-if {$num_lanes eq 4} {
+if {[lindex $num_lanes 0] == "X4"} {
   # 4-lane PCIe config
   set max_link_width X4
   set axi_data_width 128_bit

@@ -11,9 +11,9 @@ if { [get_projects -quiet] eq "" } {
 set cur_design [current_bd_design -quiet]
 set list_cells [get_bd_cells -quiet]
 
-create_bd_design $design_name
+create_bd_design $block_name
 
-current_bd_design $design_name
+current_bd_design $block_name
 
 set parentCell [get_bd_cells /]
 
@@ -57,7 +57,7 @@ connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins process
 connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK]
 
 # AXI Memory Mapped to PCIe Bridge configurations
-if {$num_lanes eq "4"} {
+if {[lindex $num_lanes 0] == "X4"} {
   # 4-lane PCIe config
   set no_of_lanes X4
   set device_id 0x7124
@@ -68,7 +68,10 @@ if {$num_lanes eq "4"} {
   set device_id 0x7012
   set data_width 64
 }
-if {$link_speed eq "5"} {
+
+# PicoZed 7015 supports PCIe Gen1
+# PicoZed 7030 and ZC706 support PCIe Gen2
+if {$board_name == "pz7z030" || $board_name == "zc706"} {
   set max_link_speed 5.0_GT/s
 } else {
   set max_link_speed 2.5_GT/s
@@ -121,18 +124,11 @@ connect_bd_net [get_bd_pins axi_pcie_0/axi_ctl_aclk_out] [get_bd_pins proc_sys_r
 connect_bd_net [get_bd_pins axi_pcie_0/mmcm_lock] [get_bd_pins proc_sys_reset_0/dcm_locked]
 
 # Create the perst port and connect it
-if {$fmc_design} {
-  # Active HIGH PERST output for FMC designs (FMC form factor)
-  create_bd_port -dir O -from 0 -to 0 -type rst perst
-  connect_bd_net [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
-  connect_bd_net [get_bd_pins /proc_sys_reset_0/peripheral_reset] [get_bd_ports perst]
-  connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_pcie_0/axi_aresetn]
-} else {
-  # Active LOW PERST_N input for PCIe designs (PCIe form factor - obsolete)
-  create_bd_port -dir I -type rst perst_n
-  connect_bd_net [get_bd_ports perst_n] [get_bd_pins proc_sys_reset_0/ext_reset_in]
-  connect_bd_net [get_bd_ports perst_n] [get_bd_pins /axi_pcie_0/axi_aresetn]
-}
+# Active HIGH PERST output for FMC designs (FMC form factor)
+create_bd_port -dir O -from 0 -to 0 -type rst perst
+connect_bd_net [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
+connect_bd_net [get_bd_pins /proc_sys_reset_0/peripheral_reset] [get_bd_ports perst]
+connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_pcie_0/axi_aresetn]
 
 # Add two peripheral interconnects (for GP0 and GP1) and a mem interconnect (for HP0)
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect periph_intercon_0
@@ -151,13 +147,11 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/process
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/processing_system7_0/FCLK_CLK0 (100 MHz)} Clk_slave {/axi_pcie_0/axi_aclk_out (125 MHz)} Clk_xbar {/processing_system7_0/FCLK_CLK0 (100 MHz)} Master {/processing_system7_0/M_AXI_GP1} Slave {/axi_pcie_0/S_AXI} intc_ip {/periph_intercon_1} master_apm {0}}  [get_bd_intf_pins axi_pcie_0/S_AXI]
 
 # Constant to enable/disable 3.3V power supply of SSD2 and clock source
-if {$fmc_design} {
-  set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
-  create_bd_port -dir O disable_ssd2_pwr
-  connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
-  # HIGH to disable SSD2
-  set_property -dict [list CONFIG.CONST_VAL {1}] $const_dis_ssd2_pwr
-}
+set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+create_bd_port -dir O disable_ssd2_pwr
+connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
+# HIGH to disable SSD2
+set_property -dict [list CONFIG.CONST_VAL {1}] $const_dis_ssd2_pwr
 
 # Restore current instance
 current_bd_instance $oldCurInst
