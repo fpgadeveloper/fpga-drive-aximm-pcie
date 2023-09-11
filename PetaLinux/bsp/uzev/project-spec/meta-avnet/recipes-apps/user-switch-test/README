@@ -1,0 +1,47 @@
+PetaLinux User Application Template
+===================================
+
+This directory contains a PetaLinux user application created from a template.
+
+If you are developing your application from scratch, simply start editing the
+file user-switch-test.c.
+
+You can easily import any existing application code by copying it into this 
+directory, and editing the automatically generated Makefile.
+
+Before building the application, you will need to enable the application
+from PetaLinux menuconfig by running:
+    "petalinux-config -c rootfs"
+You will see your application in the "Applications --->" submenu.
+
+To build your application, simply run "petlainux-build -c rootfs/user-switch-test".
+This command will build your application and will install your application
+into the target file system host copy.
+
+You will also need to rebuild PetaLinux bootable images so that the images
+is updated with the updated target filesystem copy, run this command:
+    "petalinux-build -x package"
+
+You can also run one PetaLinux command to install the application to the
+target filesystem host copy and update the bootable images as follows:
+    "petalinux-build"
+
+To add extra source code files (for example, to split a large application into 
+multiple source files), add the relevant .o files to the list in the local 
+Makefile where indicated.  
+
+To have other files (for example application configuration files or scripts) 
+copied into the root file system, add addition lines under the "install:"
+target in the Makefile.  For example:
+
+    $(TARGETINST) myfile.conf /etc
+
+Copy the file myfile.conf from this directory into the /etc directory
+on the Embedded Linux filesystem).
+
+Another example:
+    (TARGETINST) -a "some text here" /etc/system.conf
+
+Add the line "some text here" to the /etc/system.conf file.
+
+See ${PETALINUX}/components/rootfs/targetroot-inst.sh for details and more options.

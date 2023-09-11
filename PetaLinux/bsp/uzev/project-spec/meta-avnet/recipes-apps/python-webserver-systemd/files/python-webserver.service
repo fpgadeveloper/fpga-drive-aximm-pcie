@@ -1,0 +1,14 @@
+[Unit]
+Description=Python Webserver
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/bash -c 'source /usr/local/bin/gpio/gpio_common.sh && export_gpio_map'
+ExecStart=python3 /home/root/webserver/server.py
+WorkingDirectory=/home/root/webserver
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

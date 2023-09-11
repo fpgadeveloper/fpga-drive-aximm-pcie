@@ -1,0 +1,12 @@
+[Unit]
+Description=Access point for Ultra96
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/wpa_ap/ap.sh start
+RemainAfterExit=true
+ExecStop=/usr/share/wpa_ap/ap.sh stop
+
+
+[Install]
+WantedBy=multi-user.target

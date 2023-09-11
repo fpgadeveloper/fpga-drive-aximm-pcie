@@ -1,0 +1,12 @@
+[Unit]
+Description=Blinky Sample Application
+Requires=gpio-utils.service
+After=gpio-utils.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/root/run-blinky.sh
+StandardOutput=tty
+
+[Install]
+WantedBy=multi-user.target

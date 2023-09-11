@@ -1,0 +1,6 @@
+# short-description: Create EMMC image with a boot partition
+# long-description: Creates a partitioned EMMC image. Boot files
+# are located in the first vfat partition.
+
+part /boot --source bootimg-partition --ondisk mmcblk0 --fstype=vfat --label boot --active --align 4 --fixed-size 1G
+part / --source rootfs --ondisk mmcblk0 --fstype=ext4 --label root --align 4 --extra-space 1G

@@ -1,0 +1,11 @@
+[Unit]
+Description=PulseAudio Sound System
+#After=alsa-restore.service
+
+[Service]
+BusName=org.pulseaudio.Server
+ExecStart=/usr/bin/pulseaudio --system --resample-method=src-sinc-fastest
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

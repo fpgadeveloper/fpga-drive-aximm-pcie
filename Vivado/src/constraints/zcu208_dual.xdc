@@ -40,9 +40,9 @@ set_property LOC GTYE4_CHANNEL_X0Y17 [get_cells {*_i/xdma_1/inst/pcie4c_ip_i/ins
 set_property LOC GTYE4_CHANNEL_X0Y18 [get_cells {*_i/xdma_1/inst/pcie4c_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_1_0_pcie4c_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_1_0_pcie4c_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[*].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 set_property LOC GTYE4_CHANNEL_X0Y19 [get_cells {*_i/xdma_1/inst/pcie4c_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_1_0_pcie4c_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_1_0_pcie4c_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[*].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
-# ZCU208 FMC+ transceivers for SSD1 are best aligned with PCIE_X0Y0
-set_property LOC PCIE4CE4_X0Y0 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
+# ZCU208 FMC+ transceivers for SSD1 are best aligned with PCIE_X0Y1
+set_property LOC PCIE4CE4_X0Y1 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
 
-# ZCU208 FMC+ transceivers for SSD2 are best aligned with PCIE_X0Y1
-set_property LOC PCIE4CE4_X0Y1 [get_cells *_i/xdma_1/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
+# ZCU208 FMC+ transceivers for SSD2 are best aligned with PCIE_X0Y0
+set_property LOC PCIE4CE4_X0Y0 [get_cells *_i/xdma_1/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
 

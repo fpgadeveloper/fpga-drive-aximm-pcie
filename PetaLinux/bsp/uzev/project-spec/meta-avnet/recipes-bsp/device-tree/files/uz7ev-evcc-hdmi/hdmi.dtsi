@@ -1,0 +1,103 @@
+#include <dt-bindings/media/xilinx-vip.h>
+
+&axi_iic_0 {
+    /* DP159 exposes a virtual CCF clock. Upon .set_rate(), it adapts its retiming/driving behaviour */
+    dp159: hdmi-retimer@5e {
+            status = "okay";
+            compatible = "ti,dp159";
+            reg = <0x5e>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            #clock-cells = <0>;
+    };
+};
+
+/* HDMI TX */
+&xx_mix_masterhdmi_tx_v_mix_0 {
+    /delete-property/ xlnx,layer-primary;
+    xlnx,vformat = "BG24";
+};
+&xx_mix_overlay_1hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_2hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_3hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_4hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_5hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_6hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_7hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_8hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+};
+&xx_mix_overlay_9hdmi_tx_v_mix_0 {
+    xlnx,layer-max-width = <3840>;
+    xlnx,layer-primary;
+};
+
+
+&hdmi_tx_v_hdmi_tx_ss_0 {
+    clock-names = "s_axi_cpu_aclk", "link_clk", "s_axis_audio_aclk", "video_clk", "s_axis_video_aclk", "txref-clk", "retimer-clk";
+    clocks = <&zynqmp_clk 71>, <&misc_clk_1>, <&zynqmp_clk 71>, <&misc_clk_2>, <&misc_clk_0>, <&idt8t49n24x 3>, <&dp159>;
+};
+
+/* HDMI RX */
+&hdmi_rx_v_proc_ss_0 {
+    compatible = "xlnx,v-vpss-scaler-2.2";
+};
+
+&scaler_port0hdmi_rx_v_proc_ss_0 {
+    xlnx,video-format = <XVIP_VF_RBG>;
+    xlnx,video-width = <8>;
+};
+&scaler_port1hdmi_rx_v_proc_ss_0 {
+    xlnx,video-format = <XVIP_VF_YUV_422>;
+    xlnx,video-width = <8>;
+};
+
+&hdmirx_porthdmi_rx_v_hdmi_rx_ss_0 {
+    xlnx,video-format = <XVIP_VF_RBG>;
+    xlnx,video-width = <8>;
+};
+
+&i2c1 {
+    i2cswitch@70 {
+        i2c@0 {
+            /* idt8t49n241 i2c clock generator */
+            idt8t49n24x: clock-generator@6c {
+                status = "okay";
+                compatible = "idt,idt8t49n241";
+                #clock-cells = <1>;
+                reg = <0x6c>;
+
+                /* input clock(s); the XTAL is hard-wired on the ZCU104 board */
+                clocks = <&refhdmi>;
+                clock-names = "input-xtal";
+            };
+        };
+    };
+};
+
+/ {
+    hdmi_tx_clk: amba_pl@0 {
+
+        /* 38.880MHz reference crystal for 8t49n241 clock for HDMI */
+        /* IIC controller with 8t49n24x clock generator and DP159 retimer for HDMI TX */
+        refhdmi: refhdmi {
+                compatible = "fixed-clock";
+                #clock-cells = <0>;
+                clock-frequency = <38880000>;
+        };
+    };
+};

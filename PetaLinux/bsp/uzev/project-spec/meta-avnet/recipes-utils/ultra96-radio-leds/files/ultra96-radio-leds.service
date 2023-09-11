@@ -1,0 +1,13 @@
+[Unit]
+Description=Ultra96 Radio (Bluetooth & WiFi) LEDs 
+# Requires the GPIO Utils scripts to run
+After=gpio-utils.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /usr/bin/ultra96-radio-leds.sh On
+ExecStop=/bin/bash /usr/bin/ultra96-radio-leds.sh Off
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

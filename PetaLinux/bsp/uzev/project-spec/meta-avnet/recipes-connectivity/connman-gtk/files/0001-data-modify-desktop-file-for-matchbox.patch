@@ -1,0 +1,23 @@
+From 324a86c3f141810cb57fdcbfa3a919614364877b Mon Sep 17 00:00:00 2001
+From: Thomas Nizan <tnizan@witekio.com>
+Date: Sat, 4 Sep 2021 00:36:43 +0000
+Subject: [PATCH] data: modify desktop file for matchbox
+
+We want the application in 'Applications' category instead of 'Settings'
+---
+ data/connman-gtk.desktop.in | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/data/connman-gtk.desktop.in b/data/connman-gtk.desktop.in
+index 87b06b7..c639450 100644
+--- a/data/connman-gtk.desktop.in
++++ b/data/connman-gtk.desktop.in
+@@ -2,7 +2,5 @@
+ Type=Application
+ Exec=connman-gtk
+ Name=Connman Settings
+-Categories=GTK;GNOME;Settings;X-GNOME-Settings-Panel;X-Unity-Settings-Panel;HardwareSettings
+-X-GNOME-Settings-Panel=connman-gtk
+-X-Unity-Settings-Panel=connman-gtk
++Comment=Setup Wifi Connections
+ Icon=preferences-system-network

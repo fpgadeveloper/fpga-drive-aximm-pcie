@@ -1,0 +1,30 @@
+PetaLinux User Application Template
+===================================
+
+This directory contains a PetaLinux user application created from a template.
+
+You can easily import any already built application or script by copying
+it into this directory, and editing the automatically generated Makefile 
+as described below.
+
+Modify the "install:" target in Makefile to use $(TARGETINST) to install your
+prebuilt application or script to the host copy of the target file system
+referring to the comments of the "install:" target.
+
+Before building the application, you will need to enable the application
+from PetaLinux menuconfig by running:
+    "petalinux-config -c rootfs"
+You will see your application in the "apps --->" submenu.
+
+To install your prebuilt application or script to the target file system
+copy on the host, simply run the command.
+    "petalinux-build -c rootfs/ultra96-radio-leds"
+
+You will also need to rebuild PetaLinux bootable images so that the images
+is updated with the updated target filesystem copy, run this command:
+    "petalinux-build -c rootfs"
+
+You can also run one PetaLinux command to install the application to the
+target filesystem host copy and update the bootable images as follows:
+    "petalinux-build"
+

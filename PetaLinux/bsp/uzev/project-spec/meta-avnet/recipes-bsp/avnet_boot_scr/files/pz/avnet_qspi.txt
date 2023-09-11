@@ -1,0 +1,11 @@
+# This is a boot script for U-Boot
+# Generate boot.scr:
+# mkimage -c none -A arm -T script -d boot.cmd.default boot.scr
+#
+################
+
+# boot from qspi
+
+sf probe 0 0 0
+sf read 0x04000000 0x300000 0xcc0000
+bootm 0x04000000

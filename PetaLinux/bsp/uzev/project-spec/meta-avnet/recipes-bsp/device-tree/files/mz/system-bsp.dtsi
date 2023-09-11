@@ -1,0 +1,75 @@
+/ {
+   xlnk {
+      compatible = "xlnx,xlnk-1.0";
+   };
+
+   usb_phy0: usb_phy@0 {
+      compatible="usb-nop-xceiv";
+      #phy-cells = <0>;
+   };
+};
+
+/* Vitis interrupt connected at PS interrupt offset [0] (29+0=29) */
+/* This description may be missing/incorrect in the pl.dtsi, so we add/fix it here */
+&axi_intc_0 {
+   interrupts = <0 29 1>; 
+};
+
+&amba_pl {
+   zyxclmm_drm {
+      compatible = "xlnx,zocl";
+      status = "okay";
+      interrupt-parent = <&axi_intc_0>;
+      interrupts = <0  4>, <1  4>, <2  4>, <3  4>,
+         <4  4>, <5  4>, <6  4>, <7  4>,
+         <8  4>, <9  4>, <10 4>, <11 4>,
+         <12 4>, <13 4>, <14 4>, <15 4>,
+         <16 4>, <17 4>, <18 4>, <19 4>,
+         <20 4>, <21 4>, <22 4>, <23 4>,
+         <24 4>, <25 4>, <26 4>, <27 4>,
+         <28 4>, <29 4>, <30 4>, <31 4>;
+   };
+};
+
+&gem0 {
+   status = "okay";
+   phy-handle = <&phy0>;
+   phy-mode = "rgmii-id";
+   phy0: phy@0 {
+      compatible = "marvell,88E1510";
+      device_type = "ethernet-phy";
+      reg = <0x0>;
+      /* linux,phandle = <0x5>; */
+      /* phandle = <0x5>; */
+      /*
+       * modify PHY registers to:
+       * Reg 3_16
+       * LED[1] bits [7:4] = ON=link, BLINK=activity, OFF=no activity
+       * LED[0] bits [3:0] = link speed detect (3 blinks= 1Gbps, 2 blinks = 100Mbps, 1 blink = 10Mbps)
+       * Reg 3_17
+       * LED[1:0] = ON-drive low, OFF-high
+       * Reg 3_18
+       * LED[0] bits [3:2] = link speed LED blink off period = 170ms
+       * LED[0] bits [1:0] = link speed LED blink on period = 340ms
+       */
+      marvell,reg-init = <3 16 0xff00 0x42>,
+         <3 17 0xfff0 0x0>,
+         <3 18 0xfff0 0x6>;
+   };
+};
+
+/* QSPI partitions are defined with petalinux-config and described in system.conf.dtsi */
+&flash0 {
+   compatible = "n25q128a11","jedc,spi-nor";
+   reg = <0x0>;
+   spi-tx-bus-width = <1>;
+   spi-rx-bus-width = <4>;
+   spi-max-frequency = <50000000>;
+   #address-cells = <1>;
+   #size-cells = <1>;
+};
+
+&usb0 {
+   dr_mode = "otg";
+   usb-phy = <&usb_phy0>;
+};

@@ -1,0 +1,13 @@
+# This is a boot script for U-Boot
+# Generate boot.scr:
+# mkimage -c none -A arm -T script -d boot.cmd.default boot.scr
+#
+################
+
+echo Trying to boot from SD...
+fatload mmc 0:1 0x4000000 image.ub
+bootm 0x04000000
+
+echo Trying to boot from EMMC...
+fatload mmc 1:1 0x4000000 image.ub
+bootm 0x04000000

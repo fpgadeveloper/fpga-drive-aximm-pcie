@@ -1,0 +1,48 @@
+Opsero Electronic Design Inc. 2023
+Jeff Johnson
+ZCU104 FSBL patch 2022.1
+========================
+The FSBL for Zynq Ultrascale+ needs a patch to properly enable VADJ on the ZCU104 board in the 2022.1
+version of PetaLinux. The FSBL released with this version of PetaLinux has code to read the FMC card's
+EEPROM and then enable VADJ to the correct value. The released FSBL code in fact reads from the ZCU104
+board's EEPROM (address 0x54) and not the FMC's EEPROM (address 0x50). It also only reads 32 bytes 
+from the EEPROM, which is not sufficient to include the VADJ voltage data. For both of these reasons, 
+the FSBL does not properly enable VADJ on this board if this patch is not applied.
+
+diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
+index 328332402d..fdcb9bffca 100644
+--- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
++++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
+@@ -82,7 +82,7 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+ 	u32 UStatus;
+ 	s32 Status;
+ 	u32 NominalVoltage;
+-	u32 EepromAddr = 0x54U;
++	u32 EepromAddr = 0x50U;
+ 	u32 MinVoltage;
+ 	u32 MaxVoltage;
+ 
+@@ -91,8 +91,8 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+ 	MaxVoltage = 0U;
+ 	XRecord.VadjRecordFound = 0U;
+ 
+-	/* Select the Channel-1 of MUX for I2C EEprom Access */
+-	WriteBuffer[0U] = 0x1U;
++	/* Select the Channel-6 of MUX for FMC I2C EEprom Access */
++	WriteBuffer[0U] = 0x20;
+ 	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
+ 				WriteBuffer, 1U, TCA9548A_ADDR);
+ 	if (Status != XST_SUCCESS) {
+diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
+index 6177fb61f9..23e552cf1f 100644
+--- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
++++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
+@@ -58,7 +58,7 @@ extern "C" {
+ #define IRPS5401_SWC_ADDR		0x45U
+ 
+ #define BUF_LEN		10U
+-#define MAX_SIZE		32U
++#define MAX_SIZE		256U
+ 
+ #define CMD_CFG_0_REG		0x06U
+ #define CMD_OUTPUT_0_REG	0x02U

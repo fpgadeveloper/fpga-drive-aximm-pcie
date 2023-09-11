@@ -1,7 +1,7 @@
-SET vivado=C:\Xilinx\Vivado\2020.2\bin\vivado.bat
+SET vivado=C:\Xilinx\Vivado\2022.1\bin\vivado.bat
 @ECHO OFF
 if exist %vivado% (
-  %vivado% -mode batch -source build-vc709-hpc.tcl
+  %vivado% -mode batch -source scripts\build.tcl -notrace -tclargs vc709_hpc
 ) else (
   ECHO.
   ECHO ###############################

@@ -1,0 +1,88 @@
+# ----------------------------------------------------------------------------
+#
+#        ** **        **          **  ****      **  **********  **********
+#       **   **        **        **   ** **     **  **              **
+#      **     **        **      **    **  **    **  **              **
+#     **       **        **    **     **   **   **  *********       **
+#    **         **        **  **      **    **  **  **              **
+#   **           **        ****       **     ** **  **              **
+#  **  .........  **        **        **      ****  **********      **
+#     ...........
+#                                     Reach Further
+#
+# ----------------------------------------------------------------------------
+# 
+#  This design is the property of Avnet.  Publication of this
+#  design is not authorized without written consent from Avnet.
+# 
+#  Please direct any questions to the community support forum:
+#     http://www.ultrazed.org/forum
+# 
+#  Product information is available at:
+#     http://www.ultrazed.org/
+# 
+#  Disclaimer:
+#     Avnet, Inc. makes no warranty for the use of this code or design.
+#     This code is provided  "As Is". Avnet, Inc assumes no responsibility for
+#     any errors, which may appear in this code, nor does it make a commitment
+#     to update the information contained herein. Avnet, Inc specifically
+#     disclaims any implied warranties of fitness for a particular purpose.
+#                      Copyright(c) 2016 Avnet, Inc.
+#                              All rights reserved.
+# 
+# ----------------------------------------------------------------------------
+# 
+#  Create Date:         Jan 02, 2018
+#  Design Name:         Python webserver Application Daemon Launcher
+#  Module Name:         python-webserver-init(.sh)
+#  Project Name:        Python-webserver" Application
+#  Target Devices:      Xilinx Zynq and Zynq UltraScale+ MPSoC
+#  Hardware Boards:     UltraZed-EV + EV Carrier
+# 
+#  Tool versions:       Xilinx Vivado 2017.3
+# 
+#  Description:         Script to launch "python-webserver" App as a daemon
+# 
+#  Dependencies:        
+#
+#  Revision:            Jan 02, 2018: 1.0 Initial version
+# 
+# ----------------------------------------------------------------------------
+#!/bin/sh
+
+DAEMON=/home/root/webserver/launch_server.sh
+KDAEMON=/home/root/webserver/stop_server.sh
+#This script launches the Python webserver application
+
+start ()
+{
+echo " Starting Python webserver"
+    start-stop-daemon -S -o -x $DAEMON
+}
+
+stop ()
+{
+    echo " Stopping Python webserver"
+    start-stop-daemon -K -x $KDAEMON
+}
+
+restart()
+{
+    stop
+    start
+}
+
+[ -e $DAEMON ] || exit 1
+    case "$1" in
+        start)
+            start; ;;
+        stop)
+            stop; ;;
+        restart)
+            restart; ;;
+        *)
+            echo "Usage: $0 {start|stop|restart}"
+            exit 1
+
+esac
+exit $?

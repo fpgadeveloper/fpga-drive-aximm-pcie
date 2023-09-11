@@ -1,0 +1,15 @@
+# [Re]generates the gpio conf
+#!/bin/sh
+
+# recreate the gpio map on [re]start
+case "$1" in
+    start|restart)
+        /usr/local/bin/gpio/gpio_map.sh
+        ;;
+    *)
+        echo "Usage: $0 {start|restart}"
+        exit 1
+        ;;
+esac
+
+exit $?

@@ -1,0 +1,18 @@
+body{background-color: #FFF; padding: 15px;
+    font: Arial,sans-serif}
+
+h1, h2, p, .forms {margin: 0 10px}
+h1 {font-size: 120%; text-indent: 10px; margin: 1.2em 0px; padding: 8px 0px; background: #6699FF}
+h2 {font-size: 110%; text-indent: 10px; margin: 1em 0px; padding:  5px 0px; background: #bbbbbb}
+.forms { padding: 10px 0 0 0}
+p  {font-size: 100%}
+div#container {margin: 0 10%; background: #eeeeee}
+div#led_results {margin: 10px 0px 0px}
+div#switch_status {margin: 10px 0px 0px}
+
+b.rtop, b.rbottom{display: block; background: #FFF}
+b.rtop b, b.rbottom b{display: block; height: 1px; overflow: hidden; background: #eeeeee}
+b.r1{margin: 0 5px}
+b.r2{margin: 0 3px}
+b.r3{margin: 0 2px}
+b.rtop b.r4, b.rbottom b.r4{margin: 0 1px; height: 2px}
