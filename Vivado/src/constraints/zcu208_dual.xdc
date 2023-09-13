@@ -41,8 +41,19 @@ set_property LOC GTYE4_CHANNEL_X0Y18 [get_cells {*_i/xdma_1/inst/pcie4c_ip_i/ins
 set_property LOC GTYE4_CHANNEL_X0Y19 [get_cells {*_i/xdma_1/inst/pcie4c_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_1_0_pcie4c_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_1_0_pcie4c_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[*].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
 # ZCU208 FMC+ transceivers for SSD1 are best aligned with PCIE_X0Y1
-set_property LOC PCIE4CE4_X0Y1 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
+set_property LOC PCIE4CE4_X0Y0 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
 
 # ZCU208 FMC+ transceivers for SSD2 are best aligned with PCIE_X0Y0
-set_property LOC PCIE4CE4_X0Y0 [get_cells *_i/xdma_1/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
+set_property LOC PCIE4CE4_X0Y1 [get_cells *_i/xdma_1/inst/pcie4c_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
+
+# The following LOC and USER_CLOCK_ROOT constraints correct a timing issue that 
+# started happening in the ZCU208 dual design with the 2022.1 version of Vivado.
+# This forum post led to the solution:
+# https://support.xilinx.com/s/question/0D52E00006nAusUSAS/what-can-i-do-to-fix-a-max-skew-violation-on-the-pcie-pipeclk-port-i-consistently-have-pulse-width-violations-that-are-related-to-this-clock-the-rest-of-the-design-meets-timing?language=en_US
+# We simply copied the positions of these two BUFG_GTs from the same design in version 2020.2
+# and used the USER_CLOCK_ROOT property to assign the output nets to the same CLOCK_ROOT.
+set_property LOC BUFG_GT_X0Y161 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/fpgadrv_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_coreclk]
+set_property LOC BUFG_GT_X0Y164 [get_cells *_i/xdma_0/inst/pcie4c_ip_i/inst/fpgadrv_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk]
+set_property USER_CLOCK_ROOT X0Y5 [get_nets *_i/xdma_0/inst/pcie4c_ip_i/inst/fpgadrv_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/CLK_CORECLK]
+set_property USER_CLOCK_ROOT X0Y5 [get_nets *_i/xdma_0/inst/pcie4c_ip_i/inst/fpgadrv_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/CLK_PCLK2_GT]
 
