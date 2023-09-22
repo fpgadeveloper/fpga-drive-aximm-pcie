@@ -17,29 +17,28 @@ VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
 VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
 
 # valid targets
-TARGET_LIST = kc705_hpc \
-	kc705_lpc \
-	kcu105_hpc \
-	kcu105_hpc_dual \
-	kcu105_lpc \
-	pz7z015_lpc \
-	pz7z030_lpc \
-	uzev_dual \
-	vc707_hpc1 \
-	vc707_hpc2 \
-	vc709_hpc \
-	vcu118 \
-	vcu118_dual \
-	zc706_hpc \
-	zc706_lpc \
-	zcu104 \
-	zcu106_hpc0 \
-	zcu106_hpc0_dual \
-	zcu106_hpc1 \
-	zcu111 \
-	zcu111_dual \
-	zcu208 \
-	zcu208_dual
+kc705_hpc_target := microblaze
+kc705_lpc_target := microblaze
+kcu105_hpc_target := microblaze
+kcu105_hpc_dual_target := microblaze
+kcu105_lpc_target := microblaze
+pz_7015_target := zynq
+pz_7030_target := zynq
+uzev_dual_target := zynqMP
+vcu118_target := microblaze
+vcu118_dual_target := microblaze
+zc706_hpc_target := zynq
+zc706_lpc_target := zynq
+zcu104_target := zynqMP
+zcu106_hpc0_target := zynqMP
+zcu106_hpc0_dual_target := zynqMP
+zcu106_hpc1_target := zynqMP
+zcu111_target := zynqMP
+zcu111_dual_target := zynqMP
+zcu208_target := zynqMP
+zcu208_dual_target := zynqMP
+
+TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
 # target board (the first word in the target name, before the first underscore)
 TARGET_BOARD=$(word 1,$(subst _, ,$(TARGET)))
@@ -60,6 +59,10 @@ PETL_COMP_DIR = $(PETL_DIR)/components
 PETL_ZIP = $(PETL_DIR)/$(TARGET_BOARD)_$(TARGET)_petalinux-2022-1.zip
 PETL_SDCARD_DIR = $(PETL_DIR)/sdcard
 
+define get_template_name
+$($(1)_target)
+endef
+
 .PHONY: help
 help:
 	@echo 'Usage:'
@@ -73,24 +76,18 @@ help:
 	@echo '  make clean'
 	@echo '    Clean runs'
 	@echo ''
-	@echo '  Valid TARGETs: ${TARGET_LIST}'
+	@echo '  Valid TARGETs:'
+	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
 	@echo ''
 
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
+
 .PHONY: sdcard
-sdcard: $(PETL_ZIP)
+sdcard: check_target $(PETL_ZIP)
 $(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
-	@valid=0; \
-	for p in $(TARGET_LIST); do \
-	  if [ "$$p" = "$(TARGET)" ]; then \
-	    valid=1; \
-	    break; \
-	  fi \
-	done; \
-	if [ "$$valid" -ne 1 ]; then \
-	  echo 'Valid target required; you specified TARGET=$(TARGET).'
-	  echo 'TARGET options: $(TARGET_LIST)'; \
-	  exit 1; \
-	fi; \
 	echo 'Gather PetaLinux output products for $(TARGET)'; \
 	mkdir -p $(PETL_SDCARD_DIR)/boot
 	mkdir -p $(PETL_SDCARD_DIR)/root
@@ -103,24 +100,21 @@ $(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
 	cd $(PETL_SDCARD_DIR) && zip -r $(PETL_ZIP) .
 
 .PHONY: petalinux
-petalinux: $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
-$(PETL_BOOT_BIN) $(PETL_IMAGE_UB): $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_FSBL_ELF) $(PETL_DTB)
-	@valid=0; \
-	for p in $(TARGET_LIST); do \
-	  if [ "$$p" = "$(TARGET)" ]; then \
-	    valid=1; \
-	    break; \
-	  fi \
-	done; \
-	if [ "$$valid" -ne 1 ]; then \
-	  echo 'Valid target required; you specified TARGET=$(TARGET).'; \
-	  echo 'TARGET options: $(TARGET_LIST)'; \
-	  exit 1; \
-	fi; \
+petalinux: check_target package_$(call get_template_name,$(TARGET))
+
+package_microblaze: build
+	echo 'Packaging PetaLinux project for $(TARGET)'; \
+	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel
+	
+package_zynq: build
+	echo 'Packaging PetaLinux project for $(TARGET)'; \
+	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
+	
+package_zynqMP: build
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
-$(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_FSBL_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
+build: $(PETL_CFG_DONE)
 	cd $(TARGET) && petalinux-build
 
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)
@@ -132,12 +126,12 @@ $(PETL_COMP_DIR): | $(PETL_DIR)
 	cd $(TARGET) && petalinux-config --get-hw-description $(VIV_XSA) --silentconfig
 	
 $(PETL_DIR): $(VIV_XSA)
-	petalinux-create --type project --template zynqMP --name $(TARGET)
+	petalinux-create --type project --template $(call get_template_name,$(TARGET)) --name $(TARGET)
 
 $(VIV_XSA):
 	$(MAKE) -C $(VIV_DIR) xsa TARGET=$(TARGET) JOBS=$(JOBS)
 
 .PHONY: clean
-clean:
+clean: check_target
 	$(RM) $(TARGET)
 

@@ -39,8 +39,8 @@ dict set target_dict kc705_lpc { kc705 { X1 } mb }
 dict set target_dict kcu105_hpc { kcu105 { X4 } mb }
 dict set target_dict kcu105_hpc_dual { kcu105 { X4 X4 } mb }
 dict set target_dict kcu105_lpc { kcu105 { X1 } mb }
-dict set target_dict pz7z015_lpc { picozed_7015_fmc2 { X1 } zynq }
-dict set target_dict pz7z030_lpc { picozed_7030_fmc2 { X1 } zynq }
+dict set target_dict pz_7015 { picozed_7015_fmc2 { X1 } zynq }
+dict set target_dict pz_7030 { picozed_7030_fmc2 { X1 } zynq }
 dict set target_dict uzev_dual { ultrazed_7ev_cc { X4 X4 } zynqmp }
 dict set target_dict vc707_hpc1 { vc707 { X4 } mb }
 dict set target_dict vc707_hpc2 { vc707 { X4 } mb }
@@ -209,7 +209,7 @@ current_run -implementation [get_runs impl_1]
 puts "INFO: Project created:${design_name}"
 
 # Create block design
-source $origin_dir/src/bd/design_1-${bd_script}.tcl
+source $origin_dir/src/bd/bd_${bd_script}.tcl
 
 # Generate the wrapper
 make_wrapper -files [get_files *${block_name}.bd] -top

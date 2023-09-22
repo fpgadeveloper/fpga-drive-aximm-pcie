@@ -1,8 +1,4 @@
-SRC_URI += "file://proc.cfg \
-            file://kernel-options.cfg \
-            file://bsp.cfg \
-            "
-KERNEL_FEATURES_append = " bsp.cfg"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-
+SRC_URI:append = " file://bsp.cfg"
+KERNEL_FEATURES:append = " bsp.cfg"

@@ -19,7 +19,7 @@ Important links:
 
 This project is designed for version 2022.1 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
 If you are using an older version of the Xilinx tools, then refer to the 
-[release tags](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/releases "releases")
+[release tags](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tags "releases")
 to find the version of this repository that matches your version of the tools.
 
 In order to test this design on hardware, you will need the following:
@@ -33,12 +33,18 @@ In order to test this design on hardware, you will need the following:
 
 ## Contribute
 
-We encourage contribution to these projects. If you spot issues or you want to add designs for other platforms, please
-make a pull request.
+We strongly encourage community contribution to these projects. Please make a pull request if you
+would like to share your work:
+* if you've spotted and fixed any issues
+* if you've added designs for other target platforms
+* if you've added software support for other devices
 
-### About us
+Thank you to everyone who supports us!
 
-This project was developed by [Opsero Inc.](http://opsero.com "Opsero Inc."),
-a tight-knit team of FPGA experts delivering FPGA products and design services to start-ups and tech companies. 
-Follow our blog, [FPGA Developer](http://www.fpgadeveloper.com "FPGA Developer"), for news, tutorials and
+## About us
+
+[Opsero Inc.](https://opsero.com "Opsero Inc.") is a team of FPGA developers delivering FPGA products and 
+design services to start-ups and tech companies. Follow our blog, 
+[FPGA Developer](https://www.fpgadeveloper.com "FPGA Developer"), for news, tutorials and
 updates on the awesome projects we work on.
+

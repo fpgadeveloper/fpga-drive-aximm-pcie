@@ -1,53 +1,121 @@
 # PetaLinux
 
-PetaLinux can be built for these reference designs by using the script in the `PetaLinux` directory
+PetaLinux can be built for these reference designs by using the Makefile in the `PetaLinux` directory
 of the repository.
+
+## Requirements
+
+To build the PetaLinux projects, you will need a physical or virtual machine running one of the 
+[supported Linux distributions] as well as the Vitis Core Development Kit installed.
+
+```{attention} You cannot build the PetaLinux projects in the Windows operating system. Windows
+users are advised to use a Linux virtual machine to build the PetaLinux projects.
+```
 
 ## How to build
 
-### Requirements
+1. From a command terminal, clone the Git repository and `cd` into it.
+   ```
+   git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
+   cd fpga-drive-aximm-pcie
+   ```
+2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg:
+   ```
+   source <path-to-installed-petalinux>/settings.sh
+   ```
+3. Launch Vivado by sourcing the `settings64.sh` bash script, eg:
+   ```
+   source <vivado-install-dir>/settings64.sh
+   ```
+4. Build the Vivado and PetaLinux project for your specific target platform by running the following
+   commands and replacing `<target>` with one of the following: 
+   `kc705_hpc`, 
+   `kc705_lpc`, 
+   `kcu105_hpc`, 
+   `kcu105_hpc_dual`, 
+   `kcu105_lpc`, 
+   `pz_7015`, 
+   `pz_7030`, 
+   `uzev_dual`, 
+   `vcu118`, 
+   `vcu118_dual`, 
+   `zc706_hpc`, 
+   `zc706_lpc`, 
+   `zcu104`, 
+   `zcu106_hpc0`, 
+   `zcu106_hpc0_dual`, 
+   `zcu106_hpc1`, 
+   `zcu111`, 
+   `zcu111_dual`, 
+   `zcu208`, 
+   `zcu208_dual`
+   ```
+   cd PetaLinux
+   make petalinux TARGET=<target>
+   ```
+   
+The last command will launch the build process for the corresponding Vivado project if that project
+has not already been built and it's hardware exported.
 
-* Windows or Linux PC with Vivado installed
-* Linux PC or virtual machine with PetaLinux installed
+## Prepare the SD card
 
-### Instructions
+Once the build process is complete, you must prepare the SD card for booting PetaLinux.
 
-1. First generate the Vivado project hardware design(s) (the bitstream) and export the design(s).
-2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg: `source <path-to-installed-petalinux>/settings.sh`
-3. Launch Vivado by sourcing the `settings64.sh` bash script, eg: `source <vivado-install-dir>/settings64.sh`
-4. Build the PetaLinux project(s) by executing the `build-petalinux` script in Linux.
+1. The SD card must first be prepared with two partitions: one for the boot files and another 
+   for the root file system.
 
-The script will generate a separate PetaLinux project for all of the generated and exported Vivado projects that
-it finds in the Vivado directory of this repo.
+   * Plug the SD card into your computer and find it's device name using the `dmesg` command.
+     The SD card should be found at the end of the log, and it's device name should be something
+     like `/dev/sdX`, where `X` is a letter such as a,b,c,d, etc. Note that you should replace
+     the `X` in the following instructions.
+     
+```{warning} Do not continue these steps until you are certain that you have found the correct
+device name for the SD card. If you use the wrong device name in the following steps, you risk
+losing data on one of your hard drives.
+```
+   * Run `fdisk` by typing the command `sudo fdisk /dev/sdX`
+   * Make the `boot` partition: typing `n` to create a new partition, then type `p` to make 
+     it primary, then use the default partition number and first sector. For the last sector, type 
+     `+1G` to allocate 1GB to this partition.
+   * Make the `boot` partition bootable by typing `a`
+   * Make the `root` partition: typing `n` to create a new partition, then type `p` to make 
+     it primary, then use the default partition number, first sector and last sector.
+   * Save the partition table by typing `w`
+   * Format the `boot` partition (FAT32) by typing `sudo mkfs.vfat -F 32 -n boot /dev/sdX1`
+   * Format the `root` partition (ext4) by typing `sudo mkfs.ext4 -L root /dev/sdX2`
 
-## UNIX line endings
+2. Copy the following files to the `boot` partition of the SD card:
+   Assuming the `boot` partition was mounted to `/media/user/boot`, follow these instructions:
+   ```
+   $ cd /media/user/boot/
+   $ sudo cp /<petalinux-project>/images/linux/BOOT.BIN .
+   $ sudo cp /<petalinux-project>/images/linux/boot.scr .
+   $ sudo cp /<petalinux-project>/images/linux/image.ub .
+   ```
 
-The scripts and files in the PetaLinux directory of this repository must have UNIX line endings when they are
-executed or used under Linux. The best way to ensure UNIX line endings, is to clone the repo directly onto your
-Linux machine. If instead you have copied the repo from a Windows machine, the files will have DOS line endings and
-you must use the `dos2unix` tool to convert the line endings for UNIX.
+3. Create the root file system by extracting the `rootfs.tar.gz` file to the `root` partition.
+   Assuming the `root` partition was mounted to `/media/user/root`, follow these instructions:
+   ```
+   $ cd /media/user/root/
+   $ sudo cp /<petalinux-project>/images/linux/rootfs.tar.gz .
+   $ sudo tar xvf rootfs.tar.gz -C .
+   $ sync
+   ```
+   
+   Once the `sync` command returns, you will be able to eject the SD card from the machine.
 
-1. Copy the cloned repository from your Windows machine to your Linux machine.
-2. Use the `cd` command to navigate to the copied repository on your Linux machine.
-3. Type `find . -type f -exec dos2unix --keepdate {} +` to convert all of the files
-   to the Unix format.
+## Boot from SD card
 
-## How the script works
-
-The PetaLinux directory contains a `build-petalinux` shell script which can be run in Linux to automatically
-generate a PetaLinux project for each of the generated/exported Vivado projects in the Vivado directory.
-
-When executed, the build script searches the Vivado directory for all projects containing a `.xsa` exported
-hardware design file. Then for every exported project, the script does the following:
-
-#. Verifies that the `.bit` file exists.
-#. Determines the CPU type: Microblaze, Zynq or ZynqMP. It does this
-   by reading the Vivado project file.
-#. Creates a PetaLinux project, referencing the exported hardware design (.xsa).
-#. Copies the relevant configuration files from the `src` directory into the created
-   PetaLinux project.
-#. Builds the PetaLinux project.
-#. Generates a BOOT.BIN, boot.scr and image.ub file for the Zynq and ZynqMP projects.
+1. Plug the SD card into your target board.
+2. Ensure that the target board is configured to boot from SD card:
+   * **ZCU10x:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+   * **PYNQ-ZU:** Switch labelled "JTAG SD" must be flipped to the right (towards "SD")
+   * **UltraZed-EV:** DIP switch SW2 (on the SoM) is set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+3. Connect the [RPi Camera FMC] to the FMC connector of the target board. Connect one or more
+   [Raspberry Pi camera module v2] to the [RPi Camera FMC].
+4. Connect the USB-UART to your PC and then open a UART terminal set to 115200 baud and the 
+   comport that corresponds to your target board.
+5. Connect and power your hardware.
 
 ## Launch PetaLinux on hardware
 

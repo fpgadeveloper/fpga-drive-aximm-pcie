@@ -303,15 +303,15 @@ CONFIG_YOCTO_NETWORK_SSTATE_FEEDS_URL="http://petalinux.xilinx.com/sswreleases/r
 CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_BOOTARGS_GENERATED=" earlycon console=ttyPS0,115200 clk_ignore_unused init_fatal_sh=1 cma=1000M"
 
-# ZCU104 configs
+# FPGA Drive FMC configs
 
-# Boot from SD card
-# Uncomment the following lines if you want this design to boot from SD card
-# ZCU104 has the SD card connected to the PS SD1 interface
+CONFIG_SUBSYSTEM_BOOTARGS_AUTO=n
+CONFIG_SUBSYSTEM_USER_CMDLINE="earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait cma=1536M"
 
-#CONFIG_SUBSYSTEM_ROOTFS_INITRAMFS=n
-#CONFIG_SUBSYSTEM_ROOTFS_EXT=y
-#CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk1p2"
+CONFIG_SUBSYSTEM_ROOTFS_INITRD=n
+CONFIG_SUBSYSTEM_ROOTFS_EXT4=y
+CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk0p2"
+CONFIG_SUBSYSTEM_RFS_FORMATS="tar.gz ext4 ext4.gz "
 
 CONFIG_SUBSYSTEM_HOSTNAME="zcu104_fpgadrv_2022_1"
 CONFIG_SUBSYSTEM_PRODUCT="zcu104_fpgadrv_2022_1"

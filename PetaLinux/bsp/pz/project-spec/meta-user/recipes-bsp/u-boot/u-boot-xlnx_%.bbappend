@@ -1,16 +1,14 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI += "file://platform-top.h"
+SRC_URI:append = " file://platform-top.h file://bsp.cfg"
 
-do_configure_append () {
-	if [ "${U_BOOT_AUTO_CONFIG}" = "1" ]; then
-		install ${WORKDIR}/platform-auto.h ${S}/include/configs/
-		install ${WORKDIR}/platform-top.h ${S}/include/configs/
-	fi
+do_configure:append () {
+	install ${WORKDIR}/platform-top.h ${S}/include/configs/
 }
 
-do_configure_append_microblaze () {
+do_configure:append:microblaze () {
 	if [ "${U_BOOT_AUTO_CONFIG}" = "1" ]; then
+		install ${WORKDIR}/platform-auto.h ${S}/include/configs/
 		install -d ${B}/source/board/xilinx/microblaze-generic/
 		install ${WORKDIR}/config.mk ${B}/source/board/xilinx/microblaze-generic/
 	fi

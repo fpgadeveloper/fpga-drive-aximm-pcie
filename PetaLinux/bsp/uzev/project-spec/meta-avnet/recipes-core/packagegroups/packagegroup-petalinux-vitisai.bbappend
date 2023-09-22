@@ -1,3 +1,0 @@
-RDEPENDS:${PN}:remove = "\
-    dnndk \
-"

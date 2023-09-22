@@ -18,8 +18,8 @@ TARGET_LIST = kc705_hpc \
 	kcu105_hpc \
 	kcu105_hpc_dual \
 	kcu105_lpc \
-	pz7z015_lpc \
-	pz7z030_lpc \
+	pz_7015 \
+	pz_7030 \
 	uzev_dual \
 	vc707_hpc1 \
 	vc707_hpc2 \
