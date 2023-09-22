@@ -31,3 +31,6 @@ PetaLinux/zcu106*/
 PetaLinux/zcu111*/
 PetaLinux/zcu208*/
 docs/build/
+bootimages/
+PetaLinux/offline.txt
+

@@ -53,3 +53,36 @@ The source code for the reference designs is managed on this Github repository:
 12. In Vitis, select **Xilinx Tools->Program FPGA**.
 13. Right-click on the application and select **Run As->Launch on Hardware (Single Application Debug)**
 
+### PetaLinux offline build
+
+If you need to build the PetaLinux projects offline (without an internet connection), you can
+follow these instructions.
+
+1. Download the sstate-cache artefacts from the Xilinx downloads site (the same page where you downloaded
+   PetaLinux tools). There are four of them:
+   * aarch64 sstate-cache (for ZynqMP designs)
+   * arm sstate-cache (for Zynq designs)
+   * microblaze sstate-cache (for Microblaze designs)
+   * Downloads (for all designs)
+2. Extract the contents of those files to a single location on your hard drive, for this example
+   we'll say `/home/user/petalinux-sstate`. That should leave you with the following directory 
+   structure:
+   ```
+   /home/user/petalinux-sstate
+              +-----------------  aarch64
+              +-----------------  arm
+              +-----------------  downloads
+              +-----------------  microblaze
+   ```
+3. Create a file called `offline.txt` that contains a single line of text. The single line of text
+   should be the path where you extracted the sstate-cache files. In this example, the contents of 
+   the file would be:
+   ```
+   /home/user/petalinux-sstate
+   ```
+   It is important that the file contain only one line and that the path is written with NO TRAILING 
+   FORWARD SLASH.
+
+Now when you use `make` to build the PetaLinux projects, they will be configured for offline build.
+
+

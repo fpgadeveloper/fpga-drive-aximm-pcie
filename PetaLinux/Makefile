@@ -9,6 +9,7 @@ PETL_ROOT = $(shell pwd)
 BD_NAME = fpgadrv
 
 # default target
+.DEFAULT_GOAL := petalinux
 TARGET ?= none
 
 VIV_DIR = $(PETL_ROOT)/../Vivado
@@ -55,12 +56,12 @@ PETL_UBOOT_ELF = $(PETL_IMG_DIR)/u-boot.elf
 PETL_DTB = $(PETL_IMG_DIR)/system.dtb
 PETL_BOOT_BIN = $(PETL_IMG_DIR)/BOOT.BIN
 PETL_BOOT_SCR = $(PETL_IMG_DIR)/boot.scr
+PETL_BOOT_MCS = $(PETL_IMG_DIR)/boot.mcs
 PETL_ROOTFS = $(PETL_IMG_DIR)/rootfs.tar.gz
 PETL_IMAGE_UB = $(PETL_IMG_DIR)/image.ub
 PETL_CFG_DONE = $(PETL_DIR)/configdone.txt
 PETL_COMP_DIR = $(PETL_DIR)/components
-PETL_ZIP = $(PETL_DIR)/$(TARGET_BOARD)_$(TARGET)_petalinux-2022-1.zip
-PETL_SDCARD_DIR = $(PETL_DIR)/sdcard
+PETL_OFFLINE = $(PETL_ROOT)/offline.txt
 
 define get_template_name
 $(word 1,$($(1)_target))
@@ -74,12 +75,25 @@ define get_flash_intf
 $(word 3,$($(1)_target))
 endef
 
+# For offline PetaLinux builds
+SSTATE_PATH ?= $(shell test -e $(PETL_OFFLINE) && head -n 1 $(PETL_OFFLINE))
+
+ifeq ($(call get_template_name,$(TARGET)), microblaze)
+	SSTATE_ARCH = microblaze
+else ifeq ($(call get_template_name,$(TARGET)), zynq)
+	SSTATE_ARCH = arm
+else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
+	SSTATE_ARCH = arch64
+endif
+
+ifneq ($(SSTATE_PATH),)
+	MIRROR_URL = CONFIG_PRE_MIRROR_URL="file://$(SSTATE_PATH)/downloads"
+	SSTATE_FEEDS = CONFIG_YOCTO_LOCAL_SSTATE_FEEDS_URL="$(SSTATE_PATH)/$(SSTATE_ARCH)"
+endif
+
 .PHONY: help
 help:
 	@echo 'Usage:'
-	@echo ''
-	@echo '  make sdcard TARGET=<val>'
-	@echo '    Gather PetaLinux output products for the SD card.'
 	@echo ''
 	@echo '  make petalinux TARGET=<val>'
 	@echo '    Build the PetaLinux project.'
@@ -96,46 +110,46 @@ ifndef $(TARGET)_target
 	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
 endif
 
-.PHONY: sdcard
-sdcard: check_target $(PETL_ZIP)
-$(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
-	echo 'Gather PetaLinux output products for $(TARGET)'; \
-	mkdir -p $(PETL_SDCARD_DIR)/boot
-	mkdir -p $(PETL_SDCARD_DIR)/root
-	cp $(PETL_BOOT_BIN) $(PETL_SDCARD_DIR)/boot/.
-	cp $(PETL_IMAGE_UB) $(PETL_SDCARD_DIR)/boot/.
-	cp $(PETL_BOOT_SCR) $(PETL_SDCARD_DIR)/boot/.
-	cp $(PETL_ROOTFS) $(PETL_SDCARD_DIR)/root/.
-	echo 'Copy these files to the boot (FAT32) partition of the SD card' > $(PETL_SDCARD_DIR)/boot/readme.txt
-	echo 'Extract contents of rootfs.tar.gz to the root partition of the SD card' > $(PETL_SDCARD_DIR)/root/readme.txt
-	cd $(PETL_SDCARD_DIR) && zip -r $(PETL_ZIP) .
-
 .PHONY: petalinux
-petalinux: check_target package_$(call get_template_name,$(TARGET))
+petalinux: check_target package
 
-package_microblaze: $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
+# Package rule for microblaze designs
+ifeq ($(call get_template_name,$(TARGET)), microblaze)
+package: $(PETL_BOOT_MCS)
+$(PETL_BOOT_MCS): $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET))
 	
-$(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
-	cd $(TARGET) && petalinux-build
-	
-package_zynq: $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
+# Package rule for zynq designs
+else ifeq ($(call get_template_name,$(TARGET)), zynq)
+package: $(PETL_BOOT_BIN)
+$(PETL_BOOT_BIN): $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
-$(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
-	cd $(TARGET) && petalinux-build
-
-package_zynqMP: $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
+# Package rule for zynqMP designs
+else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
+package: $(PETL_BOOT_BIN)
+$(PETL_BOOT_BIN): $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
-$(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
+endif
+
+PETL_BUILD_DEPS = $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB) \
+                  $(PETL_ZYNQ_FSBL_ELF) \
+                  $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF)
+
+$(PETL_BUILD_DEPS): $(PETL_CFG_DONE)
 	cd $(TARGET) && petalinux-build
 
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)
 	cp -R ./bsp/$(TARGET_BOARD)/project-spec ./$(TARGET)/.
+	@if [ ! -z "$(SSTATE_PATH)" ]; then \
+		echo '$(MIRROR_URL)' >> ./$(TARGET)/project-spec/configs/config; \
+		echo '$(SSTATE_FEEDS)' >> ./$(TARGET)/project-spec/configs/config; \
+		echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
+	fi
 	touch $(TARGET)/configdone.txt
 	cd $(TARGET) && petalinux-config --silentconfig
 	
