@@ -5,10 +5,6 @@
       compatible = "xlnx,xlnk-1.0";
    };
 
-   chosen {
-      xlnx,eeprom= &mac_eeprom;
-   };
-
 };
 
 &gem0 {

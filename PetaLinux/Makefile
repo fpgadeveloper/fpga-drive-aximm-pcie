@@ -16,27 +16,27 @@ VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
 VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
 VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
 
-# valid targets
-kc705_hpc_target := microblaze
-kc705_lpc_target := microblaze
-kcu105_hpc_target := microblaze
-kcu105_hpc_dual_target := microblaze
-kcu105_lpc_target := microblaze
-pz_7015_target := zynq
-pz_7030_target := zynq
-uzev_dual_target := zynqMP
-vcu118_target := microblaze
-vcu118_dual_target := microblaze
-zc706_hpc_target := zynq
-zc706_lpc_target := zynq
-zcu104_target := zynqMP
-zcu106_hpc0_target := zynqMP
-zcu106_hpc0_dual_target := zynqMP
-zcu106_hpc1_target := zynqMP
-zcu111_target := zynqMP
-zcu111_dual_target := zynqMP
-zcu208_target := zynqMP
-zcu208_dual_target := zynqMP
+# valid targets (template name, flash size, flash interface)
+kc705_hpc_target := microblaze 128 BPIx16
+kc705_lpc_target := microblaze 128 BPIx16
+kcu105_hpc_target := microblaze 32 SPIx4
+kcu105_hpc_dual_target := microblaze 32 SPIx4
+kcu105_lpc_target := microblaze 32 SPIx4
+pz_7015_target := zynq 0 0
+pz_7030_target := zynq 0 0
+uzev_dual_target := zynqMP 0 0
+vcu118_target := microblaze 128 SPIx4
+vcu118_dual_target := microblaze 128 SPIx4
+zc706_hpc_target := zynq 0 0
+zc706_lpc_target := zynq 0 0
+zcu104_target := zynqMP 0 0
+zcu106_hpc0_target := zynqMP 0 0
+zcu106_hpc0_dual_target := zynqMP 0 0
+zcu106_hpc1_target := zynqMP 0 0
+zcu111_target := zynqMP 0 0
+zcu111_dual_target := zynqMP 0 0
+zcu208_target := zynqMP 0 0
+zcu208_dual_target := zynqMP 0 0
 
 TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
@@ -48,7 +48,10 @@ PETL_DIR = $(PETL_ROOT)/$(TARGET)
 PETL_IMG_DIR = $(PETL_DIR)/images/linux
 PETL_BL31_ELF = $(PETL_IMG_DIR)/bl31.elf
 PETL_PMUFW_ELF = $(PETL_IMG_DIR)/pmufw.elf
-PETL_FSBL_ELF = $(PETL_IMG_DIR)/zynqmp_fsbl.elf
+PETL_ZYNQMP_FSBL_ELF = $(PETL_IMG_DIR)/zynqmp_fsbl.elf
+PETL_ZYNQ_FSBL_ELF = $(PETL_IMG_DIR)/zynq_fsbl.elf
+PETL_FSBOOT_ELF = $(PETL_IMG_DIR)/fs-boot.elf
+PETL_UBOOT_ELF = $(PETL_IMG_DIR)/u-boot.elf
 PETL_DTB = $(PETL_IMG_DIR)/system.dtb
 PETL_BOOT_BIN = $(PETL_IMG_DIR)/BOOT.BIN
 PETL_BOOT_SCR = $(PETL_IMG_DIR)/boot.scr
@@ -60,7 +63,15 @@ PETL_ZIP = $(PETL_DIR)/$(TARGET_BOARD)_$(TARGET)_petalinux-2022-1.zip
 PETL_SDCARD_DIR = $(PETL_DIR)/sdcard
 
 define get_template_name
-$($(1)_target)
+$(word 1,$($(1)_target))
+endef
+
+define get_flash_size
+$(word 2,$($(1)_target))
+endef
+
+define get_flash_intf
+$(word 3,$($(1)_target))
 endef
 
 .PHONY: help
@@ -102,19 +113,25 @@ $(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
 .PHONY: petalinux
 petalinux: check_target package_$(call get_template_name,$(TARGET))
 
-package_microblaze: build
+package_microblaze: $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
-	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel
+	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET))
 	
-package_zynq: build
+$(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
+	cd $(TARGET) && petalinux-build
+	
+package_zynq: $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
-package_zynqMP: build
+$(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
+	cd $(TARGET) && petalinux-build
+
+package_zynqMP: $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
 	echo 'Packaging PetaLinux project for $(TARGET)'; \
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
-build: $(PETL_CFG_DONE)
+$(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB): $(PETL_CFG_DONE)
 	cd $(TARGET) && petalinux-build
 
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)

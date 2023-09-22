@@ -40,7 +40,7 @@ current_bd_instance $parentObj
 # Board specific parameters, PCIe and GT LOCs
 if {$board_name == "kc705"} {
   set ddr_name "ddr3_sdram"
-  set board_name "KC705_REVC"
+  set xlnx_ref_board "KC705_REVC"
   set pcie_ip "axi_pcie"
   set baddr {0x10000000}
   set haddr {0x13FFFFFF}
@@ -48,7 +48,7 @@ if {$board_name == "kc705"} {
   set barsize {256M}
 } elseif {$board_name == "vc707"} {
   set ddr_name "ddr3_sdram"
-  set board_name "VC707"
+  set xlnx_ref_board "VC707"
   set pcie_ip "axi_pcie"
   set baddr {0x10000000}
   set haddr {0x13FFFFFF}
@@ -196,7 +196,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     CONFIG.BAR0_SCALE {Gigabytes} \
     CONFIG.BAR_64BIT {true} \
     CONFIG.BAR0_SIZE {4} \
-    CONFIG.XLNX_REF_BOARD $board_name \
+    CONFIG.XLNX_REF_BOARD $xlnx_ref_board \
     CONFIG.rp_bar_hide {true} \
     CONFIG.BASE_CLASS_MENU {Bridge_device} \
     CONFIG.SUB_CLASS_INTERFACE_MENU {InfiniBand_to_PCI_host_bridge} \
@@ -534,9 +534,9 @@ if 0 {
   }
 }
 
-# Ethernet for AC701 and KC705 (AXI Ethernet Lite, no license required)
-if {$board_name == "ac701" || $board_name == "kc705"} {
-  # AC701 and KC705 use AXI Ethernet Lite (smaller footprint, doesn't require license but only supports 100Mbps)
+# Ethernet for KC705 (AXI Ethernet Lite, no license required)
+if {$board_name == "kc705"} {
+  # KC705 uses AXI Ethernet Lite (smaller footprint, doesn't require license but only supports 100Mbps)
   create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernetlite axi_ethernetlite
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mdio_mdc ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MDIO]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {mii ( Onboard PHY ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_ethernetlite/MII]

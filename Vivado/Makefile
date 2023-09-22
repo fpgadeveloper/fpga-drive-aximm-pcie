@@ -13,29 +13,31 @@ BD_NAME = fpgadrv
 JOBS ?= 8
 
 # valid targets
-TARGET_LIST = kc705_hpc \
-	kc705_lpc \
-	kcu105_hpc \
-	kcu105_hpc_dual \
-	kcu105_lpc \
-	pz_7015 \
-	pz_7030 \
-	uzev_dual \
-	vc707_hpc1 \
-	vc707_hpc2 \
-	vc709_hpc \
-	vcu118 \
-	vcu118_dual \
-	zc706_hpc \
-	zc706_lpc \
-	zcu104 \
-	zcu106_hpc0 \
-	zcu106_hpc0_dual \
-	zcu106_hpc1 \
-	zcu111 \
-	zcu111_dual \
-	zcu208 \
-	zcu208_dual
+kc705_hpc_target := 0
+kc705_lpc_target := 0
+kcu105_hpc_target := 0
+kcu105_hpc_dual_target := 0
+kcu105_lpc_target := 0
+pz_7015_target := 0
+pz_7030_target := 0
+uzev_dual_target := 0
+vc707_hpc1_target := 0
+vc707_hpc2_target := 0
+vc709_hpc_target := 0
+vcu118_target := 0
+vcu118_dual_target := 0
+zc706_hpc_target := 0
+zc706_lpc_target := 0
+zcu104_target := 0
+zcu106_hpc0_target := 0
+zcu106_hpc0_dual_target := 0
+zcu106_hpc1_target := 0
+zcu111_target := 0
+zcu111_dual_target := 0
+zcu208_target := 0
+zcu208_dual_target := 0
+
+TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
 # default target
 TARGET ?= none
@@ -80,9 +82,15 @@ help:
 	@echo '  make clean_all'
 	@echo '    Same as make clean but for all targets.'
 	@echo ''
-	@echo '  Valid TARGET: ${TARGET_LIST}'
+	@echo '  Valid TARGETs:'
+	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
 	@echo '  Valid JOBS: optional param to set number of synthesis jobs (default 8)'
 	@echo ''
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
 
 .PHONY: all
 all: xsa_all
@@ -110,21 +118,8 @@ xsa_all:
 
 .PHONY: project
 project: $(VIV_XPR)
-$(VIV_XPR):
-	@valid=0; \
-	for p in $(TARGET_LIST); do \
-	  if [ "$$p" = "$(TARGET)" ]; then \
-	    valid=1; \
-	    break; \
-	  fi \
-	done; \
-	if [ "$$valid" -ne 1 ]; then \
-	  echo 'Valid target required; you specified: TARGET=$(TARGET).'; \
-	  echo 'Example: make project TARGET=$(word 1,$(TARGET_LIST))'; \
-	  echo 'Valid TARGETs: $(TARGET_LIST)'; \
-	  exit 1; \
-	fi; \
-	echo 'Create Vivado project $(TARGET)'; \
+$(VIV_XPR): check_target
+	@echo 'Create Vivado project $(TARGET)'
 	$(RM) $(VIV_XPR_LOG) $(VIV_XPR_JOU)
 	$(VIVADO) -mode batch -notrace -source $(VIV_SCRIPT_BD) -log $(VIV_XPR_LOG) -journal $(VIV_XPR_JOU) -tclargs $(TARGET)
 	$(CP) $(VIV_XPR_LOG) $(VIV_XPR_JOU) $(TARGET)/.
@@ -137,21 +132,8 @@ project_all:
 	done
 
 .PHONY: clean
-clean:
-	@valid=0; \
-	for p in $(TARGET_LIST); do \
-	  if [ "$$p" = "$(TARGET)" ]; then \
-	    valid=1; \
-	    break; \
-	  fi \
-	done; \
-	if [ "$$valid" -ne 1 ]; then \
-	  echo 'Valid target required; you specified: TARGET=$(TARGET).'; \
-	  echo 'Example usage: make clean TARGET=$(word 1,$(TARGET_LIST))'; \
-	  echo 'Valid TARGETs: $(TARGET_LIST)'; \
-	  exit 1; \
-	fi; \
-	echo 'Cleaning project $(TARGET)'; \
+clean: check_target
+	@echo 'Cleaning project $(TARGET)'
 	$(RM) $(VIV_DIR)
 
 .PHONY: clean_all
