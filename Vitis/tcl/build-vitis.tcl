@@ -2,8 +2,9 @@
 
 # Description
 # -----------
-# This Tcl script will create Vitis workspace with software applications for each of the
-# exported hardware designs in the ../Vivado directory.
+# This Tcl script will create Vitis workspace and add a software application for the specified
+# target design. If a target design is not specified, a software application will be added for 
+# each of the exported hardware designs in the ../Vivado directory.
 
 # Set the Vivado directories containing the Vivado projects
 set vivado_dirs_rel [list "../Vivado"]
@@ -26,6 +27,42 @@ set template_app "Empty Application"
 
 # Microblaze designs: Generate combined .bit and .elf file
 set mb_combine_bit_elf 1
+
+# Possible targets (board name in lower case for the board.h file)
+dict set target_dict kc705_hpc { kc705 }
+dict set target_dict kc705_lpc { kc705 }
+dict set target_dict kcu105_hpc { kcu105 }
+dict set target_dict kcu105_hpc_dual { kcu105 }
+dict set target_dict kcu105_lpc { kcu105 }
+dict set target_dict pz_7015 { pz }
+dict set target_dict pz_7030 { pz }
+dict set target_dict uzev_dual { uzev }
+dict set target_dict vc707_hpc1 { vc707 }
+dict set target_dict vc707_hpc2 { vc707 }
+dict set target_dict vc709_hpc { vc709 }
+dict set target_dict vcu118 { vcu118 }
+dict set target_dict vcu118_dual { vcu118 }
+dict set target_dict zc706_hpc { zc706 }
+dict set target_dict zc706_lpc { zc706 }
+dict set target_dict zcu104 { zcu104 }
+dict set target_dict zcu106_hpc0 { zcu106 }
+dict set target_dict zcu106_hpc0_dual { zcu106 }
+dict set target_dict zcu106_hpc1 { zcu106 }
+dict set target_dict zcu111 { zcu111 }
+dict set target_dict zcu111_dual { zcu111 }
+dict set target_dict zcu208 { zcu208 }
+dict set target_dict zcu208_dual { zcu208 }
+
+# Target can be specified by creating the target variable before sourcing, or in the arguments
+if { $argc >= 1 } {
+  set target [lindex $argv 0]
+  puts "Target for the build: $target"
+} elseif { [info exists target] && [dict exists $target_dict $target] } {
+  puts "Target for the build: $target"
+} else {
+  puts "No target specified, or invalid target. $target"
+  set target ""
+}
 
 # Modifies the linker script such that all sections are relocated to local mem.
 # This allows us to store the test application in the bitstream and provide a boot

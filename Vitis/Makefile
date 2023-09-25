@@ -7,58 +7,95 @@ MKDIR = mkdir -p
 RM = rm -rf
 XSCT = $(XILINX_VITIS)/bin/xsct
 
-APP_POSTFIX = _app
+# default target
+.DEFAULT_GOAL := workspace
+TARGET ?= none
+
+JOBS ?= 8
+VITIS_ROOT = $(shell pwd)
+BD_NAME = fpgadrv
+APP_POSTFIX = _ssd_test
 SYS_POSTFIX = $(APP_POSTFIX)_system
 
 VIT_SCRIPT_WS = tcl/build-vitis.tcl
 
+VIV_DIR = $(VITIS_ROOT)/../Vivado
+VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
+VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
+
 # valid targets
-TARGET_LIST = kc705_hpc \
-	kc705_lpc \
-	kcu105_hpc \
-	kcu105_hpc_dual \
-	kcu105_lpc \
-	pz_7015 \
-	pz_7030 \
-	uzev_dual \
-	vc707_hpc1 \
-	vc707_hpc2 \
-	vc709_hpc \
-	vcu118 \
-	vcu118_dual \
-	zc706_hpc \
-	zc706_lpc \
-	zcu104 \
-	zcu106_hpc0 \
-	zcu106_hpc0_dual \
-	zcu106_hpc1 \
-	zcu111 \
-	zcu111_dual \
-	zcu208 \
-	zcu208_dual
+kc705_hpc_target := 0
+kc705_lpc_target := 0
+kcu105_hpc_target := 0
+kcu105_hpc_dual_target := 0
+kcu105_lpc_target := 0
+pz_7015_target := 0
+pz_7030_target := 0
+uzev_dual_target := 0
+vc707_hpc1_target := 0
+vc707_hpc2_target := 0
+vc709_hpc_target := 0
+vcu118_target := 0
+vcu118_dual_target := 0
+zc706_hpc_target := 0
+zc706_lpc_target := 0
+zcu104_target := 0
+zcu106_hpc0_target := 0
+zcu106_hpc0_dual_target := 0
+zcu106_hpc1_target := 0
+zcu111_target := 0
+zcu111_dual_target := 0
+zcu208_target := 0
+zcu208_dual_target := 0
+
+TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
 .PHONY: help
 help:
 	@echo 'Usage:'
 	@echo ''
-	@echo '  make workspace'
-	@echo '    Create the Vitis workspace and add applications for all exported targets.'
+	@echo '  make workspace TARGET=<target> JOBS=<val>'
+	@echo '    Create the Vitis workspace and add applications for specified target.'
+	@echo ''
+	@echo '  make all JOBS=<val>'
+	@echo '    Create the Vitis workspace and add applications for all targets.'
 	@echo ''
 	@echo '  make clean'
 	@echo '    Delete the Vitis workspace and all applications.'
 	@echo ''
+	@echo 'Parameters:'
+	@echo ''
+	@echo '  TARGET: Name of the target design, must be one of the following:'
+	@$(foreach targ,$(sort $(TARGET_LIST)),echo "    - $(targ)";)
+	@echo ''
+	@echo '  JOBS: Optional param to set number of synthesis jobs (default 8)'
+	@echo ''
+	@echo 'Example usage:'
+	@echo '  make workspace TARGET=$(word 1,$(TARGET_LIST))'
+	@echo ''
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
 
 .PHONY: all
-all: workspace
+all:
+	for targ in $(TARGET_LIST); do \
+		$(MAKE) workspace TARGET=$$targ; \
+	done
 
 .PHONY: workspace
-workspace:
-	$(XSCT) $(VIT_SCRIPT_WS)
+workspace: check_target $(VIV_XSA)
+	$(XSCT) $(VIT_SCRIPT_WS) $(TARGET)
+
+$(VIV_XSA):
+	$(MAKE) -C $(VIV_DIR) xsa TARGET=$(TARGET) JOBS=$(JOBS)
 
 .PHONY: clean
 clean:
 	for targ in $(TARGET_LIST); do \
 		$(RM) $${targ} $${targ}$(APP_POSTFIX) $${targ}$(SYS_POSTFIX); \
 	done
-	$(RM) boot .metadata .Xil IDE.log .analytics updatemem*.jou updatemem*.log
+	$(RM) boot .metadata .Xil IDE.log .analytics updatemem*.jou updatemem*.log RemoteSystemsTempFiles
 

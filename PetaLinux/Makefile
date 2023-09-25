@@ -95,14 +95,21 @@ endif
 help:
 	@echo 'Usage:'
 	@echo ''
-	@echo '  make petalinux TARGET=<val>'
+	@echo '  make petalinux TARGET=<val> JOBS=<val>'
 	@echo '    Build the PetaLinux project.'
 	@echo ''
 	@echo '  make clean'
 	@echo '    Clean runs'
 	@echo ''
-	@echo '  Valid TARGETs:'
-	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
+	@echo 'Parameters:'
+	@echo ''
+	@echo '  TARGET: Name of the target design, must be one of the following:'
+	@$(foreach targ,$(sort $(TARGET_LIST)),echo "    - $(targ)";)
+	@echo ''
+	@echo '  JOBS: Optional param to set number of synthesis jobs (default 8)'
+	@echo ''
+	@echo 'Example usage:'
+	@echo '  make petalinux TARGET=$(word 1,$(TARGET_LIST))'
 	@echo ''
 
 check_target:
@@ -117,21 +124,21 @@ petalinux: check_target package
 ifeq ($(call get_template_name,$(TARGET)), microblaze)
 package: $(PETL_BOOT_MCS)
 $(PETL_BOOT_MCS): $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
-	echo 'Packaging PetaLinux project for $(TARGET)'; \
+	@echo 'Packaging PetaLinux project for $(TARGET)'
 	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET))
 	
 # Package rule for zynq designs
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
 package: $(PETL_BOOT_BIN)
 $(PETL_BOOT_BIN): $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
-	echo 'Packaging PetaLinux project for $(TARGET)'; \
+	@echo 'Packaging PetaLinux project for $(TARGET)'
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
 # Package rule for zynqMP designs
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
 package: $(PETL_BOOT_BIN)
 $(PETL_BOOT_BIN): $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
-	echo 'Packaging PetaLinux project for $(TARGET)'; \
+	@echo 'Packaging PetaLinux project for $(TARGET)'
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
 endif
@@ -146,9 +153,9 @@ $(PETL_BUILD_DEPS): $(PETL_CFG_DONE)
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)
 	cp -R ./bsp/$(TARGET_BOARD)/project-spec ./$(TARGET)/.
 	@if [ ! -z "$(SSTATE_PATH)" ]; then \
-		echo '$(MIRROR_URL)' >> ./$(TARGET)/project-spec/configs/config; \
-		echo '$(SSTATE_FEEDS)' >> ./$(TARGET)/project-spec/configs/config; \
-		echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
+		@echo '$(MIRROR_URL)' >> ./$(TARGET)/project-spec/configs/config; \
+		@echo '$(SSTATE_FEEDS)' >> ./$(TARGET)/project-spec/configs/config; \
+		@echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
 	fi
 	touch $(TARGET)/configdone.txt
 	cd $(TARGET) && petalinux-config --silentconfig

@@ -82,9 +82,15 @@ help:
 	@echo '  make clean_all'
 	@echo '    Same as make clean but for all targets.'
 	@echo ''
-	@echo '  Valid TARGETs:'
-	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
-	@echo '  Valid JOBS: optional param to set number of synthesis jobs (default 8)'
+	@echo 'Parameters:'
+	@echo ''
+	@echo '  TARGET: Name of the target design, must be one of the following:'
+	@$(foreach targ,$(sort $(TARGET_LIST)),echo "    - $(targ)";)
+	@echo ''
+	@echo '  JOBS: Optional param to set number of synthesis jobs (default 8)'
+	@echo ''
+	@echo 'Example usage:'
+	@echo '  make xsa TARGET=$(word 1,$(TARGET_LIST))'
 	@echo ''
 
 check_target:
