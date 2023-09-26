@@ -109,7 +109,6 @@ losing data on one of your hard drives.
 1. Plug the SD card into your target board.
 2. Ensure that the target board is configured to boot from SD card:
    * **ZCU10x:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
-   * **PYNQ-ZU:** Switch labelled "JTAG SD" must be flipped to the right (towards "SD")
    * **UltraZed-EV:** DIP switch SW2 (on the SoM) is set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
 3. Connect the [RPi Camera FMC] to the FMC connector of the target board. Connect one or more
    [Raspberry Pi camera module v2] to the [RPi Camera FMC].

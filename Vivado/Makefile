@@ -1,15 +1,17 @@
 # Opsero Electronic Design Inc. 2023
 #
-# This Makefile can be used to build these projects from sources.
+# This Makefile can be used to build the Vivado projects.
 
 CP = cp -rf
 MKDIR = mkdir -p
 RM = rm -rf
-XSCT = $(XILINX_VITIS)/bin/xsct
+ROOT_DIR = $(shell pwd)
 VIVADO = $(XILINX_VIVADO)/bin/vivado
 BD_NAME = fpgadrv
 
-# default number of jobs
+# defaults
+.DEFAULT_GOAL := xsa
+TARGET ?= none
 JOBS ?= 8
 
 # valid targets
@@ -39,15 +41,10 @@ zcu208_dual_target := 0
 
 TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
-# default target
-TARGET ?= none
-
+# Vivado paths
 VIV_SCRIPT_BD = scripts/build.tcl
 VIV_SCRIPT_XSA = scripts/xsa.tcl
 VIV_DIR = $(TARGET)
-
-# source files
-VIV_SRC_XDC = src/
 
 # output files
 VIV_XPR = $(VIV_DIR)/$(TARGET).xpr
@@ -56,8 +53,8 @@ VIV_XPR_LOG = $(TARGET)_xpr.log
 VIV_XPR_JOU = $(TARGET)_xpr.jou
 VIV_XSA_LOG = $(TARGET)_xsa.log
 VIV_XSA_JOU = $(TARGET)_xsa.jou
-VIV_BD = $(VIV_DIR)/$(TARGET).srcs/sources_1/bd/$(BD_NAME)/$(BD_NAME).bd
 VIV_BIT = $(VIV_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
+VIV_LOCK = $(ROOT_DIR)/.$(TARGET).lock
 
 .PHONY: help
 help:
@@ -93,16 +90,20 @@ help:
 	@echo '  make xsa TARGET=$(word 1,$(TARGET_LIST))'
 	@echo ''
 
-check_target:
-ifndef $(TARGET)_target
-	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
-endif
-
 .PHONY: all
 all: xsa_all
 
 .PHONY: xsa
-xsa: $(VIV_XSA) check_warnings
+xsa:
+	@if [ -f $(VIV_LOCK) ]; then \
+		echo "$(TARGET) is locked. Skipping..."; \
+	else \
+		touch $(VIV_LOCK); \
+		$(MAKE) xsa_locked TARGET=$(TARGET) JOBS=$(JOBS); \
+		rm -f $(VIV_LOCK); \
+	fi
+
+xsa_locked: $(VIV_XSA) check_warnings
 $(VIV_XSA): $(VIV_XPR)
 	$(RM) $(VIV_XSA_LOG) $(VIV_XSA_JOU)
 	$(VIVADO) -mode batch -notrace -source $(VIV_SCRIPT_XSA) -log $(VIV_XSA_LOG) -journal $(VIV_XSA_JOU) -tclargs $(TARGET) $(JOBS)
@@ -123,8 +124,17 @@ xsa_all:
 	done
 
 .PHONY: project
-project: $(VIV_XPR)
-$(VIV_XPR): check_target
+project: check_target
+	@if [ -f $(VIV_LOCK) ]; then \
+		echo "$(TARGET) is locked. Skipping..."; \
+	else \
+		touch $(VIV_LOCK); \
+		$(MAKE) project_locked TARGET=$(TARGET) JOBS=$(JOBS); \
+		rm -f $(VIV_LOCK); \
+	fi
+
+project_locked: $(VIV_XPR)
+$(VIV_XPR):
 	@echo 'Create Vivado project $(TARGET)'
 	$(RM) $(VIV_XPR_LOG) $(VIV_XPR_JOU)
 	$(VIVADO) -mode batch -notrace -source $(VIV_SCRIPT_BD) -log $(VIV_XPR_LOG) -journal $(VIV_XPR_JOU) -tclargs $(TARGET)
@@ -134,7 +144,7 @@ $(VIV_XPR): check_target
 .PHONY: project_all
 project_all:
 	for targ in $(TARGET_LIST); do \
-		$(MAKE) project TARGET=$$targ; \
+		$(MAKE) project TARGET=$$targ JOBS=$(JOBS); \
 	done
 
 .PHONY: clean
@@ -148,4 +158,10 @@ clean_all:
 		$(MAKE) clean TARGET=$$targ; \
 	done
 	$(RM) .Xil vivado*.log vivado*.jou
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
+
 

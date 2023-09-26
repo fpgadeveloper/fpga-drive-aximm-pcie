@@ -60,7 +60,7 @@ if { $argc >= 1 } {
 } elseif { [info exists target] && [dict exists $target_dict $target] } {
   puts "Target for the build: $target"
 } else {
-  puts "No target specified, or invalid target. $target"
+  puts "No target specified, or invalid target."
   set target ""
 }
 

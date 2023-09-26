@@ -103,6 +103,7 @@ set proj_board [get_board_parts "*:$board_name:*" -latest_file_version]
 # Check if the board files are installed, if not, install them
 if { $proj_board == "" } {
     puts "Failed to find board files for $board_name. Installing board files..."
+    xhub::refresh_catalog [xhub::get_xstores xilinx_board_store]
     xhub::install [xhub::get_xitems *$board_name*]
     set proj_board [get_board_parts "*:$board_name:*" -latest_file_version]
 } else {

@@ -5,23 +5,16 @@
 CP = cp -rf
 MKDIR = mkdir -p
 RM = rm -rf
+ROOT_DIR = $(shell pwd)
 XSCT = $(XILINX_VITIS)/bin/xsct
-
-# default target
-.DEFAULT_GOAL := workspace
-TARGET ?= none
-
-JOBS ?= 8
-VITIS_ROOT = $(shell pwd)
 BD_NAME = fpgadrv
 APP_POSTFIX = _ssd_test
 SYS_POSTFIX = $(APP_POSTFIX)_system
 
-VIT_SCRIPT_WS = tcl/build-vitis.tcl
-
-VIV_DIR = $(VITIS_ROOT)/../Vivado
-VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
-VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
+# defaults
+.DEFAULT_GOAL := workspace
+TARGET ?= none
+JOBS ?= 8
 
 # valid targets
 kc705_hpc_target := 0
@@ -50,6 +43,14 @@ zcu208_dual_target := 0
 
 TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 
+# Vitis paths
+VIT_SCRIPT_WS = tcl/build-vitis.tcl
+
+# Vivado paths
+VIV_DIR = $(ROOT_DIR)/../Vivado
+VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
+VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
+
 .PHONY: help
 help:
 	@echo 'Usage:'
@@ -74,11 +75,6 @@ help:
 	@echo '  make workspace TARGET=$(word 1,$(TARGET_LIST))'
 	@echo ''
 
-check_target:
-ifndef $(TARGET)_target
-	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
-endif
-
 .PHONY: all
 all:
 	for targ in $(TARGET_LIST); do \
@@ -98,4 +94,10 @@ clean:
 		$(RM) $${targ} $${targ}$(APP_POSTFIX) $${targ}$(SYS_POSTFIX); \
 	done
 	$(RM) boot .metadata .Xil IDE.log .analytics updatemem*.jou updatemem*.log RemoteSystemsTempFiles
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
+
 

@@ -3,17 +3,13 @@
 # This Makefile can be used to build all projects and gather the boot images.
 
 RM = rm -rf
-JOBS ?= 8
 ROOT_DIR = $(shell pwd)
 BD_NAME = fpgadrv
 
-# default target
+# defaults
+.DEFAULT_GOAL := bootimage
 TARGET ?= none
-
-VIV_DIR = $(ROOT_DIR)/Vivado
-VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
-VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
-VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
+JOBS ?= 8
 
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
 kc705_hpc_target := microblaze both
@@ -41,9 +37,6 @@ zcu208_target := zynqMP both
 zcu208_dual_target := zynqMP both
 
 TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
-
-# target board (the first word in the target name, before the first underscore)
-TARGET_BOARD=$(word 1,$(subst _, ,$(TARGET)))
 
 # petalinux paths and files
 PETL_ROOT = $(ROOT_DIR)/PetaLinux
@@ -74,7 +67,9 @@ BOOTIMAGE_DIR = $(ROOT_DIR)/bootimages
 TEMPBOOT_DIR = $(BOOTIMAGE_DIR)/$(BD_NAME)_$(TARGET)
 PETL_ZIP = $(BOOTIMAGE_DIR)/$(BD_NAME)_$(TARGET)_petalinux-2022-1.zip
 BARE_ZIP = $(BOOTIMAGE_DIR)/$(BD_NAME)_$(TARGET)_standalone-2022-1.zip
+BOOTIMAGE_LOCK = $(ROOT_DIR)/.$(TARGET).lock
 
+# These macros return values from the valid target lists defined above
 define get_template_name
 $(word 1,$($(1)_target))
 endef
@@ -83,6 +78,7 @@ define get_both_or_baremetal_only
 $(word 2,$($(1)_target))
 endef
 
+# The name of the boot image of the baremetal app depends on the device
 ifeq ($(call get_template_name,$(TARGET)), microblaze)
 	VIT_BOOT_FILE = $(VIT_BOOT)/$(TARGET).bit
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
@@ -125,13 +121,17 @@ all:
 		$(MAKE) bootimage TARGET=$${targ} JOBS=$(JOBS); \
 	done
 
-check_target:
-ifndef $(TARGET)_target
-	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
-endif
-
 .PHONY: bootimage
-bootimage: check_target bootimage_$(call get_both_or_baremetal_only,$(TARGET))
+bootimage: check_target
+	@if [ -f $(BOOTIMAGE_LOCK) ]; then \
+		echo "$(TARGET) is locked. Skipping..."; \
+	else \
+		touch $(BOOTIMAGE_LOCK); \
+		$(MAKE) bootimage_locked TARGET=$(TARGET) JOBS=$(JOBS); \
+		rm -f $(BOOTIMAGE_LOCK); \
+	fi
+
+bootimage_locked: bootimage_$(call get_both_or_baremetal_only,$(TARGET))
 
 bootimage_baremetal_only: $(BARE_ZIP)
 
@@ -200,4 +200,10 @@ clean: check_target
 .PHONY: clean_all
 clean_all: 
 	$(RM) $(BOOTIMAGE_DIR)
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
+
 

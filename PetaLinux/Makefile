@@ -3,19 +3,13 @@
 # This Makefile can be used to build the PetaLinux projects.
 
 RM = rm -rf
-VIVADO = $(XILINX_VIVADO)/bin/vivado
-JOBS ?= 8
 PETL_ROOT = $(shell pwd)
 BD_NAME = fpgadrv
 
-# default target
+# defaults
 .DEFAULT_GOAL := petalinux
 TARGET ?= none
-
-VIV_DIR = $(PETL_ROOT)/../Vivado
-VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
-VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
-VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
+JOBS ?= 8
 
 # valid targets (template name, flash size, flash interface)
 kc705_hpc_target := microblaze 128 BPIx16
@@ -44,6 +38,12 @@ TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
 # target board (the first word in the target name, before the first underscore)
 TARGET_BOARD=$(word 1,$(subst _, ,$(TARGET)))
 
+# Vivado paths
+VIV_DIR = $(PETL_ROOT)/../Vivado
+VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
+VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
+VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
+
 # petalinux paths and files
 PETL_DIR = $(PETL_ROOT)/$(TARGET)
 PETL_IMG_DIR = $(PETL_DIR)/images/linux
@@ -62,7 +62,9 @@ PETL_IMAGE_UB = $(PETL_IMG_DIR)/image.ub
 PETL_CFG_DONE = $(PETL_DIR)/configdone.txt
 PETL_COMP_DIR = $(PETL_DIR)/components
 PETL_OFFLINE = $(PETL_ROOT)/offline.txt
+PETL_LOCK = $(PETL_ROOT)/.$(TARGET).lock
 
+# These macros return values from the valid target lists defined above
 define get_template_name
 $(word 1,$($(1)_target))
 endef
@@ -96,10 +98,16 @@ help:
 	@echo 'Usage:'
 	@echo ''
 	@echo '  make petalinux TARGET=<val> JOBS=<val>'
-	@echo '    Build the PetaLinux project.'
+	@echo '    Build the PetaLinux project for specified target.'
 	@echo ''
-	@echo '  make clean'
-	@echo '    Clean runs'
+	@echo '  make all JOBS=<val>'
+	@echo '    Build the PetaLinux project for all target designs.'
+	@echo ''
+	@echo '  make clean TARGET=<val>'
+	@echo '    Delete PetaLinux project of specified target.'
+	@echo ''
+	@echo '  make clean_all'
+	@echo '    Delete PetaLinux projects of all targets.'
 	@echo ''
 	@echo 'Parameters:'
 	@echo ''
@@ -112,13 +120,17 @@ help:
 	@echo '  make petalinux TARGET=$(word 1,$(TARGET_LIST))'
 	@echo ''
 
-check_target:
-ifndef $(TARGET)_target
-	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
-endif
-
 .PHONY: petalinux
-petalinux: check_target package
+petalinux: check_target
+	@if [ -f $(PETL_LOCK) ]; then \
+		echo "$(TARGET) is locked. Skipping..."; \
+	else \
+		touch $(PETL_LOCK); \
+		$(MAKE) petalinux_locked TARGET=$(TARGET) JOBS=$(JOBS); \
+		rm -f $(PETL_LOCK); \
+	fi
+
+petalinux_locked: package
 
 # Package rule for microblaze designs
 ifeq ($(call get_template_name,$(TARGET)), microblaze)
@@ -169,7 +181,25 @@ $(PETL_DIR): $(VIV_XSA)
 $(VIV_XSA):
 	$(MAKE) -C $(VIV_DIR) xsa TARGET=$(TARGET) JOBS=$(JOBS)
 
+.PHONY: all
+all:
+	for targ in $(TARGET_LIST); do \
+		$(MAKE) petalinux TARGET=$${targ} JOBS=$(JOBS); \
+	done
+
 .PHONY: clean
 clean: check_target
 	$(RM) $(TARGET)
+
+.PHONY: clean_all
+clean_all:
+	for targ in $(TARGET_LIST); do \
+		$(MAKE) clean TARGET=$$targ; \
+	done
+
+check_target:
+ifndef $(TARGET)_target
+	$(error "Please specify a TARGET. Use 'make help' to see valid targets.")
+endif
+
 
