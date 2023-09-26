@@ -57,7 +57,12 @@ users are advised to use a Linux virtual machine to build the PetaLinux projects
 The last command will launch the build process for the corresponding Vivado project if that project
 has not already been built and it's hardware exported.
 
-## Prepare the SD card
+## Boot from SD card
+
+These instructions only apply to the target boards that allow booting from SD card. This includes all
+Zynq-7000 boards, Zynq UltraScale+ boards and Zynq RFSoC boards.
+
+### Prepare the SD card
 
 Once the build process is complete, you must prepare the SD card for booting PetaLinux.
 
@@ -104,48 +109,108 @@ losing data on one of your hard drives.
    
    Once the `sync` command returns, you will be able to eject the SD card from the machine.
 
-## Boot from SD card
+### Boot PetaLinux
 
 1. Plug the SD card into your target board.
 2. Ensure that the target board is configured to boot from SD card:
-   * **ZCU10x:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+   * **PicoZed:** DIP switch SW1 (on the SoM) is set to 11 (1=ON,2=ON)
+   * **ZC706:** DIP switch SW11 must be set to 00110 (1=OFF,2=OFF,3=ON,4=ON,5=OFF)
    * **UltraZed-EV:** DIP switch SW2 (on the SoM) is set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
-3. Connect the [RPi Camera FMC] to the FMC connector of the target board. Connect one or more
-   [Raspberry Pi camera module v2] to the [RPi Camera FMC].
+   * **ZCU10x:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+   * **ZCU111:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+   * **ZCU208:** DIP switch SW2 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+3. Connect one or more M.2 NVMe PCIe SSDs to the [FPGA Drive FMC Gen4]. Connect the 
+   [FPGA Drive FMC Gen4] to the FMC connector of the target board.
 4. Connect the USB-UART to your PC and then open a UART terminal set to 115200 baud and the 
    comport that corresponds to your target board.
 5. Connect and power your hardware.
 
-## Launch PetaLinux on hardware
+## Boot via JTAG
 
-### Via JTAG
+```{tip} You need to install the cable drivers before being able to boot via JTAG.
+Note that the Vitis installer does not automatically install the cable drivers, it must be done separately.
+For instructions, read section 
+[installing the cable drivers](https://docs.xilinx.com/r/2022.1-English/ug973-vivado-release-notes-install-license/Installing-Cable-Drivers) 
+from the Vivado release notes.
+```
 
-To launch the PetaLinux project on hardware via JTAG, connect and power up your hardware and then
-use the following commands in a Linux command terminal:
+```{warning} If you boot the Zynq-7000, Zynq UltraScale+ or Zynq RFSoC designs via JTAG, you must still
+first prepare the SD card. The reason is because these designs are configured to use the SD card to store
+the root filesystem. If you boot these designs via JTAG without preparing and connecting the SD card, the
+boot will hang during at a message similar to this: `Waiting for root device /dev/mmcblk0p2...`
+```
 
-#. Change current directory to the PetaLinux project directory:
-   `cd <petalinux-project-dir>`
-#. Download bitstream to the FPGA:
-   `petalinux-boot --jtag --fpga`
-   Note that you don't have to specify the bitstream because this command will use the one that it finds
-   in the `./images/linux` directory.
-#. Download the PetaLinux kernel to the FPGA:
-   `petalinux-boot --jtag --kernel`
+### Setup hardware
 
-### Via SD card
+1. If you are using a Zynq-7000, Zynq UltraScale+ or Zynq RFSoC board, prepare the SD card according 
+   to the [instructions above](#prepare-the-sd-card) and plug the SD card into your target board.
+2. Ensure that the target board is configured to boot from JTAG:
+   * **KC705:** DIP switch SW13 must be set to xx101 (1-2=DONTCARE,3=ON,4=OFF,5=ON)
+   * **KCU105:** DIP switch SW15 must be set to xxxx01 (1-4=DONTCARE,5=OFF,6=ON)
+   * **VCU118:** DIP switch SW16 must be set to x101 (1=DONTCARE,2=ON,3=OFF,4=ON)
+   * **PicoZed:** DIP switch SW1 (on the SoM) is set to 00 (1=OFF,2=OFF)
+   * **ZC706:** DIP switch SW11 must be set to 00000 (1=OFF,2=OFF,3=OFF,4=OFF,5=OFF)
+   * **UltraZed-EV:** DIP switch SW2 (on the SoM) is set to 1111 (1=ON,2=ON,3=ON,4=ON)
+   * **ZCU10x:** DIP switch SW6 must be set to 1111 (1=ON,2=ON,3=ON,4=ON)
+   * **ZCU111:** DIP switch SW6 must be set to 1111 (1=ON,2=ON,3=ON,4=ON)
+   * **ZCU208:** DIP switch SW2 must be set to 1111 (1=ON,2=ON,3=ON,4=ON)
+3. Connect one or more M.2 NVMe PCIe SSDs to the [FPGA Drive FMC Gen4]. Connect the 
+   [FPGA Drive FMC Gen4] to the FMC connector of the target board. Instructions for doing this can be 
+   found in the [Getting started](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/getting-started/) guide.
+4. Connect the USB-UART to your PC and then open a UART terminal set to 115200 baud and the 
+   comport that corresponds to your target board.
+5. Connect and power your hardware.
 
-To launch the PetaLinux project on hardware via SD card, copy the following files to the root of the
-SD card:
+### Boot PetaLinux
 
-* `/<petalinux-project>/images/linux/BOOT.bin`
-* `/<petalinux-project>/images/linux/boot.scr`
-* `/<petalinux-project>/images/linux/image.ub`
+To boot PetaLinux on hardware via JTAG, use the following commands in a Linux command terminal:
 
-Then connect and power your hardware.
+1. Change current directory to the PetaLinux project directory for your target design:
+   ```
+   cd <project-dir>/PetaLinux/<target>
+   ```
+2. Download bitstream to the FPGA:
+   ```
+   petalinux-boot --jtag --kernel --fpga
+   ```
+
+An explanation of the above command is provided by the `petalinux-boot` command:
+```none
+For microblaze, it will download the bitstream to target board, and
+then boot the kernel image on target board.
+For Zynq, it will download the bitstream and FSBL to target board,
+and then boot the u-boot and then the kernel on target
+board.
+For Zynq UltraScale+, it will download the bitstream, PMUFW and FSBL,
+and then boot the kernel with help of linux-boot.elf to set kernel
+start and dtb addresses.
+```
+
+## UART terminal
+
+You will need to setup a terminal emulator to use the PetaLinux command line over the USB-UART connection.
+Connect with a baud rate of 115200.
+
+### In Windows
+
+You will need to find the comport for the USB-UART in Windows Device Manager. As a terminal emulator, you
+can use the open source and free [Putty](https://www.putty.org/).
+
+### In Linux
+
+In Linux, you can find the USB-UART device by running `dmesg | grep tty`. Typically, the device will be
+`/dev/ttyUSB0` or it could be followed by a different number. To open a terminal emulator, you can use
+the following command:
+
+```
+sudo screen /dev/ttyUSB0 115200
+```
 
 ## Setup the NVMe SSD in PetaLinux
 
-1. Log into PetaLinux using the username `root` and the password `root`.
+1. Log into PetaLinux using the username `petalinux`. On the first time you boot, you will be forced to 
+   choose a password for this user. The password you choose will be required on all future boots, so choose
+   a password that you will remember.
 2. Check that the SSD has been enumerated using: `lspci`. Without any arguments, you get the output as shown 
    in the image below. Use the `-vv` argument, to get a more detailed output with the link speed, number of
    lanes used, etc.
@@ -239,6 +304,9 @@ We suspect that this is caused by a mishandling of the "PCIe Link is DOWN" case 
 driver. The correct behavior should be that the enumeration is skipped and boot continues when the
 down link is detected.
 
-It is worth noting that our ZCU102 Dual design does NOT fail to boot under these conditions,
+It is worth noting that our ZCU106 Dual design does NOT fail to boot under these conditions,
 suggesting that the XDMA driver IS designed to properly handle the "PCIe Link is DOWN" case.
 We are still looking for a solution to this issue.
+
+[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+

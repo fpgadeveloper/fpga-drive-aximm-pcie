@@ -261,11 +261,11 @@ CONFIG_SUBSYSTEM_BOOTARGS_GENERATED="console=ttyPS0,115200 earlycon root=/dev/ra
 # FPGA Drive FMC configs
 
 CONFIG_SUBSYSTEM_BOOTARGS_AUTO=n
-CONFIG_SUBSYSTEM_USER_CMDLINE="earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait cma=1536M"
+CONFIG_SUBSYSTEM_USER_CMDLINE="earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait cma=1536M"
 
 CONFIG_SUBSYSTEM_ROOTFS_INITRD=n
 CONFIG_SUBSYSTEM_ROOTFS_EXT4=y
-CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk0p2"
+CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk1p2"
 CONFIG_SUBSYSTEM_RFS_FORMATS="tar.gz ext4 ext4.gz "
 
 CONFIG_SUBSYSTEM_HOSTNAME="pz_fpgadrv_2022_1"

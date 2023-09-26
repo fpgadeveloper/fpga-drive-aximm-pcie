@@ -165,9 +165,9 @@ $(PETL_BUILD_DEPS): $(PETL_CFG_DONE)
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)
 	cp -R ./bsp/$(TARGET_BOARD)/project-spec ./$(TARGET)/.
 	@if [ ! -z "$(SSTATE_PATH)" ]; then \
-		@echo '$(MIRROR_URL)' >> ./$(TARGET)/project-spec/configs/config; \
-		@echo '$(SSTATE_FEEDS)' >> ./$(TARGET)/project-spec/configs/config; \
-		@echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
+		echo '$(MIRROR_URL)' >> ./$(TARGET)/project-spec/configs/config; \
+		echo '$(SSTATE_FEEDS)' >> ./$(TARGET)/project-spec/configs/config; \
+		echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
 	fi
 	touch $(TARGET)/configdone.txt
 	cd $(TARGET) && petalinux-config --silentconfig

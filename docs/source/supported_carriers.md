@@ -29,7 +29,7 @@ provide us with the pinout of your carrier and we'll be happy to check compatibi
 
 ## Board specific notes
 
-### AC701 and KC705
+### KC705
 
 * These designs use the AXI EthernetLite IP for their onboard Ethernet ports. This IP does not require a license, but 
   limits the link speed to 100Mbps.
@@ -37,12 +37,8 @@ provide us with the pinout of your carrier and we'll be happy to check compatibi
 ### KCU105, VC707, VC709
 
 * The on-board Ethernet port for these boards is not connected in these designs because they are not supported by
-  the free AXI EthernetLite IP. The block design build script (design_1-mb.tcl) contains the code to add the AXI Ethernet IP
-  for these boards and can be uncommented if Ethernet is desired.
-
-### KCU105
-
-* This design uses the Quad SPI flash in dual mode with SPIx8 interface (64MB total storage).
+  the free AXI EthernetLite IP. The block design build script (`Vivado/src/bd/bd_mb.tcl`) contains the code to add 
+  the AXI Ethernet IP for these boards and can be uncommented if Ethernet is required.
 
 ### PicoZed FMC Carrier Card V2
 

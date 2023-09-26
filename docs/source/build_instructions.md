@@ -82,9 +82,9 @@ physical or virtual) running one of the [supported Linux distributions].
    on your hard drive --OR-- clone the repo to your hard drive
 2. Open Windows Explorer, browse to the repo files on your hard drive.
 3. In the `Vivado` directory, you will find multiple batch files (.bat).
-   Double click on the batch file that corresponds to your hardware,
-   for example, double-click `build-zcu104.bat` if you are using the ZCU104.
-   This will generate a Vivado project for your hardware platform.
+   Double click on the batch file that corresponds to the target design you wish to build.
+   This will generate a Vivado project for your target design and it will be located in
+   the folder `Vivado/<target>`.
 4. Run Vivado and open the project that was just created.
 5. Click Generate bitstream.
 6. When the bitstream is successfully generated, select **File->Export->Export Hardware**.
@@ -95,8 +95,8 @@ physical or virtual) running one of the [supported Linux distributions].
 
 1. Return to Windows Explorer and browse to the Vitis directory in the repo.
 2. Double click the `build-vitis.bat` batch file. The batch file will run the
-   `build-vitis.tcl` script and build the Vitis workspace containing the hardware
-   design and the software application.
+   `tcl/build-vitis.tcl` script and build the Vitis workspace containing the hardware
+   platform and the software application for the target design that you built earlier.
 
 ## Linux users
 
@@ -160,9 +160,10 @@ to build the Vivado and PetaLinux projects with a single command.
    
 ### Build Vitis workspace in Linux
 
-The following steps are required if you wish to build and run the [standalone application](standalone). You can
-skip to the following section if you instead want to use PetaLinux. We are assuming that you have 
-completed the above steps and an XSA file has been generated for your selected target.
+The following steps are required if you wish to build and run the [standalone application](stand_alone). You can
+skip to the following section if you instead want to use PetaLinux. You are not required to have built the
+Vivado design before following these steps, as the Makefile triggers the Vivado build for the corresponding
+design if it has not already been done.
 
 1. Launch the setup scripts for Vitis:
    ```
@@ -217,7 +218,7 @@ design if it has not already been done.
    `zcu208`, and 
    `zcu208_dual`.
    Note that if you skipped the Vivado build steps above, the Makefile will first generate and
-   and build the Vivado project, and then build the PetaLinux project.
+   build the Vivado project, and then build the PetaLinux project.
 
 ### PetaLinux offline build
 

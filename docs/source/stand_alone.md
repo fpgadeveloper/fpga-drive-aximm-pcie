@@ -1,79 +1,143 @@
 # Stand-alone Application
 
-A stand-alone software application can be built for this project using the build script contained in the Vitis subdirectory
-of this repo. The build script creates a Vitis workspace containing the hardware platform (exported from Vivado) and a stand-alone
-application. The application originates from an example provided by Xilinx which is located in the Vitis installation files.
-The program demonstrates basic usage of the stand-alone driver including how to check link-up, link speed, the number of 
-lanes used, as well as how to perform PCIe enumeration. The original example applications can be found here:
+A stand-alone software application can be built for this project using the build script contained in the 
+Vitis subdirectory of this repo. The build script creates a Vitis workspace containing the hardware platform 
+(exported from Vivado) and a stand-alone application. The application originates from an example provided by 
+Xilinx which is located in the Vitis installation files.
+The program demonstrates basic usage of the stand-alone driver including how to check link-up, link speed, 
+the number of lanes used, as well as how to perform PCIe enumeration. The original example applications can 
+be found here:
 
 * For the AXI PCIe designs:
-  `C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_3\examples\xaxipcie_rc_enumerate_example.c`
+  `<Xilinx-path>/Vitis/2022.1/data/embeddedsw/XilinxProcessorIPLib/drivers/axipcie_v3_3/examples/xaxipcie_rc_enumerate_example.c`
 * For the XDMA designs:
-  `C:\Xilinx\Vitis\2020.2\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v1_2\examples\xdmapcie_rc_enumerate_example.c`
+  `<Xilinx-path>/Vitis/2022.1/data/embeddedsw/XilinxProcessorIPLib/drivers/xdmapcie_v1_5/examples/xdmapcie_rc_enumerate_example.c`
 
 ## Building the Vitis workspace
 
 To build the Vitis workspace and example application, you must first generate
 the Vivado project hardware design (the bitstream) and export the hardware.
 Once the bitstream is generated and exported, then you can build the
-Vitis workspace using the provided `Vitis/build-vitis.tcl` script.
+Vitis workspace using the provided scripts. Follow the instructions appropriate for your
+operating system:
 
-### Windows users
+* **Windows**: Follow the [build instructions for Windows users](/build_instructions.md#windows-users)
+* **Linux**: Follow the [build instructions for Linux users](/build_instructions.md#linux-users)
 
-To build the Vitis workspace, Windows users can run the `build-vitis.bat` file which
-launches the Tcl script.
+## Hardware setup
 
-### Linux users
+Before running the application, you will need to setup the hardware.
 
-Linux users must use the following commands to run the build script:
+1. Connect one or more SSDs to the [FPGA Drive FMC Gen4] and then plug it into the target board.
+   Instructions for doing this can be found in the 
+   [Getting started](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/getting-started/) guide.
+2. To receive the UART output of this standalone application, you will need to connect the
+   USB-UART of the development board to your PC and run a console program such as 
+   [Putty].
+   * **For Microblaze designs:** The UART speed must be set to 9600.
+   * **For Zynq and Zynq MPSoC/RFSoC designs:** The UART speed must be set to 115200.
 
-```
-cd <path-to-repo>/Vitis
-/<path-to-xilinx-tools>/Vitis/2020.2/bin/xsct build-vitis.tcl
-```
-
-### What the script does
-
-The build script does three things:
-
-1. Creates a local software repository inside the Vitis workspace called `embeddedsw`.
-   It copies the modified driver sources from the Git repo's `EmbeddedSw` folder to the local 
-   software repository `embeddedsw`. Then it copies the rest of the required sources from
-   `{Vitis Install Dir}\data\embeddedsw\`. The `embeddedsw` local software repository holds
-   a modified version of the BSP libraries that are required by the application. For more
-   information about the modifications to the libraries, see the README in the `EmbeddedSw`
-   folder of this Git repository.
-2. Generates an empty application for each exported Vivado design
-   that is found in the `../Vivado` directory. Most users will only have one exported
-   Vivado design.
-3. Copies the appropriate enumeration application source file from the
-   `\Vitis\common\src\` directory of this repo into the application source directory.
 
 ## Run the application
 
-1. Open Xilinx Vitis.
-2. Power up your hardware platform and ensure that the JTAG is
-   connected properly.
-3. In the Vitis Explorer panel, double-click on the System project that you want to run -
-   this will reveal the applications contained in the project. The System project will have 
+You must have followed the build instructions before you can run the application.
+
+1. Launch the Xilinx Vitis GUI.
+2. When asked to select the workspace path, select the `Vitis` directory of the project repository.
+3. Power up your hardware platform and ensure that the JTAG is connected properly.
+4. In the Vitis Explorer panel, double-click on the System project that you want to run -
+   this will reveal the application contained in the project. The System project will have 
    the postfix "_system".
-4. Now click on the application that you want to run. It should have the postfix "_ssd_test_system".
-5. Select the option "Run Configurations" from the drop-down menu contained under the Run
-   button on the toolbar (play symbol).
-6. Double-click on "Single Application Debug" to create a run configuration for this 
-   application. Then click "Run".
+5. Now right click on the application (it should have the postfix "_ssd_test") then navigate the
+   drop down menu to **Run As->Launch on Hardware (Single Application Debug (GDB)).**.
+
+![Vitis Launch on hardware](images/vitis-launch-on-hardware.png)
 
 The run configuration will first program the FPGA with the bitstream, then load and run the 
-application. You can view the UART output of the application in a console window.
+application. You can view the UART output of the application in a console window and it should
+appear as follows:
 
-## UART settings
+### Output of xdma designs
 
-To receive the UART output of this standalone application, you will need to connect the
-USB-UART of the development board to your PC and run a console program such as 
-[Putty](https://www.putty.org). The following UART settings must be used:
+```none
+Xilinx Zynq MP First Stage Boot Loader
+Release 2022.1   Sep 25 2023  -  16:02:40
+PMU-FW is not running, certain applications may not be supported.
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Link is up
+Bus Number is 00
+Device Number is 00
+Function Number is 00
+Port Number is 00
+PCIe Local Config Space is   100147 at register CommandStatus
+PCIe Local Config Space is    70100 at register Prim Sec. Bus
+Root Complex IP Instance has been successfully initialized
+xdma_pcie:
+PCIeBus is 00
+PCIeDev is 00
+PCIeFunc is 00
+xdma_pcie: Vendor ID is 10EE
+Device ID is 9131
+xdma_pcie: This is a Bridge
+xdma_pcie: bus: 0, device: 0, function: 0: BAR 0 is not implemented
+xdma_pcie: bus: 0, device: 0, function: 0: BAR 1 is not implemented
+xdma_pcie:
+PCIeBus is 01
+PCIeDev is 00
+PCIeFunc is 00
+xdma_pcie: Vendor ID is 144D
+Device ID is A808
+xdma_pcie: This is an End Point
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 0, ADDR: 0xA0000000 size : 16K
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 2 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 3 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 4 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 5 is not implemented
+xdma_pcie: End Point has been enabled
+Successfully ran XdmaPcie rc enumerate Example
+```
 
-* Microblaze designs: 9600 baud
-* Zynq and ZynqMP designs: 115200 baud
+### Output of axipcie designs
+
+```none
+=============================
+PCIe Enumeration Example
+=============================
+Link:
+  - LINK UP, Gen1 x1 lanes
+Interrupts:
+  - currently enabled:        0
+  - currently pending:        0
+Cleared pending interrupts:
+  - currently enabled:        0
+  - currently pending:        0
+Requester ID:
+  - Bus Number: 00
+  - Device Number: 00
+  - Function Number: 00
+  - Port Number: 00
+PCIe Local Config Space:
+  -   100147 at register CommandStatus
+  -    70100 at register Prim Sec. Bus
+Enumeration of PCIe Fabric:
+PCIeBus 00:
+  - PCIeDev: 00
+  - PCIeFunc: 00
+  - Vendor ID: 10EE
+  - Bridge
+PCIeBus 01:
+  - PCIeDev: 00
+  - PCIeFunc: 00
+  - Vendor ID: 144D
+  - End Point
+  - End Point has been enabled
+End of Enumeration
+```
+
+## Advanced Design Details
 
 ### Linker script modifications for Zynq designs
 
@@ -87,9 +151,7 @@ If you want to manually create an application in the Vitis for one of the Zynq d
 you will have to manually modify the automatically generated linker script, and set all sections
 to DDR memory.
 
-## BSP Modifications
-
-### axipcie
+### axipcie driver
 
 This project uses a modified version of the axipcie driver.
 
@@ -105,4 +167,6 @@ Specifically, it reads the `CONFIG.device_port_type` parameter and compares it t
 for root complex designs: `Root_Port_of_PCI_Express_Root_Complex`.
 
 
+[Putty]: https://www.putty.org/
+[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
 
