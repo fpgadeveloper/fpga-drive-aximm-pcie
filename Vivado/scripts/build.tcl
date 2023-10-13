@@ -34,29 +34,29 @@ if {![string equal $ver $version_required]} {
 set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
 
 # Possible targets
-dict set target_dict kc705_hpc { kc705 { X4 } mb }
-dict set target_dict kc705_lpc { kc705 { X1 } mb }
-dict set target_dict kcu105_hpc { kcu105 { X4 } mb }
-dict set target_dict kcu105_hpc_dual { kcu105 { X4 X4 } mb }
-dict set target_dict kcu105_lpc { kcu105 { X1 } mb }
-dict set target_dict pz_7015 { picozed_7015_fmc2 { X1 } zynq }
-dict set target_dict pz_7030 { picozed_7030_fmc2 { X1 } zynq }
-dict set target_dict uzev_dual { ultrazed_7ev_cc { X4 X4 } zynqmp }
-dict set target_dict vc707_hpc1 { vc707 { X4 } mb }
-dict set target_dict vc707_hpc2 { vc707 { X4 } mb }
-dict set target_dict vc709_hpc { vc709 { X4 } mb }
-dict set target_dict vcu118 { vcu118 { X4 } mb }
-dict set target_dict vcu118_dual { vcu118 { X4 X4 } mb }
-dict set target_dict zc706_hpc { zc706 { X4 } zynq }
-dict set target_dict zc706_lpc { zc706 { X1 } zynq }
-dict set target_dict zcu104 { zcu104 { X1 } zynqmp }
-dict set target_dict zcu106_hpc0 { zcu106 { X4 } zynqmp }
-dict set target_dict zcu106_hpc0_dual { zcu106 { X4 X4 } zynqmp }
-dict set target_dict zcu106_hpc1 { zcu106 { X1 } zynqmp }
-dict set target_dict zcu111 { zcu111 { X4 } zynqmp }
-dict set target_dict zcu111_dual { zcu111 { X4 X4 } zynqmp }
-dict set target_dict zcu208 { zcu208 { X4 } zynqmp }
-dict set target_dict zcu208_dual { zcu208 { X4 X4 } zynqmp }
+dict set target_dict kc705_hpc { xilinx.com kc705 { X4 } mb }
+dict set target_dict kc705_lpc { xilinx.com kc705 { X1 } mb }
+dict set target_dict kcu105_hpc { xilinx.com kcu105 { X4 } mb }
+dict set target_dict kcu105_hpc_dual { xilinx.com kcu105 { X4 X4 } mb }
+dict set target_dict kcu105_lpc { xilinx.com kcu105 { X1 } mb }
+dict set target_dict pz_7015 { avnet.com picozed_7015_fmc2 { X1 } zynq }
+dict set target_dict pz_7030 { avnet.com picozed_7030_fmc2 { X1 } zynq }
+dict set target_dict uzev_dual { avnet.com ultrazed_7ev_cc { X4 X4 } zynqmp }
+dict set target_dict vc707_hpc1 { xilinx.com vc707 { X4 } mb }
+dict set target_dict vc707_hpc2 { xilinx.com vc707 { X4 } mb }
+dict set target_dict vc709_hpc { xilinx.com vc709 { X4 } mb }
+dict set target_dict vcu118 { xilinx.com vcu118 { X4 } mb }
+dict set target_dict vcu118_dual { xilinx.com vcu118 { X4 X4 } mb }
+dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }
+dict set target_dict zc706_lpc { xilinx.com zc706 { X1 } zynq }
+dict set target_dict zcu104 { xilinx.com zcu104 { X1 } zynqmp }
+dict set target_dict zcu106_hpc0 { xilinx.com zcu106 { X4 } zynqmp }
+dict set target_dict zcu106_hpc0_dual { xilinx.com zcu106 { X4 X4 } zynqmp }
+dict set target_dict zcu106_hpc1 { xilinx.com zcu106 { X1 } zynqmp }
+dict set target_dict zcu111 { xilinx.com zcu111 { X4 } zynqmp }
+dict set target_dict zcu111_dual { xilinx.com zcu111 { X4 X4 } zynqmp }
+dict set target_dict zcu208 { xilinx.com zcu208 { X4 } zynqmp }
+dict set target_dict zcu208_dual { xilinx.com zcu208 { X4 X4 } zynqmp }
 
 if { $argc == 1 } {
   set target [lindex $argv 0]
@@ -98,22 +98,23 @@ if { $argc == 1 } {
 
 set design_name ${target}
 set block_name fpgadrv
-set board_name [lindex [dict get $target_dict $target] 0]
-set proj_board [get_board_parts "*:$board_name:*" -latest_file_version]
+set board_url [lindex [dict get $target_dict $target] 0]
+set board_name [lindex [dict get $target_dict $target] 1]
+set proj_board [get_board_parts "$board_url:$board_name:*" -latest_file_version]
 # Check if the board files are installed, if not, install them
 if { $proj_board == "" } {
     puts "Failed to find board files for $board_name. Installing board files..."
     xhub::refresh_catalog [xhub::get_xstores xilinx_board_store]
-    xhub::install [xhub::get_xitems *$board_name*]
-    set proj_board [get_board_parts "*:$board_name:*" -latest_file_version]
+    xhub::install [xhub::get_xitems $board_url:xilinx_board_store:$board_name*]
+    set proj_board [get_board_parts "$board_url:$board_name:*" -latest_file_version]
 } else {
     puts "Board files found for $board_name"
 }
 
 set fpga_part [get_property PART_NAME [get_board_parts $proj_board]]
-set num_lanes [lindex [dict get $target_dict $target] 1]
+set num_lanes [lindex [dict get $target_dict $target] 2]
 set dual_design [expr {[llength $num_lanes] == 2}]
-set bd_script [lindex [dict get $target_dict $target] 2]
+set bd_script [lindex [dict get $target_dict $target] 3]
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."

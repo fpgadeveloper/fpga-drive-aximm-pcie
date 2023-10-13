@@ -39,7 +39,7 @@ The BSP files for each supported target platform are contained in the `PetaLinux
 
    * For KC705, KCU105, ZC706, ZCU104, ZCU106, ZCU111, ZCU208 download the BSP from the 
      [Xilinx downloads] page
-   * For PicoZed and UltraZed-EV contact your [Avnet rep](https://www.avnet.com)
+   * For PicoZed and UltraZed-EV download the BSP from the [Avnet downloads] page
 
 3. Update the BSP files for the target platform in the `PetaLinux/bsp/<platform>` directory. 
    These are the specific directories to update:
@@ -593,4 +593,5 @@ IMAGE_BOOT_FILES:zynqmp = "BOOT.BIN boot.scr Image system.dtb"
 
 
 [Xilinx downloads]: https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html
+[Avnet downloads]: https://avnet.me/zedsupport
 

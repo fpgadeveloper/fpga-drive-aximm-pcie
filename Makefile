@@ -36,7 +36,7 @@ zcu111_dual_target := zynqMP both
 zcu208_target := zynqMP both
 zcu208_dual_target := zynqMP both
 
-TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
+TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 
 # petalinux paths and files
 PETL_ROOT = $(ROOT_DIR)/PetaLinux
@@ -60,7 +60,8 @@ PETL_IMAGE_UB = $(PETL_IMG_DIR)/image.ub
 
 # vitis paths and files
 VIT_ROOT = $(ROOT_DIR)/Vitis
-VIT_BOOT = $(VIT_ROOT)/boot/$(TARGET)
+VIT_BOOT = $(VIT_ROOT)/boot
+VIT_BOOT_TARG = $(VIT_BOOT)/$(TARGET)
 
 # outputs
 BOOTIMAGE_DIR = $(ROOT_DIR)/bootimages
@@ -80,11 +81,13 @@ endef
 
 # The name of the boot image of the baremetal app depends on the device
 ifeq ($(call get_template_name,$(TARGET)), microblaze)
-	VIT_BOOT_FILE = $(VIT_BOOT)/$(TARGET).bit
+	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/$(TARGET).bit
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
-	VIT_BOOT_FILE = $(VIT_BOOT)/BOOT.BIN
+	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/BOOT.BIN
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
-	VIT_BOOT_FILE = $(VIT_BOOT)/BOOT.BIN
+	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/BOOT.BIN
+else ifeq ($(call get_template_name,$(TARGET)), versal)
+	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/BOOT.BIN
 endif
 
 .PHONY: help
@@ -106,7 +109,7 @@ help:
 	@echo 'Parameters:'
 	@echo ''
 	@echo '  TARGET: Name of the target design, must be one of the following:'
-	@$(foreach targ,$(sort $(TARGET_LIST)),echo "    - $(targ)";)
+	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
 	@echo ''
 	@echo '  JOBS: Optional param to set number of synthesis jobs (default 8)'
 	@echo ''
@@ -117,9 +120,11 @@ help:
 
 .PHONY: all
 all:
+	@{ \
 	for targ in $(TARGET_LIST); do \
-		$(MAKE) bootimage TARGET=$${targ} JOBS=$(JOBS); \
-	done
+		$(MAKE) --no-print-directory bootimage TARGET=$${targ} JOBS=$(JOBS); \
+	done; \
+	}
 
 .PHONY: bootimage
 bootimage: check_target
@@ -178,20 +183,36 @@ $(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
 	@echo 'Extract contents of rootfs.tar.gz to the root partition of the SD card' > $(TEMPBOOT_DIR)/root/readme.txt
 	cd $(TEMPBOOT_DIR) && zip -r $(PETL_ZIP) .
 	rm -r $(TEMPBOOT_DIR)
+
+else ifeq ($(call get_template_name,$(TARGET)), versal)
+$(PETL_ZIP): $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
+	@echo 'Gather PetaLinux output products for $(TARGET)'
+	mkdir -p $(TEMPBOOT_DIR)/boot
+	mkdir -p $(TEMPBOOT_DIR)/root
+	cp $(PETL_BOOT_BIN) $(TEMPBOOT_DIR)/boot/.
+	cp $(PETL_IMAGE_UB) $(TEMPBOOT_DIR)/boot/.
+	cp $(PETL_BOOT_SCR) $(TEMPBOOT_DIR)/boot/.
+	cp $(PETL_ROOTFS) $(TEMPBOOT_DIR)/root/.
+	@echo 'Copy these files to the boot (FAT32) partition of the SD card' > $(TEMPBOOT_DIR)/boot/readme.txt
+	@echo 'Extract contents of rootfs.tar.gz to the root partition of the SD card' > $(TEMPBOOT_DIR)/root/readme.txt
+	cd $(TEMPBOOT_DIR) && zip -r $(PETL_ZIP) .
+	rm -r $(TEMPBOOT_DIR)
 endif
 
 PETL_BUILD_DEPS = $(PETL_BOOT_MCS) $(PETL_BOOT_PRM) $(PETL_IMAGE_ELF) $(PETL_SYSTEM_BIT) \
                   $(PETL_BOOT_BIN) $(PETL_IMAGE_UB)
 
 $(PETL_BUILD_DEPS):
-	$(MAKE) -C $(PETL_ROOT) petalinux TARGET=$(TARGET) JOBS=$(JOBS)
+	$(MAKE) --no-print-directory -C $(PETL_ROOT) petalinux TARGET=$(TARGET) JOBS=$(JOBS)
 
 $(BARE_ZIP): $(VIT_BOOT_FILE)
 	@echo 'Gather standalone application output products for $(TARGET)'
-	cd $(VIT_BOOT) && zip -r $(BARE_ZIP) .
+	mkdir -p $(BOOTIMAGE_DIR)
+	cd $(VIT_BOOT_TARG) && zip -r $(BARE_ZIP) .
 
 $(VIT_BOOT_FILE):
-	$(MAKE) -C $(VIT_ROOT) workspace TARGET=$(TARGET) JOBS=$(JOBS)
+	$(MAKE) --no-print-directory -C $(VIT_ROOT) workspace TARGET=$(TARGET) JOBS=$(JOBS)
+	@if [ ! -e $@ ]; then echo "Error: $@ was not created for $(TARGET)."; exit 1; fi
 
 .PHONY: clean
 clean: check_target

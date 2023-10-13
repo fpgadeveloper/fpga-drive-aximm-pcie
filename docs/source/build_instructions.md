@@ -17,22 +17,22 @@ git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
 The designs for the boards listed below **require a license** to build. To build the designs for these boards,
 you will need to either buy a license or download a 30-day evaluation license for Vivado ML Enterprise Edition:
 
-* KC705
-* KCU105
-* VC707
-* VC709
-* VCU118
-* ZC706
-* ZCU111
-* ZCU208
+* [KC705]
+* [KCU105]
+* [VC707]
+* [VC709]
+* [VCU118]
+* [ZC706]
+* [ZCU111]
+* [ZCU208]
 
 The designs for all of the remaining [target boards](supported_carriers) can be built with the Vivado ML Standard 
 Edition **without a license**. That includes the following boards:
 
-* PicoZed 7015 and 7030
-* UltraZed-EV carrier
-* ZCU104
-* ZCU106
+* [PicoZed FMC Carrier v2]
+* [UltraZed-EV carrier]
+* [ZCU104]
+* [ZCU106]
 
 ## Target designs
 
@@ -254,5 +254,26 @@ Now when you use `make` to build the PetaLinux projects, they will be configured
 
 [supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 [FPGA Drive FMC Gen4]: https://fpgadrive.com
+[AC701]: https://www.xilinx.com/ac701
+[KC705]: https://www.xilinx.com/kc705
+[VC707]: https://www.xilinx.com/vc707
+[VC709]: https://www.xilinx.com/vc709
+[VCU108]: https://www.xilinx.com/vcu108
+[VCU118]: https://www.xilinx.com/vcu118
+[KCU105]: https://www.xilinx.com/kcu105
+[ZC702]: https://www.xilinx.com/zc702
+[ZC706]: https://www.xilinx.com/zc706
+[ZCU111]: https://www.xilinx.com/zcu111
+[ZCU208]: https://www.xilinx.com/zcu208
+[Trenz TEBF0808]: https://shop.trenz-electronic.de/en/TEBF0808-04A-UltraITX-Baseboard-for-Trenz-Electronic-TE080X-UltraSOM
+[MicroZed 7020 FMC Carrier]: https://www.avnet.com/opasdata/d120001/medias/docus/187/PB-AES-MBCC-FMC-G-V2-Product-Brief.pdf
+[PicoZed FMC Carrier v2]: https://www.avnet.com/wps/portal/silica/products/product-highlights/2016/xilinx-picozed-fmc-carrier-card-v2/
+[ZedBoard]: https://digilent.com/reference/programmable-logic/zedboard/start
+[UltraZed EG PCIe Carrier]: https://www.xilinx.com/products/boards-and-kits/1-mb9rqb.html
+[UltraZed EV carrier]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html
+[ZCU104]: https://www.xilinx.com/zcu104
+[ZCU102]: https://www.xilinx.com/zcu102
+[ZCU106]: https://www.xilinx.com/zcu106
+[PYNQ-ZU]: https://www.tulembedded.com/FPGA/ProductsPYNQ-ZU.html
 
 

@@ -41,7 +41,7 @@ zcu111_dual_target := 0
 zcu208_target := 0
 zcu208_dual_target := 0
 
-TARGET_LIST := $(patsubst %_target,%,$(filter %_target,$(.VARIABLES)))
+TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 
 # Vitis paths
 VIT_SCRIPT_WS = tcl/build-vitis.tcl
@@ -67,7 +67,7 @@ help:
 	@echo 'Parameters:'
 	@echo ''
 	@echo '  TARGET: Name of the target design, must be one of the following:'
-	@$(foreach targ,$(sort $(TARGET_LIST)),echo "    - $(targ)";)
+	@$(foreach targ,$(TARGET_LIST),echo "    - $(targ)";)
 	@echo ''
 	@echo '  JOBS: Optional param to set number of synthesis jobs (default 8)'
 	@echo ''
@@ -93,7 +93,7 @@ clean:
 	for targ in $(TARGET_LIST); do \
 		$(RM) $${targ} $${targ}$(APP_POSTFIX) $${targ}$(SYS_POSTFIX); \
 	done
-	$(RM) boot .metadata .Xil IDE.log .analytics updatemem*.jou updatemem*.log RemoteSystemsTempFiles
+	$(RM) boot .metadata .Xil IDE.log .analytics updatemem*.jou updatemem*.log RemoteSystemsTempFiles embeddedsw
 
 check_target:
 ifndef $(TARGET)_target

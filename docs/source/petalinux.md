@@ -309,4 +309,5 @@ suggesting that the XDMA driver IS designed to properly handle the "PCIe Link is
 We are still looking for a solution to this issue.
 
 [FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 

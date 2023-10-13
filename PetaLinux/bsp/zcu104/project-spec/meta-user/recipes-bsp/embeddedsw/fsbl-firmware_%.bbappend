@@ -4,7 +4,4 @@ SRC_URI:append = " \
         "
   
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
-  
-# Note: This is not required if you are using Yocto
-EXTERNALXSCTSRC = ""
-EXTERNALXSCTSRC_BUILD = ""
+
