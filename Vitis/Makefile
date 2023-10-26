@@ -133,7 +133,7 @@ clean_all:
 	for targ in $(TARGET_LIST); do \
 		$(RM) $${targ}_workspace; \
 	done; \
-	$(RM) .Xil RemoteSystemsTempFiles; \
+	$(RM) boot .Xil RemoteSystemsTempFiles; \
 	}
 
 check_target:
