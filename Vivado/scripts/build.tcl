@@ -58,43 +58,70 @@ dict set target_dict zcu111_dual { xilinx.com zcu111 { X4 X4 } zynqmp }
 dict set target_dict zcu208 { xilinx.com zcu208 { X4 } zynqmp }
 dict set target_dict zcu208_dual { xilinx.com zcu208 { X4 X4 } zynqmp }
 
-if { $argc == 1 } {
-  set target [lindex $argv 0]
-  puts "Target for the build: $target"
-} elseif { [info exists target] && [dict exists $target_dict $target] } {
-  puts "Target for the build: $target"
-} else {
-  puts ""
-  if { [info exists target] } {
-    puts "ERROR: Invalid target $target"
-    puts ""
-  }
-  puts "The build script requires one argument to specify the design to build."
-  puts "Possible values are:"
-  # Get all the keys
-  set all_targets [dict keys $target_dict]
-  # Print the target names
-  set counter 0
-  foreach key $all_targets {
-    if { $counter == 3 } {
-      puts ""
-      set counter 0
+# Function to display the options and get user input
+proc selectTarget {target_dict} {
+    # Create a list to hold the keys in order
+    set keys_list [dict keys $target_dict]
+    set keys_list [lsort $keys_list]
+
+    # Forever loop until we break it when the user confirms their selection
+    while {1} {
+        # Initialize a counter for the numbering
+        set counter 0
+
+        # Display options
+        puts "Possible target designs:"
+        foreach key $keys_list {
+            incr counter
+            puts "  $counter: $key"
+        }
+
+        # Ask for user input
+        set user_choice -1
+        while {($user_choice < 1) || ($user_choice > $counter)} {
+            puts -nonewline "Choose target design (1-$counter): "
+            flush stdout
+            gets stdin user_choice
+
+            # Check if the input is a valid number
+            if {![string is integer -strict $user_choice]} {
+                set user_choice -1
+                continue
+            }
+        }
+
+        # Confirm selection
+        set selected_key [lindex $keys_list [expr {$user_choice - 1}]]
+        puts -nonewline "Confirm selection '$selected_key' (Y/n): "
+        flush stdout
+        gets stdin confirmation
+
+        # Check confirmation
+        if {[string match -nocase "y*" $confirmation] || [string equal -length 1 "" $confirmation]} {
+            # If the user confirmed, return the selected key
+            return $selected_key
+        }
     }
-    if { $counter != 0 } {
-      puts -nonewline ", "
-    }
-    puts -nonewline $key
-    incr counter
-  }
-  puts ""
-  puts "Example 1 (from the Windows command line):"
-  puts "   vivado -mode batch -source build.tcl -notrace -tclargs [lindex $all_targets 0]"
-  puts ""
-  puts "Example 2 (from Vivado Tcl console):"
-  puts "   set target [lindex $all_targets 0]"
-  puts "   source build.tcl -notrace"
-  return
 }
+
+# Target can be specified by creating the target variable before sourcing, or in the command line arguments
+if { [info exists target] } {
+  if { ![dict exists $target_dict $target] } {
+    puts "Invalid target specified: $target"
+    exit 1
+  }
+} elseif { $argc == 0 } {
+  set target [selectTarget $target_dict]
+} else {
+  set target [lindex $argv 0]
+  if { ![dict exists $target_dict $target] } {
+    puts "Invalid target specified: $target"
+    exit 1
+  }
+}
+
+# At this point of the script, we are guaranteed to have a valid target
+puts "Target design: $target"
 
 set design_name ${target}
 set block_name fpgadrv

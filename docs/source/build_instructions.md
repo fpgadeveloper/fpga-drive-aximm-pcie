@@ -14,25 +14,10 @@ git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
 
 ## License requirements
 
-The designs for the boards listed below **require a license** to build. To build the designs for these boards,
-you will need to either buy a license or download a 30-day evaluation license for Vivado ML Enterprise Edition:
-
-* [KC705]
-* [KCU105]
-* [VC707]
-* [VC709]
-* [VCU118]
-* [ZC706]
-* [ZCU111]
-* [ZCU208]
-
-The designs for all of the remaining [target boards](supported_carriers) can be built with the Vivado ML Standard 
-Edition **without a license**. That includes the following boards:
-
-* [PicoZed FMC Carrier v2]
-* [UltraZed-EV carrier]
-* [ZCU104]
-* [ZCU106]
+Some of the designs in this repository target dev boards for which a license is required to generate a bitstream. 
+Others can be built with the Vivado ML Standard Edition **without a license**. The table of target designs in the 
+following section contains a column specifying which designs require a license, and which can be built without a 
+license.
 
 ## Target designs
 
@@ -40,31 +25,31 @@ This repo contains several designs that target the various supported development
 FMC connectors. The table below lists the target design name, the M2 ports supported by the design and 
 the FMC connector on which to connect the FPGA Drive FMC Gen4.
 
-| Target design     | M2 ports   | Target board and connector     |
-|-------------------|------------|--------------------------------|
-| `kc705_hpc`       | SSD1       | KC705, HPC connector           |
-| `kc705_lpc`       | SSD1       | KC705, LPC connector           |
-| `kcu105_hpc`      | SSD1       | KCU105, HPC connector          |
-| `kcu105_hpc_dual` | SSD1,SSD2  | KCU105, HPC connector          |
-| `kcu105_lpc`      | SSD1       | KCU105, LPC connector          |
-| `pz_7015`         | SSD1       | PicoZed 7015                   |
-| `pz_7030`         | SSD1       | PicoZed 7030                   |
-| `uzev_dual`       | SSD1,SSD2  | UltraZed-EV carrier            |
-| `vc707_hpc1`      | SSD1       | VC707, HPC1 connector          |
-| `vc707_hpc2`      | SSD1       | VC707, HPC2 connector          |
-| `vc709_hpc`       | SSD1       | VC709                          |
-| `vcu118`          | SSD1       | VCU118                         |
-| `vcu118_dual`     | SSD1,SSD2  | VCU118                         |
-| `zc706_hpc`       | SSD1       | ZC706, HPC connector           |
-| `zc706_lpc`       | SSD1       | ZC706, HPC connector           |
-| `zcu104`          | SSD1       | ZCU104                         |
-| `zcu106_hpc0`     | SSD1       | ZCU106, HPC0 connector         |
-| `zcu106_hpc0_dual`| SSD1,SSD2  | ZCU106, HPC0 connector         |
-| `zcu106_hpc1`     | SSD1       | ZCU106, HPC1 connector         |
-| `zcu111`          | SSD1       | ZCU111                         |
-| `zcu111_dual`     | SSD1,SSD2  | ZCU111                         |
-| `zcu208`          | SSD1       | ZCU208                         |
-| `zcu208_dual`     | SSD1,SSD2  | ZCU208                         |
+| Target design     | M2 ports   | Target board and connector     | License<br> required |
+|-------------------|------------|--------------------------------|-----|
+| `kc705_hpc`       | SSD1       | KC705, HPC connector           | YES |
+| `kc705_lpc`       | SSD1       | KC705, LPC connector           | YES |
+| `kcu105_hpc`      | SSD1       | KCU105, HPC connector          | YES |
+| `kcu105_hpc_dual` | SSD1,SSD2  | KCU105, HPC connector          | YES |
+| `kcu105_lpc`      | SSD1       | KCU105, LPC connector          | YES |
+| `pz_7015`         | SSD1       | PicoZed 7015                   | NO  |
+| `pz_7030`         | SSD1       | PicoZed 7030                   | NO  |
+| `uzev_dual`       | SSD1,SSD2  | UltraZed-EV carrier            | NO  |
+| `vc707_hpc1`      | SSD1       | VC707, HPC1 connector          | YES |
+| `vc707_hpc2`      | SSD1       | VC707, HPC2 connector          | YES |
+| `vc709_hpc`       | SSD1       | VC709                          | YES |
+| `vcu118`          | SSD1       | VCU118                         | YES |
+| `vcu118_dual`     | SSD1,SSD2  | VCU118                         | YES |
+| `zc706_hpc`       | SSD1       | ZC706, HPC connector           | YES |
+| `zc706_lpc`       | SSD1       | ZC706, HPC connector           | YES |
+| `zcu104`          | SSD1       | ZCU104                         | NO  |
+| `zcu106_hpc0`     | SSD1       | ZCU106, HPC0 connector         | NO  |
+| `zcu106_hpc0_dual`| SSD1,SSD2  | ZCU106, HPC0 connector         | NO  |
+| `zcu106_hpc1`     | SSD1       | ZCU106, HPC1 connector         | NO  |
+| `zcu111`          | SSD1       | ZCU111                         | YES |
+| `zcu111_dual`     | SSD1,SSD2  | ZCU111                         | YES |
+| `zcu208`          | SSD1       | ZCU208                         | YES |
+| `zcu208_dual`     | SSD1,SSD2  | ZCU208                         | YES |
 
 ## Windows users
 
@@ -81,9 +66,8 @@ physical or virtual) running one of the [supported Linux distributions].
 1. Download the repo as a zip file and extract the files to a directory
    on your hard drive --OR-- clone the repo to your hard drive
 2. Open Windows Explorer, browse to the repo files on your hard drive.
-3. In the `Vivado` directory, you will find multiple batch files (.bat).
-   Double click on the batch file that corresponds to the target design you wish to build.
-   This will generate a Vivado project for your target design and it will be located in
+3. In the `Vivado` directory, double click on the `build-vivado.bat` batch file.
+   You will be prompted to select a target design to build. You will find the project in
    the folder `Vivado/<target>`.
 4. Run Vivado and open the project that was just created.
 5. Click Generate bitstream.
@@ -93,10 +77,12 @@ physical or virtual) running one of the [supported Linux distributions].
 
 ### Build Vitis workspace in Windows
 
+Before running these steps, you must first build and export the Vivado project as described above.
+
 1. Return to Windows Explorer and browse to the Vitis directory in the repo.
-2. Double click the `build-vitis.bat` batch file. The batch file will run the
-   `tcl/build-vitis.tcl` script and build the Vitis workspace containing the hardware
-   platform and the software application for the target design that you built earlier.
+2. Double click the `build-vitis.bat` batch file. You will be prompted to select a target design.
+   A Vitis workspace with hardware platform and software application will be created for the
+   selected target design. You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ## Linux users
 
@@ -175,6 +161,7 @@ design if it has not already been done.
    cd fpga-drive-aximm-pcie/Vitis
    make workspace TARGET=<target>
    ```
+   You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ### Build PetaLinux project in Linux
 
@@ -270,10 +257,11 @@ Now when you use `make` to build the PetaLinux projects, they will be configured
 [PicoZed FMC Carrier v2]: https://www.avnet.com/wps/portal/silica/products/product-highlights/2016/xilinx-picozed-fmc-carrier-card-v2/
 [ZedBoard]: https://digilent.com/reference/programmable-logic/zedboard/start
 [UltraZed EG PCIe Carrier]: https://www.xilinx.com/products/boards-and-kits/1-mb9rqb.html
-[UltraZed EV carrier]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html
+[UltraZed-EV carrier]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html
 [ZCU104]: https://www.xilinx.com/zcu104
 [ZCU102]: https://www.xilinx.com/zcu102
 [ZCU106]: https://www.xilinx.com/zcu106
 [PYNQ-ZU]: https://www.tulembedded.com/FPGA/ProductsPYNQ-ZU.html
+
 
 

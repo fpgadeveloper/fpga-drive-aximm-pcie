@@ -31,6 +31,11 @@ In order to test this design on hardware, you will need the following:
 * M.2 PCIe Solid State Drive
 * One of the supported carriers listed [here](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/)
 
+## Build instructions
+
+* [For Windows users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#windows-users)
+* [For Linux users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#linux-users)
+
 ## Contribute
 
 We strongly encourage community contribution to these projects. Please make a pull request if you

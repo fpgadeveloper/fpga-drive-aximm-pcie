@@ -43,12 +43,12 @@ Before running the application, you will need to setup the hardware.
 You must have followed the build instructions before you can run the application.
 
 1. Launch the Xilinx Vitis GUI.
-2. When asked to select the workspace path, select the `Vitis` directory of the project repository.
+2. When asked to select the workspace path, select the `Vitis/<target>_workspace` directory.
 3. Power up your hardware platform and ensure that the JTAG is connected properly.
 4. In the Vitis Explorer panel, double-click on the System project that you want to run -
    this will reveal the application contained in the project. The System project will have 
    the postfix "_system".
-5. Now right click on the application (it should have the postfix "_ssd_test") then navigate the
+5. Now right click on the application "ssd_test" then navigate the
    drop down menu to **Run As->Launch on Hardware (Single Application Debug (GDB)).**.
 
 ![Vitis Launch on hardware](images/vitis-launch-on-hardware.png)

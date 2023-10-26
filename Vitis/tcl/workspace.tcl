@@ -3,9 +3,9 @@
 # -------------------------------------------------------------------------------------
 # *** VITIS WORKSPACE BUILDER SCRIPT ***
 #
-# This script is called by the main script (build-vitis.tcl) and it's job is to 
-# create the Vitis workspace based on the variables and functions defined in
-# the main script.
+# This script contains functions that are used by the main script (build-vitis.tcl).
+# The functions are used to create the Vitis workspace based on the variables and 
+# functions defined in the main script.
 #
 # These are the steps in workspace creation:
 #
@@ -14,33 +14,15 @@
 #     software repo inside the Vitis workspace called "embeddedsw". The local software
 #     repo is then filled with the contents of "EmbeddedSw" and the remaining sources
 #     are copied from the Vitis installation.
-# (2) If a target design was specified, check that the .xsa file exists for that design.
-#     If no target was specified, look for exported Vivado projects:
-#     The script will search the folders in the "vivado_dirs" list variable, looking
-#     for .xsa files.
-# (3) Create the platform and application for each .xsa file:
-#     The script will create a platform and stand-alone application for each .xsa file.
+# (2) Check that the .xsa file exists for the target design.
+# (3) Create the platform and application for the .xsa file:
+#     The script will create a platform and stand-alone application for the .xsa file.
 #     The application to create must be specified by the "support_app" and 
-#     "template_app" variables. The name of the application will be the "app_postfix"
-#     variable appended to the board name.
+#     "template_app" variables. The name of the application is specified by the
+#      "app_name" variable.
 # (4) Copy boot files into boot folder:
-#     The script will create a "boot" folder inside the Vitis workspace and copy the
-#     boot files for each project into the folder.
-# (5) Check all applications:
-#     The script will check each application and report build status (success or 
-#     failure).
-#
-# Usage notes:
-#
-# * Once this script has built the Vitis workspace, it can be run again to incorporate
-#   changes, without rebuilding everything. For example:
-#     - If the Vivado project changes (.xsa) and is re-exported, run the build script
-#       again to rebuild the platform and application for that .xsa.
-#     - If an application did not build the first time, and you have made modifications
-#       to fix the issue, run the build script again to rebuild the application.
-# * To remove a platform or application from the workspace, you will have to open the
-#   workspace in Vitis and perform the delete from the IDE. You can then use the build
-#   script to recreate the platform and application.
+#     The script will create a "boot" folder inside the Vitis folder and copy the
+#     boot file for the target project into that folder.
 #
 # -------------------------------------------------------------------------------------
 
@@ -113,21 +95,23 @@ proc print_sysproj {name msg} {
 }
 
 # Create the local software repository (embeddedsw) for the modified drivers
-proc create_local_embeddedsw {} {
+proc create_local_embeddedsw {workspace_dir} {
   # Xilinx Vitis install directory
-  set vitis_dir $::env(XILINX_VITIS)
+  set vitis_path $::env(XILINX_VITIS)
+  set embeddedsw_path "$workspace_dir/embeddedsw"
   # Copy the EmbeddedSw folder into the Vitis workspace
-  file mkdir "embeddedsw"
-  copy-r "../EmbeddedSw" "embeddedsw"
+  file mkdir $embeddedsw_path
+  copy-r "../EmbeddedSw" $embeddedsw_path
   # List all of the "src" or "data" directories so that we know what to copy
   # from the Vitis installation original driver sources
-  set local_dirs [glob-dir-r "embeddedsw" src data]
+  set local_dirs [glob-dir-r $embeddedsw_path src data]
   set orig_dirs {}
   foreach d $local_dirs {
+    set rel_path [string map [list "${workspace_dir}/" ""] $d]
     if {[string index $d end] == "9"} {
-      lappend orig_dirs [string replace "$vitis_dir/data/$d" end end ""]
+      lappend orig_dirs [string replace "$vitis_path/data/$rel_path" end end ""]
     } else {
-      lappend orig_dirs "$vitis_dir/data/$d"
+      lappend orig_dirs "$vitis_path/data/$rel_path"
     }
   }
   # Copy the relevant original sources into the local software repository
@@ -164,8 +148,10 @@ proc get_list_of_apps {} {
   # For each line of the app list
   foreach line [split $apps "\n"] {
     # If line begins with a lowercase a-z, then we assume it is an app name
-    if {[string match {[a-z]*} $line]} {
-      append list_of_apps "$line "
+    set words [regexp -all -inline {\S+} $line]
+    set first_word [lindex $words 0]
+    if {[string match {[a-z]*} $first_word]} {
+      append list_of_apps "$first_word "
     }
   }
   return $list_of_apps
@@ -263,9 +249,9 @@ proc get_processor_from_platform {platform_name} {
 }
 
 # Returns true if xsa_file is newer than the local copy in platform_name
-proc xsa_needs_updating {xsa_file platform_name} {
+proc xsa_needs_updating {workspace_dir xsa_file platform_name} {
   # If the .xsa needs updating
-  set xsa_wildcard "$platform_name/hw/*.xsa"
+  set xsa_wildcard "$workspace_dir/$platform_name/hw/*.xsa"
   set xsa_local_files [glob -nocomplain -- $xsa_wildcard]
   if { [llength $xsa_local_files] != 1 } {
     return 1
@@ -286,8 +272,8 @@ proc clean_sysproj {sysproj_name} {
 # Creates the board.h file that defines the board name
 proc create_board_h {board_name target_dir} {
   # Xilinx Vitis install directory to get the version number
-  set vitis_dir $::env(XILINX_VITIS)
-  set vitis_ver [lindex [file split $vitis_dir] end]
+  set workspace_dir $::env(XILINX_VITIS)
+  set vitis_ver [lindex [file split $workspace_dir] end]
   # Create the file
   set fd [open "${target_dir}/board.h" "w"]
   puts $fd "/* This file is automatically generated */"
@@ -300,28 +286,10 @@ proc create_board_h {board_name target_dir} {
   close $fd
 }
 
-# Returns list of Vivado projects in the given directory
-proc get_vivado_projects {vivado_dir} {
-  # Create the empty list
-  set vivado_proj_list {}
-  # Make a list of all subdirectories in Vivado directory
-  foreach {vivado_proj_dir} [glob -type d "${vivado_dir}/*"] {
-    # Get the vivado project name from the project directory name
-    set vivado_proj [lindex [split $vivado_proj_dir /] end]
-    # Return only directories containing .xpr project files
-    set xpr_file "$vivado_proj_dir/$vivado_proj.xpr"
-    if {[file exists $xpr_file]} {
-      # Add the Vivado project to the list
-      lappend vivado_proj_list $vivado_proj
-    }
-  }
-  return $vivado_proj_list
-}
-
 # Add the local software repo to the workspace
-proc add_local_software_repo {vitis_dir} {
+proc add_local_software_repo {workspace_dir} {
   # Check if the software repo is already in the workspace
-  set embsw [file normalize "${vitis_dir}/embeddedsw"]
+  set embsw [file normalize "${workspace_dir}/embeddedsw"]
   set sw_repos [repo -get]
   if {[string first $embsw $sw_repos] >= 0} {
     puts "Local software repo (embeddedsw) already in workspace."
@@ -332,8 +300,7 @@ proc add_local_software_repo {vitis_dir} {
 }
 
 # Create the platform
-proc create_platform {xsa_file platform_name} {
-  global support_app
+proc create_platform {xsa_file platform_name support_app} {
   platform create -name ${platform_name} -hw ${xsa_file}
   platform write
   set proc_instance [get_processor_from_platform $platform_name]
@@ -357,7 +324,7 @@ proc create_platform {xsa_file platform_name} {
 }
 
 # Generates the boot files for Microblaze designs
-proc microblaze_boot_files {xsa_file app_name proc_instance target_name} {
+proc microblaze_boot_files {workspace_dir xsa_file app_name proc_instance target} {
   global mb_combine_bit_elf
   global vivado_postfix
   set vivado_path [file dirname $xsa_file]
@@ -369,64 +336,40 @@ proc microblaze_boot_files {xsa_file app_name proc_instance target_name} {
     # Generate the download.bit file with combined .bit and .elf
     exec updatemem --bit "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bit" \
       --meminfo "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.mmi" \
-      --data "./${app_name}/Debug/${app_name}.elf" \
+      --data "${workspace_dir}/${app_name}/Debug/${app_name}.elf" \
       --proc "${block_design}_i/$proc_instance" \
-      -force --out "./boot/${target_name}/${target_name}.bit"
+      -force --out "./boot/${target}/${target}.bit"
     # Delete the logfiles generated by updatemem
     file delete "updatemem.log" "updatemem.jou"
   } else {
     # Just copy the bitstream and .elf
     puts "Copying bitstream and elf for $vivado_folder project."
     # Copy the bitstream and elf file to the boot folder
-    file copy "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bit" "./boot/${target_name}"
-    file copy "./${app_name}/Debug/${app_name}.elf" "./boot/${target_name}"
+    file copy "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bit" "./boot/${target}"
+    file copy "${workspace_dir}/${app_name}/Debug/${app_name}.elf" "./boot/${target}"
   }
 }
 
 # Creates Vitis workspace for a project
-proc create_vitis_ws {vivado_dirs} {
-  global app_postfix
+proc create_vitis_ws {workspace_dir target target_dict vivado_dir app_name support_app template_app} {
   global vivado_postfix
-  global support_app
-  global template_app
-  global target
-  global target_dict
-  set design_prefix [string range $vivado_postfix 1 end]
-  # First make sure there is at least one exported Vivado project
-  set xsa_files {}
-  # If a target was specified, then verify the xsa file exists in one of the vivado folders
-  if {$target != ""} {
-    # For each of the Vivado dirs
-    foreach {vivado_dir} $vivado_dirs {
-      set file_list [glob -nocomplain "$vivado_dir/$target/*.xsa"]
-      if {[llength $file_list] != 0} {
-        lappend xsa_files [lindex $file_list 0]
-        break
-      }
-    }
-  } else {
-    # For each of the Vivado dirs
-    foreach {vivado_dir} $vivado_dirs {
-      # Check each Vivado project for export files
-      foreach {vivado_folder} [get_vivado_projects $vivado_dir] {
-        # If the hardware has been exported for Vitis
-        set file_list [glob -nocomplain "$vivado_dir/$vivado_folder/*.xsa"]
-        if {[llength $file_list] != 0} {
-          lappend xsa_files [lindex $file_list 0]
-        }      
-      }
-    }
+
+  # Copy original library sources into the local Vitis repo
+  if {[file exists "../EmbeddedSw"]} {
+    puts "Creating the local embeddedsw repo from original sources"
+    create_local_embeddedsw $workspace_dir
   }
   
-  set exported_projects [llength $xsa_files]
-  # If no projects then exit
-  if {$exported_projects == 0} {
-    puts "### There are no exported Vivado projects ###"
-    puts "You must build and export a Vivado project before building the Vitis workspace."
-    exit
+  set design_prefix [string range $vivado_postfix 1 end]
+  # Verify the xsa file exists in the vivado folder
+  set file_list [glob -nocomplain "$vivado_dir/$target/*.xsa"]
+  if {[llength $file_list] != 0} {
+    set xsa_file [lindex $file_list 0]
+  } else {
+    puts "### XSA file not found for target $target ###"
+    puts "You must build and export the Vivado project before building the Vitis workspace."
+    exit 1
   }
-  puts "Found $exported_projects exported Vivado projects:"
-  foreach {xsa_file} $xsa_files { puts "  $xsa_file" }
   
   # Create "boot" directory if it doesn't already exist
   if {[file exists "./boot"] == 0} {
@@ -434,165 +377,188 @@ proc create_vitis_ws {vivado_dirs} {
   }
   
   # Set the workspace directory
-  set vitis_dir [pwd]
-  puts "Vitis workspace: $vitis_dir"
-  setws $vitis_dir
+  setws $workspace_dir
   
   # Add local software repo to workspace
   if {[file exists "../EmbeddedSw"]} {
-    add_local_software_repo $vitis_dir
+    add_local_software_repo $workspace_dir
   }
 
   # Get a list of platforms and apps already in the workspace
   set list_of_platforms [get_list_of_platforms]
   set list_of_apps [get_list_of_apps]
   
-  # Add each exported Vivado project to Vitis workspace
-  foreach {xsa_file} $xsa_files {
-    set vivado_path [file dirname $xsa_file]
-    set vivado_folder [file tail $vivado_path]
-    set target_name [string map [list $vivado_postfix ""] $vivado_folder]
-    set platform_name $target_name
-    set app_name "${target_name}$app_postfix"
-    set sysproj_name "${app_name}_system"
-    set sysproj_build 0
+  set vivado_path [file dirname $xsa_file]
+  set vivado_folder [file tail $vivado_path]
+  set platform_name $target
+  set sysproj_name "${app_name}_system"
+  set sysproj_build 0
 
-    print_platform $platform_name "XSA path:\n    $xsa_file"
-    # -----------------------------------------------------
-    # PLATFORM: Create the platform for this Vivado project
-    # -----------------------------------------------------
-    # If the platform has been created
-    if {$platform_name in $list_of_platforms} {
-      print_platform $platform_name "Platform already exists in the workspace."
-      # If the .xsa needs updating
-      if {[xsa_needs_updating $xsa_file $platform_name]} {
-        print_platform $platform_name "Hardware XSA file has changed."
-        print_platform $platform_name "Cleaning platform."
-        platform active $platform_name
-        platform clean
-        print_platform $platform_name "Cleaning system project."
-        clean_sysproj $sysproj_name
-        print_platform $platform_name "Updating hardware."
-        platform config -updatehw $xsa_file
-      }
-      # If the platform is not compiled, we recreate from scratch because
-      # we don't know what config or mods have been done and what hasn't
-      if {[file exists "$platform_name/export/$platform_name"] == 0} {
-        print_platform $platform_name "Platform is not built. Recreating platform."
-        # Delete the platform
-        platform remove $platform_name
-        # Recreate the platform from scratch
-        create_platform $xsa_file $platform_name
-        platform active $platform_name
-        platform generate
-        set sysproj_build 1
-      }
-    # If the platform doesn't exist, the create it
-    } else {
-      print_platform $platform_name "Creating Platform for $platform_name."
-      # Create the platform
-      create_platform $xsa_file $platform_name
+  print_platform $platform_name "XSA path:\n    $xsa_file"
+  # -----------------------------------------------------
+  # PLATFORM: Create the platform for this Vivado project
+  # -----------------------------------------------------
+  # If the platform has been created
+  if {$platform_name in $list_of_platforms} {
+    print_platform $platform_name "Platform already exists in the workspace."
+    # If the .xsa needs updating
+    if {[xsa_needs_updating $workspace_dir $xsa_file $platform_name]} {
+      print_platform $platform_name "Hardware XSA file has changed."
+      print_platform $platform_name "Cleaning platform."
+      platform active $platform_name
+      platform clean
+      print_platform $platform_name "Cleaning system project."
+      clean_sysproj $sysproj_name
+      print_platform $platform_name "Updating hardware."
+      platform config -updatehw $xsa_file
+    }
+    # If the platform is not compiled, we recreate from scratch because
+    # we don't know what config or mods have been done and what hasn't
+    if {[file exists "$workspace_dir/$platform_name/export/$platform_name"] == 0} {
+      print_platform $platform_name "Platform is not built. Recreating platform."
+      # Delete the platform
+      platform remove $platform_name
+      # Recreate the platform from scratch
+      create_platform $xsa_file $platform_name $support_app
       platform active $platform_name
       platform generate
-      # If the system project is already in the workspace, then clean sysproj
-      if {$app_name in $list_of_apps} {
-        clean_sysproj $sysproj_name
-      }
       set sysproj_build 1
     }
-    # ---------------------------------------------
-    # APPLICATION: Generate the example application
-    # ---------------------------------------------
-    # If the application has already been created and built, then skip
-    if {[file exists "$app_name/Debug/${app_name}.elf"] == 1} {
-      print_app $app_name "Already built."
-    # If the application has already been created but not built, then build
-    } elseif {$app_name in $list_of_apps} {
-      print_app $app_name "Exists but not built."
-      app clean -name $app_name
-      app build -name $app_name
-      set sysproj_build 1
-    # If the app doesn't exist then create and build it
+  # If the platform doesn't exist, the create it
+  } else {
+    print_platform $platform_name "Creating Platform for $platform_name."
+    # Create the platform
+    create_platform $xsa_file $platform_name $support_app
+    platform active $platform_name
+    platform generate
+    # If the system project is already in the workspace, then clean sysproj
+    if {$app_name in $list_of_apps} {
+      clean_sysproj $sysproj_name
+    }
+    set sysproj_build 1
+  }
+  # ---------------------------------------------
+  # APPLICATION: Generate the example application
+  # ---------------------------------------------
+  # If the application has already been created and built, then skip
+  if {[file exists "$workspace_dir/$app_name/Debug/${app_name}.elf"] == 1} {
+    print_app $app_name "Already built."
+  # If the application has already been created but not built, then build
+  } elseif {$app_name in $list_of_apps} {
+    print_app $app_name "Exists but not built."
+    app clean -name $app_name
+    app build -name $app_name
+    set sysproj_build 1
+  # If the app doesn't exist then create and build it
+  } else {
+    print_app $app_name "Creating application."
+    # Create the application for standalone domain
+    app create -name $app_name \
+      -template $template_app \
+      -platform ${platform_name} \
+      -domain {standalone_domain}
+    # Custom modifications to the app
+    custom_app_mods $platform_name $app_name $workspace_dir
+    # Create the board.h file
+    create_board_h [lindex [dict get $target_dict $target] 0] "$workspace_dir/${app_name}/src"
+    # Build the application
+    print_app $app_name "Building application."
+    app build -name $app_name
+    set sysproj_build 1
+  }
+  # ---------------------------------------------------------
+  # SYSPROJ: Build the system project and copy the boot files
+  # ---------------------------------------------------------
+  if {$sysproj_build} {
+    print_sysproj $sysproj_name "Building system project."
+    sysproj build -name $sysproj_name
+  }
+  # If all required files exist, then generate boot files
+  # Create directory for the boot file if it doesn't already exist
+  if {[file exists "./boot/$target"] == 0} {
+    print_sysproj $sysproj_name "Creating the boot folder."
+    file mkdir "./boot/$target"
+  }
+  # Get the processor instance name
+  set proc_instance [get_processor_from_platform $platform_name]
+  # For Microblaze designs
+  if {[str_contains $proc_instance "microblaze"]} {
+    print_sysproj $sysproj_name "Creating bitstream and copying to the ./boot/${target} directory."
+    microblaze_boot_files $workspace_dir $xsa_file $app_name $proc_instance $target
+  # For Versal designs
+  } elseif {[str_contains $proc_instance "psv_cortexa72_0"]} {
+    print_sysproj $sysproj_name "Copying the PDI file to the ./boot/${target_name} directory."
+    # Copy the already generated PDI file
+    set wrapper_name [file rootname [file tail $xsa_file]]
+    set bootbin_file "${workspace_dir}/${app_name}/_ide/bootimage/resources/${wrapper_name}.pdi"
+    if {[file exists $bootbin_file] == 1} {
+      file copy -force $bootbin_file "./boot/${target_name}/BOOT.BIN"
     } else {
-      print_app $app_name "Creating application."
-      # Create the application for standalone domain
-      app create -name $app_name \
-        -template $template_app \
-        -platform ${platform_name} \
-        -domain {standalone_domain}
-      # Custom modifications to the app
-      custom_app_mods $platform_name $app_name
-      # Create the board.h file
-      create_board_h [lindex [dict get $target_dict $target_name] 0] "${app_name}/src"
-      # Build the application
-      print_app $app_name "Building application."
-      app build -name $app_name
-      set sysproj_build 1
+      print_sysproj $sysproj_name "No ${wrapper_name}.pdi file found."
     }
-    # ---------------------------------------------------------
-    # SYSPROJ: Build the system project and copy the boot files
-    # ---------------------------------------------------------
-    if {$sysproj_build} {
-      print_sysproj $sysproj_name "Building system project."
-      sysproj build -name $sysproj_name
-    }
-    # If all required files exist, then generate boot files
-    # Create directory for the boot file if it doesn't already exist
-    if {[file exists "./boot/$target_name"] == 0} {
-        print_sysproj $sysproj_name "Creating the boot folder."
-        file mkdir "./boot/$target_name"
-    }
-    # Get the list of files in the boot dir
-    set files [glob -nocomplain -directory "./boot/$target_name" *]
-    if {[llength $files] == 0} {
-      # Get the processor instance name
-      set proc_instance [get_processor_from_platform $platform_name]
-      # For Microblaze designs
-      if {[str_contains $proc_instance "microblaze"]} {
-        print_sysproj $sysproj_name "Creating bitstream and copying to the ./boot/${target_name} directory."
-        microblaze_boot_files $xsa_file $app_name $proc_instance $target_name
-      # For Zynq and Zynq MP designs
-      } else {
-        print_sysproj $sysproj_name "Copying the BOOT.BIN file to the ./boot/${target_name} directory."
-        # Copy the already generated BOOT.BIN file
-        set bootbin_file "./${sysproj_name}/Debug/sd_card/BOOT.BIN"
-        if {[file exists $bootbin_file] == 1} {
-          file copy -force $bootbin_file "./boot/${target_name}"
-        } else {
-          print_sysproj $sysproj_name "No BOOT.BIN file found."
-        }
-      }
+  # For Zynq and Zynq MP designs
+  } else {
+    print_sysproj $sysproj_name "Copying the BOOT.BIN file to the ./boot/${target} directory."
+    # Copy the already generated BOOT.BIN file
+    set bootbin_file "${workspace_dir}/${sysproj_name}/Debug/sd_card/BOOT.BIN"
+    if {[file exists $bootbin_file] == 1} {
+      file copy -force $bootbin_file "./boot/${target}"
+    } else {
+      print_sysproj $sysproj_name "No BOOT.BIN file found."
     }
   }
 }
 
-# Checks all applications
-proc check_apps {} {
-  global app_postfix
-  # Set the workspace directory
-  setws [pwd]
-  puts "Checking build status of all applications:"
-  # Get list of applications
-  foreach {app_dir} [glob -type d "./*$app_postfix"] {
-    # Get the app name
-    set app_name [lindex [split $app_dir /] end]
-    if {[file exists "$app_dir/Debug/${app_name}.elf"] == 1} {
-      puts "  SUCCESS: ${app_name} was built"
-    } else {
-      puts "  ERROR: ${app_name} failed to build"
+# Function to display the target design options and get selection from the user
+# This gets called when the build script is run without any arguments
+proc select_target {target_dict} {
+  # Create a list to hold the keys in order
+  set keys_list [dict keys $target_dict]
+  set keys_list [lsort $keys_list]
+
+  puts "------------------------"
+  puts " SELECT A TARGET DESIGN"
+  puts "------------------------"
+  puts ""
+
+  # Forever loop until we break it when the user confirms their selection
+  while {1} {
+    # Initialize a counter for the numbering
+    set counter 0
+
+    # Display options
+    puts "Possible target designs:"
+    foreach key $keys_list {
+      incr counter
+      puts "  $counter: $key"
+    }
+
+    # Ask for user input
+    set user_choice -1
+    while {($user_choice < 1) || ($user_choice > $counter)} {
+      puts -nonewline "Choose target design (1-$counter): "
+      flush stdout
+      gets stdin user_choice
+
+      # Check if the input is a valid number
+      if {![string is integer -strict $user_choice]} {
+        set user_choice -1
+        continue
+      }
+    }
+
+    # Confirm selection
+    set selected_key [lindex $keys_list [expr {$user_choice - 1}]]
+    puts -nonewline "Confirm selection '$selected_key' (Y/n): "
+    flush stdout
+    gets stdin confirmation
+
+    # Check confirmation
+    if {[string match -nocase "y*" $confirmation] || [string equal -length 1 "" $confirmation]} {
+      # If the user confirmed, return the selected key
+      return $selected_key
     }
   }
 }
-  
-# Copy original library sources into the local Vitis repo
-if {[file exists "../EmbeddedSw"]} {
-  puts "Building the local Vitis repo from original sources"
-  create_local_embeddedsw
-}
 
-# Create the Vitis workspace
-puts "Creating the Vitis workspace"
-create_vitis_ws $vivado_dirs
-check_apps
 
-exit

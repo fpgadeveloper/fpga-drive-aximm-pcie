@@ -1,22 +1,29 @@
-#!/usr/bin/tclsh
+# -------------------------------------------------------------------------------------
+# Opsero Electronic Design Inc. Copyright 2023
+# -------------------------------------------------------------------------------------
 
 # Description
 # -----------
 # This Tcl script will create Vitis workspace and add a software application for the specified
-# target design. If a target design is not specified, a software application will be added for 
-# each of the exported hardware designs in the ../Vivado directory.
+# target design. If a target design is not specified, the user will be shown a list of target
+# designs and asked to make a selection.
 
-# Set the Vivado directories containing the Vivado projects
-set vivado_dirs_rel [list "../Vivado"]
-set vivado_dirs {}
-foreach d $vivado_dirs_rel {
-  set d_abs [file join [pwd] $d]
-  append vivado_dirs [file normalize $d_abs] " "
-}
+# Load functions from the workspace script
+source tcl/workspace.tcl
 
-# Set the application postfix
-# Applications will be named using the app_postfix appended to the board name
-set app_postfix "_ssd_test"
+# ----------------------------------------------------------------------------------------------
+# Custom parameters
+# ----------------------------------------------------------------------------------------------
+# The following variables specify how the application should be created (from what 
+# template if any), how things should be named and the dictionary of target designs.
+
+# Set the Vivado directory containing the Vivado projects
+set vivado_dir_rel "../Vivado"
+set d_abs [file join [pwd] $vivado_dir_rel]
+set vivado_dir [file normalize $d_abs]
+
+# Set the application name
+set app_name "ssd_test"
 
 # Specify the postfix on the Vivado projects (if one is used)
 set vivado_postfix ""
@@ -53,16 +60,12 @@ dict set target_dict zcu111_dual { zcu111 }
 dict set target_dict zcu208 { zcu208 }
 dict set target_dict zcu208_dual { zcu208 }
 
-# Target can be specified by creating the target variable before sourcing, or in the arguments
-if { $argc >= 1 } {
-  set target [lindex $argv 0]
-  puts "Target for the build: $target"
-} elseif { [info exists target] && [dict exists $target_dict $target] } {
-  puts "Target for the build: $target"
-} else {
-  puts "No target specified, or invalid target."
-  set target ""
-}
+# ----------------------------------------------------------------------------------------------
+# Custom modifications functions
+# ----------------------------------------------------------------------------------------------
+# These functions make custom changes to the platform or standard application template 
+# such as modifying files or copying sources into the platform/application.
+# These functions are called after creating the platform/application and before build.
 
 # Modifies the linker script such that all sections are relocated to local mem.
 # This allows us to store the test application in the bitstream and provide a boot
@@ -158,37 +161,57 @@ proc linker_script_to_ddr_mem {linker_filename} {
   return 0
 }
 
-# ----------------------------------------------------------------------------------------------
-# Custom modifications functions
-# ----------------------------------------------------------------------------------------------
-# Use these functions to make custom changes to the platform or standard application template 
-# such as modifying files or copying sources into the platform/application.
-# These functions are called after creating the platform/application and before build.
-
 proc custom_platform_mods {platform_name} {
   # No platform mods required
 }
 
-proc custom_app_mods {platform_name app_name} {
+proc custom_app_mods {platform_name app_name workspace_dir} {
   set proc_instance [get_processor_from_platform $platform_name]
   # If the hardware contains the XDMA (all Zynq MP designs and VCU118 designs)
   if {[str_contains $proc_instance "psu_cortex"] || [str_contains $platform_name "vcu118"]} {
     # Copy the XDMA application from common/src
-    file copy "common/src/xdmapcie_rc_enumerate_example.c" ${app_name}/src
+    file copy "common/src/xdmapcie_rc_enumerate_example.c" ${workspace_dir}/${app_name}/src
   } else {
     # Copy the AXI PCIe application from common/src
-    file copy "common/src/pcie_enumerate.c" ${app_name}/src
+    file copy "common/src/pcie_enumerate.c" ${workspace_dir}/${app_name}/src
   }
   # For Microblaze designs, modify the linker script to put
   # all sections in local mem
   # For Zynq designs, modify linker script to put all sections in DDR
   if {[str_contains $proc_instance "microblaze"]} {
-    linker_script_to_local_mem ${app_name}/src/lscript.ld
+    linker_script_to_local_mem ${workspace_dir}/${app_name}/src/lscript.ld
   } elseif {[str_contains $proc_instance "ps7_cortex"]} {
-    linker_script_to_ddr_mem ${app_name}/src/lscript.ld
+    linker_script_to_ddr_mem ${workspace_dir}/${app_name}/src/lscript.ld
   }
 }
 
-# Call the workspace builder script
-source tcl/workspace.tcl
+# ----------------------------------------------------------------------------------------------
+# End of custom sections
+# ----------------------------------------------------------------------------------------------
+
+# Target can be specified by creating the target variable before sourcing, or in the command line arguments
+if { [info exists target] } {
+  if { ![dict exists $target_dict $target] } {
+    puts "Invalid target specified: $target"
+    exit 1
+  }
+} elseif { $argc == 0 } {
+  set target [select_target $target_dict]
+} else {
+  set target [lindex $argv 0]
+  if { ![dict exists $target_dict $target] } {
+    puts "Invalid target specified: $target"
+    exit 1
+  }
+}
+
+# At this point of the script, we are guaranteed to have a valid target
+# The Vitis workspace directory name
+set current_dir [pwd]
+set workspace_dir [file join $current_dir "${target}_workspace"]
+
+# Create the Vitis workspace
+puts "Creating the Vitis workspace: $workspace_dir"
+create_vitis_ws $workspace_dir $target $target_dict $vivado_dir $app_name $support_app $template_app
+
 
