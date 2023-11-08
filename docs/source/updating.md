@@ -21,9 +21,8 @@ we cannot always provide support if you have trouble updating the designs.
 3. In a text editor, open the `Vivado/scripts/xsa.tcl` file and perform the following changes:
    * Update the `version_required` variable value to the tools version number 
      that you are using.
-4. **Windows users only:** In a text editor, open the `Vivado/build-<target>.bat` file for
-   the design that you wish to update, and update the tools version number to the one you are using 
-   (eg. 2022.1).
+4. **Windows users only:** In a text editor, open the `Vivado/build-vivado.bat` file and update 
+   the tools version number to the one you are using (eg. 2022.1).
 
 After completing the above, you should now be able to use the [build instructions](build_instructions) to
 build the Vivado project. If there were no significant changes to the tools and/or IP, the build script 
@@ -306,26 +305,63 @@ These modifications are specific to the PicoZed FMC carrier BSP.
 ```
 # PZ configs
 
-CONFIG_SUBSYSTEM_MACHINE_NAME="template"
-
-# SD card for root filesystem
-
-CONFIG_SUBSYSTEM_BOOTARGS_AUTO=n
+CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_USER_CMDLINE="earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait cma=1536M"
-
-CONFIG_SUBSYSTEM_ROOTFS_INITRD=n
-CONFIG_SUBSYSTEM_ROOTFS_EXT4=y
 CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk1p2"
-CONFIG_SUBSYSTEM_RFS_FORMATS="tar.gz ext4 ext4.gz "
+```
+
+2. Overwrite the device tree file 
+   `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi` with the one that is in the
+   repository.
+
+3. Overwrite the U-Boot config file `project-spec/meta-user/recipes-bsp/u-boot/files/bsp.cfg` with
+   the following:
+```
+CONFIG_SYS_CONFIG_NAME="platform-top"
+
+CONFIG_CMD_EEPROM=y
+CONFIG_I2C_EEPROM=y
+CONFIG_SYS_I2C_EEPROM_BUS=0
+CONFIG_SYS_EEPROM_SIZE=256
+CONFIG_SYS_I2C_EEPROM_ADDR=0x51
+CONFIG_SYS_I2C_EEPROM_ADDR_OVERFLOW=0x0
+CONFIG_SYS_I2C_EEPROM_ADDR_LEN=1
+CONFIG_SYS_I2C_XILINX_XIIC=y
+CONFIG_ZYNQ_MAC_IN_EEPROM=y
+CONFIG_ZYNQ_GEM_I2C_MAC_OFFSET=0xFA
+CONFIG_NET_RANDOM_ETHADDR=n
+
+CONFIG_BOOT_SCRIPT_OFFSET=0xFC0000
+```
+
+4. Append the following to the kernel configuration file
+   `project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg`:
+```
+# Required by PZ BSP
+CONFIG_USB_ACM=y
+CONFIG_USB_F_ACM=m
+CONFIG_USB_U_SERIAL=m
+CONFIG_USB_CDC_COMPOSITE=m
+CONFIG_I2C_XILINX=y
 ```
 
 ### Mods for ZCU104
 
 These modifications are specific to the ZCU104 BSP.
 
-1. Add patch for FSBL to `project-spec/meta-user/recipes-bsp/fsbl/`. You will have to update this
+1. Add patch for FSBL to `project-spec/meta-user/recipes-bsp/embeddedsw/`. You will have to update this
    patch for the version of PetaLinux that you are using. Refer to the existing patch files in that
    location for guidance.
+   
+```
+project-spec
+           +--- meta-user
+                        +--- recipes-bsp
+                                       +--- embeddedsw
+                                                     +--- files
+                                                     |        +--- zcu104_vadj_fsbl.patch
+                                                     +--- fsbl-firmware_%.bbappend
+```
 
 ### Mods for ZCU106
 
@@ -348,7 +384,7 @@ These modifications are specific to the UltraZed-EV BSP.
 1. Append the following lines to `project-spec/configs/config`.
 
 ```
-# UZ configs
+# UZ-EV configs
 
 CONFIG_YOCTO_MACHINE_NAME="zynqmp-generic"
 CONFIG_USER_LAYER_0=""
@@ -365,231 +401,73 @@ CONFIG_SUBSYSTEM_SD_PSU_SD_0_SELECT=n
 IMAGE_BOOT_FILES:zynqmp = "BOOT.BIN boot.scr Image system.dtb"
 ```
 
-3. Replace the device tree file `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`
-   contents with the following:
-   
+3. Overwrite the device tree file 
+   `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi` with the one that is in the
+   repository.
+
+### Mods for VCU118
+
+These modifications are specific to the VCU118 BSP.
+
+1. Append the following lines to `project-spec/configs/config`.
+
 ```
-#include "include/dt-bindings/input/input.h"
-#include "include/dt-bindings/gpio/gpio.h"
-#include "include/dt-bindings/pinctrl/pinctrl-zynqmp.h"
-#include "include/dt-bindings/phy/phy.h"
-#include "include/dt-bindings/interrupt-controller/irq.h"
-/include/ "system-conf.dtsi"
+# Modifications to VCU118 BSP
 
-/* From include/dt-bindings/clk/versaclock.h */
-#define VC5_LVPECL   0
-#define VC5_CMOS  1
-#define VC5_HCSL33   2
-#define VC5_LVDS  3
-#define VC5_CMOS2 4
-#define VC5_CMOSD 5
-#define VC5_HCSL25   6
+# Use general template
+# We use the template because the board dtsi expects axi_ethernet_0 to be
+# the on-board Ethernet, and axi_iic_0 to be the I2C. We define the I2C
+# device tree for iic_main in the system-user.dtsi in this BSP.
+CONFIG_SUBSYSTEM_MACHINE_NAME="template"
 
-/ {
-   model = "ZynqMP Ultrazed EV";
-   xlnk {
-      compatible = "xlnx,xlnk-1.0";
-   };
-
-   chosen {
-      xlnx,eeprom= &mac_eeprom;
-   };
-
-   clock_5p49v5935_ref25: ref25m { /* 25MHz reference crystal (internal) - U3 */
-      compatible = "fixed-clock";
-      #clock-cells = <0>;
-      clock-frequency = <25000000>;
-   };
-
-   gtr_clk0: gtr_clk0 { /* gtr_refclk0_pcie - 100MHz - U3 */
-      compatible = "fixed-clock";
-      #clock-cells = <0>;
-      clock-frequency = <100000000>;
-   };
-
-   gtr_clk1: gtr_clk1 { /* gtr_refclk1_sata - 125MHz - U3 */
-      compatible = "fixed-clock";
-      #clock-cells = <0>;
-      clock-frequency = <125000000>;
-   };
-
-   gtr_clk2: gtr_clk2 { /* gtr_refclk2_usb - 52MHz - U3 */
-      compatible = "fixed-clock";
-      #clock-cells = <0>;
-      clock-frequency = <52000000>;
-   };
-
-   gtr_clk3: gtr_clk3 { /* gtr_refclk3_dp - 27MHz - U3 */
-      compatible = "fixed-clock";
-      #clock-cells = <0>;
-      clock-frequency = <27000000>;
-   };
-
-};
-
-&gem3 {
-   status = "okay";
-   phy-mode = "rgmii-id";
-   phy-handle = <&phy0>;
-   phy0: phy@0 {
-      reg = <0x0>;
-      ti,rx-internal-delay = <0x5>;
-      ti,tx-internal-delay = <0x5>;
-      ti,fifo-depth = <0x1>;
-   };
-};
-
-&i2c1 {
-   i2cswitch@70 { /* U7 on UZ3EG SOM, U8 on UZ7EV SOM */
-      compatible = "nxp,pca9543";
-      #address-cells = <1>;
-      #size-cells = <0>;
-      reg = <0x70>;
-      i2c@0 { /* i2c mw 70 0 1 */
-         #address-cells = <1>;
-         #size-cells = <0>;
-         reg = <0>;
-         /* Ethernet MAC ID EEPROM */
-         mac_eeprom: mac_eeprom@51 { /* U5 on UZ3EG IOCC & PCIEC and U7 on the UZ7EV EVCC */
-            compatible = "atmel,24c02";
-            reg = <0x51>;
-         };
-
-         vc5: clock-generator@6a { /* IDT (Renesas) 5P49V5935 I2C clock generator */
-            compatible = "idt,5p49v5935";
-            reg = <0x6a>;
-            #clock-cells = <1>;
-
-            /* Connect XIN input to 25MHz reference */
-            clocks = <&clock_5p49v5935_ref25>;
-            clock-names = "xin";
-
-            OUT3 { /* USB3 */
-               idt,drive-mode = <VC5_CMOSD>; /* */
-               idt,voltage-microvolts = <1800000>;
-               idt,slew-percent = <80>;
-            };
-         };
-
-         
-         clock_eeprom@52 { /* U5 on the UZ7EV EVCC */
-            compatible = "atmel,24c02";
-            reg = <0x52>;
-         };
-      };
-
-      i2c@1 {
-         #address-cells = <0x1>;
-         #size-cells = <0x0>;
-         reg = <0x1>;
-
-         irps5401@46 { /* IRPS5401 - U24 on UZ7EV SOM*/
-            compatible = "infineon,irps5401";
-            reg = <0x46>;
-         };
-
-         irps5401@47 { /* IRPS5401 - U25 on UZ7EV SOM*/
-            compatible = "infineon,irps5401";
-            reg = <0x47>;
-         };
-
-         ir38063@48 { /* IR38063 - U26 on UZ7EV SOM*/
-            compatible = "infineon,ir38063";
-            reg = <0x48>;
-         };
-
-         irps5401@49 { /* IRPS5401 - U21 on UZ7EV EVCC*/
-            compatible = "infineon,irps5401";
-            reg = <0x49>;
-         };
-         irps5401@4a { /* IRPS5401 - U22 on UZ7EV EVCC*/
-            compatible = "infineon,irps5401";
-            reg = <0x4a>;
-         };
-
-         ir38063@4b { /* IR38063 - U18 on UZ7EV EVCC*/
-            compatible = "infineon,ir38063";
-            reg = <0x4b>;
-         };
-
-         ir38063@4c { /* IR38063 - U19 on UZ7EV EVCC*/
-            compatible = "infineon,ir38063";
-            reg = <0x4c>;
-         };
-      };
-   };
-};
-
-&qspi {
-   #address-cells = <1>;
-   #size-cells = <0>;
-   status = "okay";
-   is-dual = <1>; /* Set for dual-parallel QSPI config */
-   num-cs = <2>;
-   xlnx,fb-clk = <0x1>;
-   flash0: flash@0 {
-      /* The Flash described below doesn't match our board ("micron,n25qu256a"), but is needed */
-      /* so the Flash MTD partitions are correctly identified in /proc/mtd */
-      compatible = "micron,m25p80","jedec,spi-nor"; /* 32MB */
-      #address-cells = <1>;
-      #size-cells = <1>;
-      reg = <0x0>;
-      spi-tx-bus-width = <1>;
-      spi-rx-bus-width = <4>; /* FIXME also DUAL configuration possible */
-      spi-max-frequency = <108000000>; /* Set to 108000000 Based on DC1 spec */
-   };
-};
-
-/* SD0 eMMC, 8-bit wide data bus */
-&sdhci0 {
-   status = "okay";
-   bus-width = <8>;
-   max-frequency = <50000000>;
-};
-
-/* SD1 with level shifter */
-&sdhci1 {
-   status = "okay";
-   max-frequency = <50000000>;
-   no-1-8-v;   /* for 1.0 silicon */
-   disable-wp;
-   broken-cd;
-   xlnx,mio-bank = <1>;
-   /* Do not run SD in HS mode from bootloader */
-   sdhci-caps-mask = <0 0x200000>;
-   sdhci-caps = <0 0>;
-};
-
-&psgtr {
-   /* PCIE, SATA, USB3, DP */
-   clocks = <&gtr_clk0>, <&gtr_clk1>, <&gtr_clk2>, <&gtr_clk3>;
-   clock-names = "ref0", "ref1", "ref2", "ref3";
-};
-
-/* ULPI SMSC USB3320 */
-&usb0 {
-   status = "okay";
-};
-
-&dwc3_0 {
-   status = "okay"; 
-   dr_mode = "host";
-   maximum-speed = "super-speed"; 
-   snps,usb3_lpm_capable; 
-   snps,enable_auto_retry; 
-   phy-names = "usb3-phy"; 
-   /* <psgtr_phandle> <lane_number> <controller_type> <instance> <refclk> */
-   phys = <&psgtr 2 PHY_TYPE_USB3 0 2>;
-};
-
-&sata {
-   status = "okay";
-   phy-names = "sata-phy";
-   /* <psgtr_phandle> <lane_number> <controller_type> <instance> <refclk> */
-   phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
-};
+# Flash Settings - QSPI (increase fpga and kernel partition sizes)
+CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART0_SIZE=0x2400000
+CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART3_SIZE=0xE00000
+CONFIG_SUBSYSTEM_UBOOT_QSPI_FIT_IMAGE_OFFSET=0x25A0000
 ```
 
+2. Append the following lines to file `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`:
+
+```
+&iic_main {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	i2c-mux@75 {
+		compatible = "nxp,pca9548";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x75>;
+		i2c@3 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <3>;
+			eeprom@54 {
+				compatible = "atmel,24c08";
+				reg = <0x54>;
+			};
+		};
+	};
+	i2c-mux@74 {
+		compatible = "nxp,pca9548";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x74>;
+		i2c@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+			si570: clock-generator@5d {
+				#clock-cells = <0>;
+				compatible = "silabs,si570";
+				temperature-stability = <50>;
+				reg = <0x5d>;
+				factory-fout = <156250000>;
+				clock-frequency = <148500000>;
+			};
+		};
+	};
+};
+```
 
 
 [Xilinx downloads]: https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html

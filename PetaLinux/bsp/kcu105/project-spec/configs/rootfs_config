@@ -794,5 +794,4 @@ CONFIG_util-linux-mkfs=y
 CONFIG_util-linux-blkid=y
 CONFIG_util-linux-fdisk=y
 CONFIG_pciutils=y
-CONFIG_bootscript=y
 

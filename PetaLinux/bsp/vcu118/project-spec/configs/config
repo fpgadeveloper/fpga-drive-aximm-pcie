@@ -258,8 +258,8 @@ CONFIG_SUBSYSTEM_BOOTARGS_GENERATED="console=ttyUL0,115200 earlycon root=/dev/ra
 # device tree for iic_main in the system-user.dtsi in this BSP.
 CONFIG_SUBSYSTEM_MACHINE_NAME="template"
 
-CONFIG_SUBSYSTEM_HOSTNAME="vcu118_fpgadrv_2022_1"
-CONFIG_SUBSYSTEM_PRODUCT="vcu118_fpgadrv_2022_1"
+CONFIG_SUBSYSTEM_HOSTNAME="vcu118-fpgadrv-2022-1"
+CONFIG_SUBSYSTEM_PRODUCT="vcu118-fpgadrv-2022-1"
 
 # Flash Settings - QSPI (increase fpga and kernel partition sizes)
 CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART0_SIZE=0x2400000

@@ -2513,7 +2513,7 @@ CONFIG_packagegroup-core-boot=y
 #
 # packagegroup-core-ssh-dropbear 
 #
-CONFIG_packagegroup-core-ssh-dropbear=y
+# CONFIG_packagegroup-core-ssh-dropbear is not set
 # CONFIG_packagegroup-core-ssh-dropbear-dbg is not set
 # CONFIG_packagegroup-core-ssh-dropbear-dev is not set
 
@@ -3910,5 +3910,4 @@ CONFIG_util-linux-blkid=y
 CONFIG_util-linux-fdisk=y
 CONFIG_pciutils=y
 CONFIG_bridge-utils=y
-CONFIG_bootscript=y
 CONFIG_nvme-cli=y
