@@ -1,4 +1,4 @@
-Opsero Electronic Design Inc. 2023
+Opsero Electronic Design Inc. 2024
 Jeff Johnson
 ZCU104 FSBL patch 2022.1
 ========================
@@ -10,7 +10,7 @@ from the EEPROM, which is not sufficient to include the VADJ voltage data. For b
 the FSBL does not properly enable VADJ on this board if this patch is not applied.
 
 diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
-index 328332402d..fdcb9bffca 100644
+index 328332402d..bdb9048181 100644
 --- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
 +++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
 @@ -82,7 +82,7 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
@@ -33,6 +33,23 @@ index 328332402d..fdcb9bffca 100644
  	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
  				WriteBuffer, 1U, TCA9548A_ADDR);
  	if (Status != XST_SUCCESS) {
+@@ -106,6 +106,16 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+ 		/** For MISRA-C compliance */
+ 	}
+ 
++	/* Set the read address to zero */
++	WriteBuffer[0U] = 0x00U;
++	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
++				WriteBuffer, 1U, EepromAddr);
++	if (Status != XST_SUCCESS) {
++		UStatus = XFSBL_ERROR_I2C_WRITE;
++		XFsbl_Printf(DEBUG_GENERAL, "XFSBL_ERROR_I2C_WRITE\r\n");
++		goto END;
++	}
++
+ 	/* Read the contents of FMC EEPROM to Read_Buffer */
+ 		Status = XIicPs_MasterRecvPolled(I2c0InstancePtr, Read_Buffer,
+ 			EepromByteCount, EepromAddr);
 diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
 index 6177fb61f9..23e552cf1f 100644
 --- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
