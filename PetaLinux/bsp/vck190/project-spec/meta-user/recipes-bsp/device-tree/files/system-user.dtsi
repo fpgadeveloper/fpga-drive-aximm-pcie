@@ -1,0 +1,18 @@
+/include/ "system-conf.dtsi"
+/ {
+};
+
+&amba {
+        zyxclmm_drm {
+                compatible = "xlnx,zocl-versal";
+        };
+};
+
+/* 
+The following is to remove the upper 6G of memory from device tree as suggested here:
+https://support.xilinx.com/s/question/0D52E00006zxS2ESAU/configuring-one-of-the-versal-pl-pcie-blocks-to-act-as-another-root-master-for-the-processing-system?language=en_US
+*/
+&memoryaxi_noc_0 {
+	reg = <0x0 0x00000000 0x0 0x80000000>;
+};
+

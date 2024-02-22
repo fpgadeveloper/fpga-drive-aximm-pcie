@@ -1,0 +1,14 @@
+
+/dts-v1/;
+/plugin/;
+
+&{/} {
+	compatible = "xlnx,versal-vck190-revA", "xlnx,versal";
+	model = "Xilinx Versal vck190 Eval board revA";
+};
+
+&sdhci1 {
+	sdhci-caps-mask = <0 0x200000>;
+	sdhci-caps = <0 0>;
+	max-frequency = <19000000>;
+};

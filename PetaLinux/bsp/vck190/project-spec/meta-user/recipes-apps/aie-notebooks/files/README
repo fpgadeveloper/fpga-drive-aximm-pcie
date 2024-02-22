@@ -1,0 +1,15 @@
+# AIE-Notebooks
+--------------
+> AIE Notebook Demos 
+
+NOTE
+----
+
+To spawn a Jupyter notebook server pointing to default notebook directory for aie-notebooks, run:
+
+	$ jupyter notebook --allow-root --no-browser --notebook-dir=<path-to-notebooks-dir> --ip=<your-ip>
+
+Now use the link provided by the server to connect to it from any browser client from the same network.
+
+The demos included are:
+- AIE Matrix Multiplication

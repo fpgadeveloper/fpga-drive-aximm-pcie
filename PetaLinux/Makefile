@@ -20,6 +20,8 @@ kcu105_lpc_target := microblaze 32 SPIx4
 pz_7015_target := zynq 0 0
 pz_7030_target := zynq 0 0
 uzev_dual_target := zynqMP 0 0
+vck190_fmcp1_target := versal 0 0
+vck190_fmcp2_target := versal 0 0
 vcu118_target := microblaze 128 SPIx4
 vcu118_dual_target := microblaze 128 SPIx4
 zc706_hpc_target := zynq 0 0
@@ -89,6 +91,10 @@ else ifeq ($(call get_template_name,$(TARGET)), zynq)
 	BUILD_PRODUCTS = $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
+	SSTATE_ARCH = arch64
+	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
+	PKG_PRODUCTS = $(PETL_BOOT_BIN)
+else ifeq ($(call get_template_name,$(TARGET)), versal)
 	SSTATE_ARCH = arch64
 	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
@@ -165,6 +171,12 @@ $(PKG_PRODUCTS): $(BUILD_PRODUCTS)
 	@echo 'Packaging PetaLinux project for $(TARGET)'
 	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 	
+# Package rule for versal designs
+else ifeq ($(call get_template_name,$(TARGET)), versal)
+package: $(PKG_PRODUCTS)
+$(PKG_PRODUCTS): $(BUILD_PRODUCTS)
+	@echo 'Packaging PetaLinux project for $(TARGET)'
+	cd $(TARGET) && petalinux-package --boot --plm --psmfw --u-boot --dtb
 endif
 
 PETL_BUILD_DEPS = $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB) \

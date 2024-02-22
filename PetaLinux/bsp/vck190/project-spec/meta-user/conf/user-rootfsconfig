@@ -1,0 +1,24 @@
+#Note: Mention Each package in individual line
+#These packages will get added into rootfs menu entry
+
+CONFIG_gpio-demo
+CONFIG_peekpoke
+CONFIG_packagegroup-petalinux-jupyter
+CONFIG_pm-notebooks
+CONFIG_openamp-demo-notebooks
+CONFIG_python3-ipywidgets
+CONFIG_aie-oob
+CONFIG_aie-notebooks
+CONFIG_e2fsprogs
+CONFIG_e2fsprogs-mke2fs
+CONFIG_e2fsprogs-badblocks
+CONFIG_mtd-utils
+CONFIG_util-linux
+CONFIG_util-linux-mount
+CONFIG_util-linux-mkfs
+CONFIG_util-linux-blkid
+CONFIG_util-linux-fdisk
+CONFIG_pciutils
+CONFIG_bridge-utils
+CONFIG_nvme-cli
+

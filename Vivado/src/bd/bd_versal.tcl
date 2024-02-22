@@ -51,6 +51,10 @@ if {[str_contains $target "vck190"]} {
   set pcie_blk_locn { "X1Y0" "X1Y2" }
 }
 
+# BAR addresses and sizes
+set bar_addr { 0x00430000000 0x00440000000 }
+set bar_size { 256M 256M }
+
 # List of interrupt pins
 set intr_list {}
 
@@ -113,7 +117,7 @@ set_property -dict [list \
   PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
   PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
   PS_M_AXI_LPD_DATA_WIDTH 32  \
-  PS_NUM_FABRIC_RESETS 0  \
+  PS_NUM_FABRIC_RESETS 1  \
   PS_PCIE_RESET {{ENABLE 1}}  \
   PS_PL_CONNECTIVITY_MODE Custom  \
   PS_UART0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 42 .. 43}}}  \
@@ -733,6 +737,14 @@ if {$dual_design} {
 # Add smartconnects for S_AXI interfaces
 create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smc_fpd
 set_property -dict [list CONFIG.NUM_SI {1}] [get_bd_cells axi_smc_fpd]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins axi_smc_fpd/aclk]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins versal_cips_0/m_axi_fpd_aclk]
+
+# Add processor system reset for the PL0_REF_CLK 350MHz
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset_pl0_ref_clk
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins reset_pl0_ref_clk/slowest_sync_clk]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_resetn] [get_bd_pins reset_pl0_ref_clk/ext_reset_in]
+connect_bd_net [get_bd_pins reset_pl0_ref_clk/interconnect_aresetn] [get_bd_pins axi_smc_fpd/aresetn]
 
 proc connect_qdma_saxi { index } {
   # QDMA: S_AXI_BRIDGE
@@ -752,6 +764,11 @@ proc connect_qdma_saxi { index } {
   set_property -dict [list CONFIG.ASSOCIATED_BUSIF "S00_AXI:S0${noc_num_si}_AXI"] [get_bd_pins /axi_noc_0/aclk0]
   connect_bd_net [get_bd_pins qdma_${index}/axi_aclk] [get_bd_pins axi_noc_0/aclk${noc_num_si}]
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master "/qdma_$index/axi_aclk (250 MHz)" Clk_slave {/versal_cips_0/fpd_cci_noc_axi0_clk (824 MHz)} Clk_xbar {Auto} Master "/qdma_$index/M_AXI_BRIDGE" Slave "/axi_noc_0/S0${noc_num_si}_AXI" ddr_seg {Auto} intc_ip {/axi_noc_0} master_apm {0}]  [get_bd_intf_pins axi_noc_0/S0${noc_num_si}_AXI]
+  # Set the BAR address and size
+  global bar_addr
+  global bar_size
+  set_property offset [lindex $bar_addr $index] [get_bd_addr_segs "versal_cips_0/M_AXI_FPD/SEG_qdma_${index}_BAR0"]
+  set_property range [lindex $bar_size $index] [get_bd_addr_segs "versal_cips_0/M_AXI_FPD/SEG_qdma_${index}_BAR0"]
 }
 
 connect_qdma_saxi 0
