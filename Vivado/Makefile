@@ -1,4 +1,4 @@
-# Opsero Electronic Design Inc. 2023
+# Opsero Electronic Design Inc. 2024
 #
 # This Makefile can be used to build the Vivado projects.
 
@@ -26,6 +26,8 @@ uzev_dual_target := 0
 vc707_hpc1_target := 0
 vc707_hpc2_target := 0
 vc709_hpc_target := 0
+vck190_fmcp1_target := 0
+vck190_fmcp2_target := 0
 vcu118_target := 0
 vcu118_dual_target := 0
 zc706_hpc_target := 0

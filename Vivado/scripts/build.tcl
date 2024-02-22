@@ -45,6 +45,8 @@ dict set target_dict uzev_dual { avnet.com ultrazed_7ev_cc { X4 X4 } zynqmp }
 dict set target_dict vc707_hpc1 { xilinx.com vc707 { X4 } mb }
 dict set target_dict vc707_hpc2 { xilinx.com vc707 { X4 } mb }
 dict set target_dict vc709_hpc { xilinx.com vc709 { X4 } mb }
+dict set target_dict vck190_fmcp1 { xilinx.com vck190 { X4 X4 } versal }
+dict set target_dict vck190_fmcp2 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vcu118 { xilinx.com vcu118 { X4 } mb }
 dict set target_dict vcu118_dual { xilinx.com vcu118 { X4 X4 } mb }
 dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }
@@ -221,8 +223,13 @@ if {[string equal [get_runs -quiet impl_1] ""]} {
   set_property flow "Vivado Implementation 2022" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
-set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
-set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects $obj
+if {$bd_script == "versal"} {
+  set_property -name "steps.write_device_image.args.readback_file" -value "0" -objects $obj
+  set_property -name "steps.write_device_image.args.verbose" -value "0" -objects $obj
+} else {
+  set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
+  set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects $obj
+}
 
 # UZ-EV design requires post hook script
 if { $target == "uzev_dual" } {
