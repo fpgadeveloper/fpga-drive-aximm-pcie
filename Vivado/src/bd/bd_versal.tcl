@@ -308,7 +308,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf0_ari_enabled {false} \
    CONFIG.pf0_bar0_64bit {true} \
    CONFIG.pf0_bar0_enabled {true} \
-   CONFIG.pf0_bar0_prefetchable {true} \
+   CONFIG.pf0_bar0_prefetchable {false} \
    CONFIG.pf0_bar0_scale {Gigabytes} \
    CONFIG.pf0_bar0_size {4} \
    CONFIG.pf0_bar1_64bit {false} \
@@ -343,7 +343,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf0_msix_enabled {false} \
    CONFIG.pf1_bar0_64bit {true} \
    CONFIG.pf1_bar0_enabled {true} \
-   CONFIG.pf1_bar0_prefetchable {true} \
+   CONFIG.pf1_bar0_prefetchable {false} \
    CONFIG.pf1_bar0_scale {Gigabytes} \
    CONFIG.pf1_bar0_size {4} \
    CONFIG.pf1_bar1_64bit {false} \
@@ -379,7 +379,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf1_vendor_id {10EE} \
    CONFIG.pf2_bar0_64bit {true} \
    CONFIG.pf2_bar0_enabled {true} \
-   CONFIG.pf2_bar0_prefetchable {true} \
+   CONFIG.pf2_bar0_prefetchable {false} \
    CONFIG.pf2_bar0_scale {Gigabytes} \
    CONFIG.pf2_bar0_size {4} \
    CONFIG.pf2_bar1_64bit {false} \
@@ -415,7 +415,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf2_vendor_id {10EE} \
    CONFIG.pf3_bar0_64bit {true} \
    CONFIG.pf3_bar0_enabled {true} \
-   CONFIG.pf3_bar0_prefetchable {true} \
+   CONFIG.pf3_bar0_prefetchable {false} \
    CONFIG.pf3_bar0_scale {Gigabytes} \
    CONFIG.pf3_bar0_size {4} \
    CONFIG.pf3_bar1_64bit {false} \
@@ -579,7 +579,7 @@ proc create_qdma { index } {
     CONFIG.functional_mode {AXI_Bridge} \
     CONFIG.last_core_cap_addr {0x1F0} \
     CONFIG.mode_selection {Advanced} \
-    CONFIG.pf0_bar0_prefetchable_qdma {true} \
+    CONFIG.pf0_bar0_prefetchable_qdma {false} \
     CONFIG.pf0_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf0_bar0_size_qdma {4} \
     CONFIG.pf0_bar0_type_qdma {AXI_Bridge_Master} \
@@ -601,7 +601,7 @@ proc create_qdma { index } {
     CONFIG.pf0_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf0_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf0_sub_class_interface_menu_qdma {PCI_to_PCI_bridge} \
-    CONFIG.pf1_bar0_prefetchable_qdma {true} \
+    CONFIG.pf1_bar0_prefetchable_qdma {false} \
     CONFIG.pf1_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf1_bar0_size_qdma {4} \
     CONFIG.pf1_bar0_type_qdma {AXI_Bridge_Master} \
@@ -618,7 +618,7 @@ proc create_qdma { index } {
     CONFIG.pf1_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf1_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf1_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf2_bar0_prefetchable_qdma {true} \
+    CONFIG.pf2_bar0_prefetchable_qdma {false} \
     CONFIG.pf2_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf2_bar0_size_qdma {4} \
     CONFIG.pf2_bar0_type_qdma {AXI_Bridge_Master} \
@@ -636,7 +636,7 @@ proc create_qdma { index } {
     CONFIG.pf2_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf2_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf2_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf3_bar0_prefetchable_qdma {true} \
+    CONFIG.pf3_bar0_prefetchable_qdma {false} \
     CONFIG.pf3_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf3_bar0_size_qdma {4} \
     CONFIG.pf3_bar0_type_qdma {AXI_Bridge_Master} \

@@ -274,10 +274,10 @@ CONFIG_SUBSYSTEM_PRODUCT="vck190-fpgadrv-2022-1"
 # SD card for root filesystem
 
 CONFIG_SUBSYSTEM_BOOTARGS_AUTO=n
-CONFIG_SUBSYSTEM_USER_CMDLINE="console=ttyAMA0 earlycon=pl011,mmio32,0xFF000000,115200n8 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait rootfs=ext4 uio_pdrv_genirq.of_id=generic-uio"
+CONFIG_SUBSYSTEM_USER_CMDLINE="console=ttyAMA0 earlycon=pl011,mmio32,0xFF000000,115200n8 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait rootfs=ext4 uio_pdrv_genirq.of_id=generic-uio"
 
 CONFIG_SUBSYSTEM_ROOTFS_INITRD=n
 CONFIG_SUBSYSTEM_ROOTFS_EXT4=y
-CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk1p2"
+CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk0p2"
 CONFIG_SUBSYSTEM_RFS_FORMATS="cpio cpio.gz cpio.gz.u-boot tar.gz jffs2 ext4"
 

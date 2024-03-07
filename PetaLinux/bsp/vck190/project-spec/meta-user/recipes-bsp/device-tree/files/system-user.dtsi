@@ -16,3 +16,21 @@ https://support.xilinx.com/s/question/0D52E00006zxS2ESAU/configuring-one-of-the-
 	reg = <0x0 0x00000000 0x0 0x80000000>;
 };
 
+&qdma_0 {
+	#address-cells = <3>;
+	#interrupt-cells = <1>;
+	#size-cells = <2>;
+	compatible = "xlnx,qdma-host-3.00";
+	device_type = "pci";
+	ranges = <0x43000000 0x00000004 0x30000000 0x00000004 0x30000000 0x00000000 0x10000000>;
+};
+
+&qdma_1 {
+	#address-cells = <3>;
+	#interrupt-cells = <1>;
+	#size-cells = <2>;
+	compatible = "xlnx,qdma-host-3.00";
+	device_type = "pci";
+	ranges = <0x43000000 0x00000004 0x40000000 0x00000004 0x40000000 0x00000000 0x10000000>;
+};
+
