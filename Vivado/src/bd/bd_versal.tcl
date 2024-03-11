@@ -52,8 +52,8 @@ if {[str_contains $target "vck190"]} {
 }
 
 # BAR addresses and sizes
-set bar_addr { 0x00430000000 0x00440000000 }
-set bar_size { 256M 256M }
+set bar_addr { 0x000A8000000 0x000AC000000 }
+set bar_size { 64M 64M }
 
 # List of interrupt pins
 set intr_list {}
@@ -116,7 +116,8 @@ set_property -dict [list \
   PS_MIO21 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
   PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
   PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
-  PS_M_AXI_LPD_DATA_WIDTH 32  \
+  PS_M_AXI_FPD_DATA_WIDTH 128 \
+  PS_M_AXI_LPD_DATA_WIDTH 128 \
   PS_NUM_FABRIC_RESETS 1  \
   PS_PCIE_RESET {{ENABLE 1}}  \
   PS_PL_CONNECTIVITY_MODE Custom  \
@@ -125,7 +126,7 @@ set_property -dict [list \
   PS_USE_FPD_CCI_NOC 1  \
   PS_USE_FPD_CCI_NOC0 1  \
   PS_USE_M_AXI_FPD 1  \
-  PS_USE_M_AXI_LPD 0  \
+  PS_USE_M_AXI_LPD 1  \
   PS_USE_NOC_LPD_AXI0 1  \
   PS_USE_PMCPL_CLK0 1  \
   PS_USE_PMCPL_CLK1 0  \
@@ -308,7 +309,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf0_ari_enabled {false} \
    CONFIG.pf0_bar0_64bit {true} \
    CONFIG.pf0_bar0_enabled {true} \
-   CONFIG.pf0_bar0_prefetchable {false} \
+   CONFIG.pf0_bar0_prefetchable {true} \
    CONFIG.pf0_bar0_scale {Gigabytes} \
    CONFIG.pf0_bar0_size {4} \
    CONFIG.pf0_bar1_64bit {false} \
@@ -343,7 +344,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf0_msix_enabled {false} \
    CONFIG.pf1_bar0_64bit {true} \
    CONFIG.pf1_bar0_enabled {true} \
-   CONFIG.pf1_bar0_prefetchable {false} \
+   CONFIG.pf1_bar0_prefetchable {true} \
    CONFIG.pf1_bar0_scale {Gigabytes} \
    CONFIG.pf1_bar0_size {4} \
    CONFIG.pf1_bar1_64bit {false} \
@@ -379,7 +380,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf1_vendor_id {10EE} \
    CONFIG.pf2_bar0_64bit {true} \
    CONFIG.pf2_bar0_enabled {true} \
-   CONFIG.pf2_bar0_prefetchable {false} \
+   CONFIG.pf2_bar0_prefetchable {true} \
    CONFIG.pf2_bar0_scale {Gigabytes} \
    CONFIG.pf2_bar0_size {4} \
    CONFIG.pf2_bar1_64bit {false} \
@@ -415,7 +416,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pf2_vendor_id {10EE} \
    CONFIG.pf3_bar0_64bit {true} \
    CONFIG.pf3_bar0_enabled {true} \
-   CONFIG.pf3_bar0_prefetchable {false} \
+   CONFIG.pf3_bar0_prefetchable {true} \
    CONFIG.pf3_bar0_scale {Gigabytes} \
    CONFIG.pf3_bar0_size {4} \
    CONFIG.pf3_bar1_64bit {false} \
@@ -579,7 +580,7 @@ proc create_qdma { index } {
     CONFIG.functional_mode {AXI_Bridge} \
     CONFIG.last_core_cap_addr {0x1F0} \
     CONFIG.mode_selection {Advanced} \
-    CONFIG.pf0_bar0_prefetchable_qdma {false} \
+    CONFIG.pf0_bar0_prefetchable_qdma {true} \
     CONFIG.pf0_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf0_bar0_size_qdma {4} \
     CONFIG.pf0_bar0_type_qdma {AXI_Bridge_Master} \
@@ -601,7 +602,7 @@ proc create_qdma { index } {
     CONFIG.pf0_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf0_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf0_sub_class_interface_menu_qdma {PCI_to_PCI_bridge} \
-    CONFIG.pf1_bar0_prefetchable_qdma {false} \
+    CONFIG.pf1_bar0_prefetchable_qdma {true} \
     CONFIG.pf1_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf1_bar0_size_qdma {4} \
     CONFIG.pf1_bar0_type_qdma {AXI_Bridge_Master} \
@@ -618,7 +619,7 @@ proc create_qdma { index } {
     CONFIG.pf1_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf1_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf1_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf2_bar0_prefetchable_qdma {false} \
+    CONFIG.pf2_bar0_prefetchable_qdma {true} \
     CONFIG.pf2_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf2_bar0_size_qdma {4} \
     CONFIG.pf2_bar0_type_qdma {AXI_Bridge_Master} \
@@ -636,7 +637,7 @@ proc create_qdma { index } {
     CONFIG.pf2_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf2_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf2_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf3_bar0_prefetchable_qdma {false} \
+    CONFIG.pf3_bar0_prefetchable_qdma {true} \
     CONFIG.pf3_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf3_bar0_size_qdma {4} \
     CONFIG.pf3_bar0_type_qdma {AXI_Bridge_Master} \
@@ -661,6 +662,7 @@ proc create_qdma { index } {
     CONFIG.xdma_axilite_slave {true} \
     CONFIG.pcie_blk_locn [lindex $pcie_blk_locn $index] \
   ] $qdma
+
 }
 
 create_qdma 0
@@ -740,21 +742,39 @@ set_property -dict [list CONFIG.NUM_SI {1}] [get_bd_cells axi_smc_fpd]
 connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins axi_smc_fpd/aclk]
 connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins versal_cips_0/m_axi_fpd_aclk]
 
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smc_lpd
+set_property -dict [list CONFIG.NUM_SI {1}] [get_bd_cells axi_smc_lpd]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins axi_smc_lpd/aclk]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins versal_cips_0/m_axi_lpd_aclk]
+
 # Add processor system reset for the PL0_REF_CLK 350MHz
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset_pl0_ref_clk
 connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins reset_pl0_ref_clk/slowest_sync_clk]
 connect_bd_net [get_bd_pins versal_cips_0/pl0_resetn] [get_bd_pins reset_pl0_ref_clk/ext_reset_in]
 connect_bd_net [get_bd_pins reset_pl0_ref_clk/interconnect_aresetn] [get_bd_pins axi_smc_fpd/aresetn]
+connect_bd_net [get_bd_pins reset_pl0_ref_clk/interconnect_aresetn] [get_bd_pins axi_smc_lpd/aresetn]
 
 proc connect_qdma_saxi { index } {
   # QDMA: S_AXI_BRIDGE
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_BRIDGE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_BRIDGE]
 
+  if { $index == 0 } {
+
   # QDMA: S_AXI_LITE
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_LPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_lpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
+
+  # QDMA: S_AXI_LITE_CSR
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_LPD} Slave "/qdma_$index/S_AXI_LITE_CSR" ddr_seg {Auto} intc_ip {/axi_smc_lpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE_CSR]
+
+  } else {
 
   # QDMA: S_AXI_LITE_CSR
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE_CSR" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE_CSR]
+
+  # QDMA: S_AXI_LITE
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
+
+  }
 
   # QDMA: M_AXI_BRIDGE
   set noc_num_si [get_property CONFIG.NUM_SI [get_bd_cells axi_noc_0]]

@@ -22,7 +22,17 @@ https://support.xilinx.com/s/question/0D52E00006zxS2ESAU/configuring-one-of-the-
 	#size-cells = <2>;
 	compatible = "xlnx,qdma-host-3.00";
 	device_type = "pci";
-	ranges = <0x43000000 0x00000004 0x30000000 0x00000004 0x30000000 0x00000000 0x10000000>;
+	ranges = <0x02000000 0x00000000 0xA8000000 0x0 0xA8000000 0x00000000 0x4000000>;
+	reg = <0x0 0x90000000 0x0 0x10000000>,<0x0 0x80000000 0x0 0x10000000>;
+	reg-names = "breg", "cfg";
+	interrupt-map = <0 0 0 1 &psv_pcie_intc_0 1>, <0 0 0 2 &psv_pcie_intc_0 2>, <0 0 0 3 &psv_pcie_intc_0 3>, <0 0 0 4 &psv_pcie_intc_0 4>;
+	interrupt-map-mask = <0 0 0 7>;
+	interrupt-names = "misc", "msi0", "msi1";
+	psv_pcie_intc_0: interrupt-controller {
+		#address-cells = <0>;
+		#interrupt-cells = <1>;
+		interrupt-controller ;
+	};
 };
 
 &qdma_1 {
@@ -31,6 +41,16 @@ https://support.xilinx.com/s/question/0D52E00006zxS2ESAU/configuring-one-of-the-
 	#size-cells = <2>;
 	compatible = "xlnx,qdma-host-3.00";
 	device_type = "pci";
-	ranges = <0x43000000 0x00000004 0x40000000 0x00000004 0x40000000 0x00000000 0x10000000>;
+	ranges = <0x02000000 0x00000000 0xAC000000 0x0 0xAC000000 0x00000000 0x4000000>;
+	reg = <0x0 0xB0000000 0x0 0x10000000>,<0x00000004 0x00000000 0x0 0x10000000>;
+	reg-names = "breg", "cfg";
+	interrupt-map = <0 0 0 1 &psv_pcie_intc_1 1>, <0 0 0 2 &psv_pcie_intc_1 2>, <0 0 0 3 &psv_pcie_intc_1 3>, <0 0 0 4 &psv_pcie_intc_1 4>;
+	interrupt-map-mask = <0 0 0 7>;
+	interrupt-names = "misc", "msi0", "msi1";
+	psv_pcie_intc_1: interrupt-controller {
+		#address-cells = <0>;
+		#interrupt-cells = <1>;
+		interrupt-controller ;
+	};
 };
 
