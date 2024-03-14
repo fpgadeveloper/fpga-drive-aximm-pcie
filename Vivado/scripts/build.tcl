@@ -1,4 +1,4 @@
-# Opsero Electronic Design Inc. Copyright 2023
+# Opsero Electronic Design Inc. Copyright 2024
 #
 # Project build script
 #
@@ -17,7 +17,7 @@
 #*****************************************************************************************
 
 # Check the version of Vivado used
-set version_required "2022.1"
+set version_required "2023.2"
 set ver [lindex [split $::env(XILINX_VIVADO) /] end]
 if {![string equal $ver $version_required]} {
   puts "###############################"

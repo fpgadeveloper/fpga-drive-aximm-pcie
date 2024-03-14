@@ -1,4 +1,0 @@
-LABEL Linux
-KERNEL Image
-FDT system-default.dtb
-INITRD ramdisk.cpio.gz.u-boot

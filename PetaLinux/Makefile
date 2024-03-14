@@ -96,7 +96,7 @@ else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 else ifeq ($(call get_template_name,$(TARGET)), versal)
 	SSTATE_ARCH = arch64
-	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
+	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 endif
 
@@ -179,11 +179,7 @@ $(PKG_PRODUCTS): $(BUILD_PRODUCTS)
 	cd $(TARGET) && petalinux-package --boot --plm --psmfw --u-boot --dtb
 endif
 
-PETL_BUILD_DEPS = $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB) \
-                  $(PETL_ZYNQ_FSBL_ELF) \
-                  $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF)
-
-$(PETL_BUILD_DEPS): $(PETL_CFG_DONE)
+$(BUILD_PRODUCTS): $(PETL_CFG_DONE)
 	cd $(TARGET) && petalinux-build
 
 $(PETL_CFG_DONE): | $(PETL_COMP_DIR)

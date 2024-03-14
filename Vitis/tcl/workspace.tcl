@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------
-# Opsero Electronic Design Inc. Copyright 2023
+# Opsero Electronic Design Inc. Copyright 2024
 # -------------------------------------------------------------------------------------
 # *** VITIS WORKSPACE BUILDER SCRIPT ***
 #
