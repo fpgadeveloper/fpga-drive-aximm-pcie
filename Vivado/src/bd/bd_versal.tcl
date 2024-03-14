@@ -49,6 +49,10 @@ proc str_contains {str substr} {
 # Board specific PCIe and GT LOCs
 if {[str_contains $target "vck190"]} {
   set pcie_blk_locn { "X1Y0" "X1Y2" }
+  set ref_board "VCK190"
+} elseif {[str_contains $target "vmk180"]} {
+  set pcie_blk_locn { "X1Y0" "X1Y2" }
+  set ref_board "VMK180"
 }
 
 # BAR addresses and sizes
@@ -233,6 +237,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
  ] $gt_quad_0
 
   # Create instance: pcie, and set properties
+  global ref_board
   set pcie [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_versal pcie ]
   set_property -dict [ list \
    CONFIG.AXISTEN_IF_CQ_ALIGNMENT_MODE {Address_Aligned} \
@@ -472,7 +477,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pipe_sim {false} \
    CONFIG.sys_reset_polarity {ACTIVE_LOW} \
    CONFIG.vendor_id {10EE} \
-   CONFIG.xlnx_ref_board {VCK190} \
+   CONFIG.xlnx_ref_board $ref_board \
  ] $pcie
 
   # Create instance: pcie_phy, and set properties
