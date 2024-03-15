@@ -27,29 +27,33 @@ the FMC connector on which to connect the FPGA Drive FMC Gen4.
 
 | Target design     | M2 ports   | Target board and connector     | License<br> required |
 |-------------------|------------|--------------------------------|-----|
-| `kc705_hpc`       | SSD1       | KC705, HPC connector           | YES |
-| `kc705_lpc`       | SSD1       | KC705, LPC connector           | YES |
-| `kcu105_hpc`      | SSD1       | KCU105, HPC connector          | YES |
-| `kcu105_hpc_dual` | SSD1,SSD2  | KCU105, HPC connector          | YES |
-| `kcu105_lpc`      | SSD1       | KCU105, LPC connector          | YES |
+| `kc705_hpc`       | SSD1       | [KC705], HPC connector         | YES |
+| `kc705_lpc`       | SSD1       | [KC705], LPC connector         | YES |
+| `kcu105_hpc`      | SSD1       | [KCU105], HPC connector        | YES |
+| `kcu105_hpc_dual` | SSD1,SSD2  | [KCU105], HPC connector        | YES |
+| `kcu105_lpc`      | SSD1       | [KCU105], LPC connector        | YES |
 | `pz_7015`         | SSD1       | PicoZed 7015                   | NO  |
 | `pz_7030`         | SSD1       | PicoZed 7030                   | NO  |
 | `uzev_dual`       | SSD1,SSD2  | UltraZed-EV carrier            | NO  |
-| `vc707_hpc1`      | SSD1       | VC707, HPC1 connector          | YES |
-| `vc707_hpc2`      | SSD1       | VC707, HPC2 connector          | YES |
-| `vc709_hpc`       | SSD1       | VC709                          | YES |
-| `vcu118`          | SSD1       | VCU118                         | YES |
-| `vcu118_dual`     | SSD1,SSD2  | VCU118                         | YES |
-| `zc706_hpc`       | SSD1       | ZC706, HPC connector           | YES |
-| `zc706_lpc`       | SSD1       | ZC706, HPC connector           | YES |
-| `zcu104`          | SSD1       | ZCU104                         | NO  |
-| `zcu106_hpc0`     | SSD1       | ZCU106, HPC0 connector         | NO  |
-| `zcu106_hpc0_dual`| SSD1,SSD2  | ZCU106, HPC0 connector         | NO  |
-| `zcu106_hpc1`     | SSD1       | ZCU106, HPC1 connector         | NO  |
-| `zcu111`          | SSD1       | ZCU111                         | YES |
-| `zcu111_dual`     | SSD1,SSD2  | ZCU111                         | YES |
-| `zcu208`          | SSD1       | ZCU208                         | YES |
-| `zcu208_dual`     | SSD1,SSD2  | ZCU208                         | YES |
+| `vc707_hpc1`      | SSD1       | [VC707], HPC1 connector        | YES |
+| `vc707_hpc2`      | SSD1       | [VC707], HPC2 connector        | YES |
+| `vc709_hpc`       | SSD1       | [VC709]                        | YES |
+| `vck190_fmcp1`    | SSD1,SSD2  | [VCK190]                       | YES |
+| `vck190_fmcp2`    | SSD1,SSD2  | [VCK190]                       | YES |
+| `vmk180_fmcp1`    | SSD1,SSD2  | [VMK180]                       | YES |
+| `vmk180_fmcp2`    | SSD1,SSD2  | [VMK180]                       | YES |
+| `vcu118`          | SSD1       | [VCU118]                       | YES |
+| `vcu118_dual`     | SSD1,SSD2  | [VCU118]                       | YES |
+| `zc706_hpc`       | SSD1       | [ZC706], HPC connector         | YES |
+| `zc706_lpc`       | SSD1       | [ZC706], HPC connector         | YES |
+| `zcu104`          | SSD1       | [ZCU104]                       | NO  |
+| `zcu106_hpc0`     | SSD1       | [ZCU106], HPC0 connector       | NO  |
+| `zcu106_hpc0_dual`| SSD1,SSD2  | [ZCU106], HPC0 connector       | NO  |
+| `zcu106_hpc1`     | SSD1       | [ZCU106], HPC1 connector       | NO  |
+| `zcu111`          | SSD1       | [ZCU111]                       | YES |
+| `zcu111_dual`     | SSD1,SSD2  | [ZCU111]                       | YES |
+| `zcu208`          | SSD1       | [ZCU208]                       | YES |
+| `zcu208_dual`     | SSD1,SSD2  | [ZCU208]                       | YES |
 
 ## Windows users
 
@@ -122,6 +126,10 @@ to build the Vivado and PetaLinux projects with a single command.
    `vc707_hpc1`,
    `vc707_hpc2`,
    `vc709_hpc`,
+   `vck190_fmcp1`,
+   `vck190_fmcp2`,
+   `vmk180_fmcp1`,
+   `vmk180_fmcp2`,
    `vcu118`, 
    `vcu118_dual`, 
    `zc706_hpc`, 
@@ -192,6 +200,10 @@ design if it has not already been done.
    `pz_7015`, 
    `pz_7030`, 
    `uzev_dual`, 
+   `vck190_fmcp1`,
+   `vck190_fmcp2`,
+   `vmk180_fmcp1`,
+   `vmk180_fmcp2`,
    `vcu118`, 
    `vcu118_dual`, 
    `zc706_hpc`, 
@@ -245,6 +257,8 @@ Now when you use `make` to build the PetaLinux projects, they will be configured
 [KC705]: https://www.xilinx.com/kc705
 [VC707]: https://www.xilinx.com/vc707
 [VC709]: https://www.xilinx.com/vc709
+[VCK190]: https://www.xilinx.com/vck190
+[VMK180]: https://www.xilinx.com/vmk180
 [VCU108]: https://www.xilinx.com/vcu108
 [VCU118]: https://www.xilinx.com/vcu118
 [KCU105]: https://www.xilinx.com/kcu105

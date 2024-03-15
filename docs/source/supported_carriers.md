@@ -20,6 +20,10 @@
 | Zynq UltraScale+ [ZCU111 Evaluation board]                       | FMC+ | Single & dual SSD   |
 | Zynq UltraScale+ [ZCU208 Evaluation board]                       | FMC+ | Single & dual SSD   |
 | Zynq UltraScale+ [UltraZed EV Carrier Card]                      | HPC  | Dual SSD design     |
+| Versal AI Core [VCK190 Evaluation board]                         | FMCP1 | Dual SSD           |
+|                                                                  | FMCP2 | Dual SSD           |
+| Versal Prime [VMK180 Evaluation board]                           | FMCP1 | Dual SSD           |
+|                                                                  | FMCP2 | Dual SSD           |
 
 ## Unlisted boards
 
