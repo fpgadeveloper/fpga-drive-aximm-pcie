@@ -1,0 +1,14 @@
+
+/dts-v1/;
+/plugin/;
+
+/{
+	compatible = "xlnx,versal-vmk180-rev1.1", "xlnx,versal";
+	model = "Xilinx Versal vmk180 Eval board rev1.1";
+};
+
+&sdhci1 {
+	clk-phase-sd-hs = <111>, <48>;
+	clk-phase-uhs-sdr25 = <114>, <48>;
+	clk-phase-uhs-ddr50 = <126>, <36>;
+};

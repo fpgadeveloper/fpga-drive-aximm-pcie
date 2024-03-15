@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------
-# Opsero Electronic Design Inc. Copyright 2023
+# Opsero Electronic Design Inc. Copyright 2024
 # -------------------------------------------------------------------------------------
 
 # Description
@@ -47,6 +47,10 @@ dict set target_dict uzev_dual { uzev }
 dict set target_dict vc707_hpc1 { vc707 }
 dict set target_dict vc707_hpc2 { vc707 }
 dict set target_dict vc709_hpc { vc709 }
+dict set target_dict vck190_fmcp1 { vck190 }
+dict set target_dict vck190_fmcp2 { vck190 }
+dict set target_dict vmk180_fmcp1 { vmk180 }
+dict set target_dict vmk180_fmcp2 { vmk180 }
 dict set target_dict vcu118 { vcu118 }
 dict set target_dict vcu118_dual { vcu118 }
 dict set target_dict zc706_hpc { zc706 }

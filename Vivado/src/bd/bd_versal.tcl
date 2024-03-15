@@ -49,11 +49,16 @@ proc str_contains {str substr} {
 # Board specific PCIe and GT LOCs
 if {[str_contains $target "vck190"]} {
   set pcie_blk_locn { "X1Y0" "X1Y2" }
+  set ref_board "VCK190"
+} elseif {[str_contains $target "vmk180"]} {
+  set pcie_blk_locn { "X1Y0" "X1Y2" }
+  set ref_board "VMK180"
 }
 
 # BAR addresses and sizes
-set bar_addr { 0x000A8000000 0x000AC000000 }
-set bar_size { 64M 64M }
+set bar_addr { 0x000A8000000 0x000B0000000 }
+set bar_size { 128M 256M }
+set qdma_cfg_addr { 0x400000000 0x440000000 }
 
 # List of interrupt pins
 set intr_list {}
@@ -68,12 +73,29 @@ apply_bd_automation -rule xilinx.com:bd_rule:cips -config { \
   configure_noc {Add new AXI NoC} \
   debug_config {JTAG} \
   design_flow {Full System} \
-  mc_type {DDR + LPDDR} \
+  mc_type {DDR} \
   num_mc_ddr {1} \
-  num_mc_lpddr {2} \
+  num_mc_lpddr {None} \
   pl_clocks {None} \
   pl_resets {None} \
 }  [get_bd_cells versal_cips_0]
+
+# -----------------------------------------------------------------------------
+# Remove DDR address region 1 from the design
+# -----------------------------------------------------------------------------
+# Having this address region in the design leads to the following errors on PetaLinux boot:
+#   nvme nvme0: I/O 4 QID 0 timeout, disable controller
+#   nvme nvme0: Device shutdown incomplete; abort shutdown
+#   nvme nvme0: Identify Controller failed (-4)
+#   nvme nvme0: Removing after probe failure status: -5
+# Removing the region is the only available workaround at this time.
+set_property CONFIG.MC_CHAN_REGION1 {NONE} [get_bd_cells axi_noc_0]
+set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S00_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S01_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_0 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S02_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S03_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S04_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
 
 # Extra config for this design
 set_property -dict [list \
@@ -215,6 +237,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
  ] $gt_quad_0
 
   # Create instance: pcie, and set properties
+  global ref_board
   set pcie [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_versal pcie ]
   set_property -dict [ list \
    CONFIG.AXISTEN_IF_CQ_ALIGNMENT_MODE {Address_Aligned} \
@@ -269,7 +292,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.PF3_SRIOV_VF_DEVICE_ID {C334} \
    CONFIG.PF3_SUBSYSTEM_ID {0007} \
    CONFIG.PF3_SUBSYSTEM_VENDOR_ID {10EE} \
-   CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {8.0_GT/s} \
+   CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {16.0_GT/s} \
    CONFIG.PL_LINK_CAP_MAX_LINK_WIDTH {X4} \
    CONFIG.REF_CLK_FREQ {100_MHz} \
    CONFIG.TL_PF_ENABLE_REG {1} \
@@ -277,7 +300,7 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.axisten_freq {250} \
    CONFIG.axisten_if_enable_client_tag {true} \
    CONFIG.axisten_if_enable_msg_route_override {TRUE} \
-   CONFIG.axisten_if_width {128_bit} \
+   CONFIG.axisten_if_width {256_bit} \
    CONFIG.cfg_ext_if {false} \
    CONFIG.cfg_mgmt_if {true} \
    CONFIG.copy_pf0 {true} \
@@ -454,13 +477,13 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.pipe_sim {false} \
    CONFIG.sys_reset_polarity {ACTIVE_LOW} \
    CONFIG.vendor_id {10EE} \
-   CONFIG.xlnx_ref_board {VCK190} \
+   CONFIG.xlnx_ref_board $ref_board \
  ] $pcie
 
   # Create instance: pcie_phy, and set properties
   set pcie_phy [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_phy_versal pcie_phy ]
   set_property -dict [ list \
-   CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {8.0_GT/s} \
+   CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {16.0_GT/s} \
    CONFIG.PL_LINK_CAP_MAX_LINK_WIDTH {X4} \
    CONFIG.aspm {No_ASPM} \
    CONFIG.async_mode {SRNS} \
@@ -567,7 +590,7 @@ proc create_qdma { index } {
     CONFIG.PF2_SRIOV_VF_DEVICE_ID {C234} \
     CONFIG.PF3_MSIX_CAP_TABLE_SIZE_qdma {000} \
     CONFIG.PF3_SRIOV_VF_DEVICE_ID {C334} \
-    CONFIG.axi_data_width {128_bit} \
+    CONFIG.axi_data_width {256_bit} \
     CONFIG.axil_master_64bit_en {false} \
     CONFIG.axilite_master_en {false} \
     CONFIG.axisten_freq {250} \
@@ -582,7 +605,7 @@ proc create_qdma { index } {
     CONFIG.mode_selection {Advanced} \
     CONFIG.pf0_bar0_prefetchable_qdma {true} \
     CONFIG.pf0_bar0_scale_qdma {Gigabytes} \
-    CONFIG.pf0_bar0_size_qdma {4} \
+    CONFIG.pf0_bar0_size_qdma {2} \
     CONFIG.pf0_bar0_type_qdma {AXI_Bridge_Master} \
     CONFIG.pf0_bar2_64bit_qdma {false} \
     CONFIG.pf0_bar2_enabled_qdma {false} \
@@ -655,7 +678,7 @@ proc create_qdma { index } {
     CONFIG.pf3_sriov_bar0_type {AXI_Bridge_Master} \
     CONFIG.pf3_sriov_bar2_type {AXI_Lite_Master} \
     CONFIG.pf3_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pl_link_cap_max_link_speed {8.0_GT/s} \
+    CONFIG.pl_link_cap_max_link_speed {16.0_GT/s} \
     CONFIG.pl_link_cap_max_link_width {X4} \
     CONFIG.plltype {QPLL1} \
     CONFIG.vdm_en {true} \
@@ -755,26 +778,21 @@ connect_bd_net [get_bd_pins reset_pl0_ref_clk/interconnect_aresetn] [get_bd_pins
 connect_bd_net [get_bd_pins reset_pl0_ref_clk/interconnect_aresetn] [get_bd_pins axi_smc_lpd/aresetn]
 
 proc connect_qdma_saxi { index } {
+  global qdma_cfg_addr
+  
   # QDMA: S_AXI_BRIDGE
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_BRIDGE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_BRIDGE]
 
-  if { $index == 0 } {
-
   # QDMA: S_AXI_LITE
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_LPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_lpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
+  
+  set_property offset [lindex $qdma_cfg_addr $index] [get_bd_addr_segs versal_cips_0/M_AXI_FPD/SEG_qdma_${index}_CTL0]
+  set_property range 256M [get_bd_addr_segs versal_cips_0/M_AXI_FPD/SEG_qdma_${index}_CTL0]
 
   # QDMA: S_AXI_LITE_CSR
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_LPD} Slave "/qdma_$index/S_AXI_LITE_CSR" ddr_seg {Auto} intc_ip {/axi_smc_lpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE_CSR]
-
-  } else {
-
-  # QDMA: S_AXI_LITE_CSR
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE_CSR" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE_CSR]
-
-  # QDMA: S_AXI_LITE
-  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Clk_master {/versal_cips_0/pl0_ref_clk (333 MHz)} Clk_slave "/qdma_$index/axi_aclk (250 MHz)" Clk_xbar "/qdma_$index/axi_aclk (250 MHz)" Master {/versal_cips_0/M_AXI_FPD} Slave "/qdma_$index/S_AXI_LITE" ddr_seg {Auto} intc_ip {/axi_smc_fpd} master_apm {0}]  [get_bd_intf_pins qdma_$index/S_AXI_LITE]
-
-  }
+  
+  set_property range 16K [get_bd_addr_segs versal_cips_0/M_AXI_LPD/SEG_qdma_${index}_CTL0]
 
   # QDMA: M_AXI_BRIDGE
   set noc_num_si [get_property CONFIG.NUM_SI [get_bd_cells axi_noc_0]]
@@ -824,6 +842,9 @@ foreach intr $intr_list {
   connect_bd_net [get_bd_pins $intr] [get_bd_pins versal_cips_0/pl_ps_irq$intr_index]
   set intr_index [expr {$intr_index+1}]
 }
+
+# Assign any addresses that haven't already been assigned
+assign_bd_address
 
 validate_bd_design
 save_bd_design

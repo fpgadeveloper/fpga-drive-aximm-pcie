@@ -1,4 +1,4 @@
-# Opsero Electronic Design Inc. 2023
+# Opsero Electronic Design Inc. 2024
 #
 # This Makefile can be used to build all projects and gather the boot images.
 
@@ -23,6 +23,10 @@ uzev_dual_target := zynqMP both
 vc707_hpc1_target := microblaze baremetal_only
 vc707_hpc2_target := microblaze baremetal_only
 vc709_hpc_target := microblaze baremetal_only
+vck190_fmcp1_target := versal both
+vck190_fmcp2_target := versal both
+vmk180_fmcp1_target := versal both
+vmk180_fmcp2_target := versal both
 vcu118_target := microblaze both
 vcu118_dual_target := microblaze both
 zc706_hpc_target := zynq both
