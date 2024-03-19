@@ -2,28 +2,24 @@
 
 ## List of supported boards
 
-| Carrier board                                                    | FMC  | No. SSDs            |
-|------------------------------------------------------------------|------|---------------------|
-| Zynq-7000 [PicoZed FMC Carrier Card V2] with [PicoZed 7030]      | LPC  | Single SSD          |
-| Kintex-7 [KC705 Evaluation board]                                | LPC  | Single SSD          |
-|                                                                  | HPC  | Single SSD          |
-| Kintex UltraScale [KCU105 Evaluation board]                      | LPC  | Single SSD          |
-|                                                                  | HPC  | Single & dual SSD   |
-| Virtex-7 [VC707 Evaluation board]                                | HPC1 | Single SSD          |
-|                                                                  | HPC2 | Single SSD          |
-| Virtex-7 [VC709 Evaluation board]                                | HPC  | Single SSD          |
-| Zynq-7000 [ZC706 Evaluation board]                               | LPC  | Single SSD          |
-|                                                                  | HPC  | Single SSD          |
-| Zynq UltraScale+ [ZCU104 Evaluation board]                       | LPC  | Single SSD          |
-| Zynq UltraScale+ [ZCU106 Evaluation board]                       | HPC0 | Single & dual SSD   |
-|                                                                  | HPC1 | Single SSD          |
-| Zynq UltraScale+ [ZCU111 Evaluation board]                       | FMC+ | Single & dual SSD   |
-| Zynq UltraScale+ [ZCU208 Evaluation board]                       | FMC+ | Single & dual SSD   |
-| Zynq UltraScale+ [UltraZed EV Carrier Card]                      | HPC  | Dual SSD design     |
-| Versal AI Core [VCK190 Evaluation board]                         | FMCP1 | Dual SSD           |
-|                                                                  | FMCP2 | Dual SSD           |
-| Versal Prime [VMK180 Evaluation board]                           | FMCP1 | Dual SSD           |
-|                                                                  | FMCP2 | Dual SSD           |
+| Carrier board                                                    | FMC Slot |
+|------------------------------------------------------------------|------|
+| Zynq-7000 [PicoZed FMC Carrier Card V2] with [PicoZed 7030]      | LPC  |
+| Kintex-7 [KC705 Evaluation board]                                | LPC & HPC |
+| Virtex-7 [VC707 Evaluation board]                                | HPC1 & HPC2 |
+| Virtex-7 [VC709 Evaluation board]                                | HPC  |
+| Zynq-7000 [ZC706 Evaluation board]                               | LPC & HPC |
+| Kintex UltraScale [KCU105 Evaluation board]                      | LPC & HPC |
+| Virtex UltraScale+ [VCU118 Evaluation board]                     | FMCP |
+| Zynq UltraScale+ [ZCU104 Evaluation board]                       | LPC  |
+| Zynq UltraScale+ [ZCU106 Evaluation board]                       | HPC0 & HPC1 |
+| Zynq UltraScale+ [ZCU111 Evaluation board]                       | FMC+ |
+| Zynq UltraScale+ [ZCU208 Evaluation board]                       | FMC+ |
+| Zynq UltraScale+ [UltraZed EV Carrier Card]                      | HPC  |
+| Versal AI Core [VCK190 Evaluation board]                         | FMCP1 & FMCP2 |
+| Versal Prime [VMK180 Evaluation board]                           | FMCP1 & FMCP2 |
+
+For list of the target designs showing the number of SSDs supported, refer to the build instructions.
 
 ## Unlisted boards
 
@@ -91,4 +87,7 @@ The ZCU208 has a single FMC+ connector that can support 2x SSDs, each with an in
 [VC707 Evaluation board]: https://www.xilinx.com/vc707
 [VC709 Evaluation board]: https://www.xilinx.com/vc709
 [PicoZed Hardware User Guide]: https://www.element14.com/community/servlet/JiveServlet/downloadBody/90974-102-2-394635/5279-UG-PicoZed-7015-7030-V2_1.pdf
+[VCK190 Evaluation board]: https://www.xilinx.com/vck190
+[VMK180 Evaluation board]: https://www.xilinx.com/vmk180
+[VCU118 Evaluation board]: https://www.xilinx.com/vcu118
 
