@@ -33,7 +33,8 @@ In order to test this design on hardware, you will need the following:
 
 This repo contains several designs that target various supported development boards and their
 FMC connectors. The table below lists the target design name, the M2 ports supported by the design and 
-the FMC connector on which to connect the FPGA Drive FMC Gen4.
+the FMC connector on which to connect the FPGA Drive FMC Gen4. Some of the target designs
+require a license to generate a bitstream with the AMD Xilinx tools.
 
 | Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
 |---------------------|-------------------|-------------|-------------|-----|

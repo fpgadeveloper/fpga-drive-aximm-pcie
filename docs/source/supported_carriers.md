@@ -70,6 +70,17 @@ The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an in
 
 The ZCU208 has a single FMC+ connector that can support 2x SSDs, each with an independent 4-lane PCIe interface.
 
+### VCK190 and VMK180
+
+The VCK190 and VMK180 have two FMC+ connectors that both can support 2x SSDs with independent 4-lane PCIe interfaces.
+These boards have a system controller that runs on a Zynq UltraScale+. The system controller is responsible for enabling
+the adjustable voltage (VADJ) that is applied to the FMC cards. These designs can be run even when VADJ is not enabled
+(ie. when VADJ=0V); they can be run without the system controller.
+
+Note that the BEAM Tool 2.2 has a 
+[known issue that causes multiple resets on power up](https://support.xilinx.com/s/article/000034111?language=en_US).
+We recommend that you apply the fix if you intend to use this version of the BEAM tool.
+
 
 [contact Opsero]: https://opsero.com/contact-us
 [compatibility list]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/
