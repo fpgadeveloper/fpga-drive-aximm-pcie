@@ -350,6 +350,39 @@ proc microblaze_boot_files {workspace_dir xsa_file app_name proc_instance target
   }
 }
 
+# Create .bif file for Versal designs
+proc create_versal_bif {filename pdi elf} {
+  # Split the path to get directory and file separately
+  set dirs [file dirname $filename]
+  # Check if the directory exists, if not, create it
+  if { ![file exists $dirs] } {
+    file mkdir $dirs
+  }
+  set outfile [open $filename w]
+  puts $outfile "all:"
+  puts $outfile "{"
+  puts $outfile "image"
+  puts $outfile "{"
+  puts $outfile "partition"
+  puts $outfile "{"
+  puts $outfile "type = bootimage"
+  puts $outfile "file = $pdi"
+  puts $outfile "}"
+  puts $outfile "}"
+  puts $outfile "image"
+  puts $outfile "{"
+  puts $outfile "name = user_elfs_subsystem"
+  puts $outfile "id = 0x1c000000"
+  puts $outfile "partition"
+  puts $outfile "{"
+  puts $outfile "core = a72-0"
+  puts $outfile "file = $elf"
+  puts $outfile "}"
+  puts $outfile "}"
+  puts $outfile "}"
+  close $outfile
+}
+
 # Creates Vitis workspace for a project
 proc create_vitis_ws {workspace_dir target target_dict vivado_dir app_name support_app template_app} {
   global vivado_postfix
@@ -487,14 +520,19 @@ proc create_vitis_ws {workspace_dir target target_dict vivado_dir app_name suppo
     microblaze_boot_files $workspace_dir $xsa_file $app_name $proc_instance $target
   # For Versal designs
   } elseif {[str_contains $proc_instance "psv_cortexa72_0"]} {
-    print_sysproj $sysproj_name "Copying the PDI file to the ./boot/${target_name} directory."
-    # Copy the already generated PDI file
+    print_sysproj $sysproj_name "Copying the PDI file to the ./boot/${target} directory."
+    # Generate the PDI/BOOT.BIN file
     set wrapper_name [file rootname [file tail $xsa_file]]
-    set bootbin_file "${workspace_dir}/${app_name}/_ide/bootimage/resources/${wrapper_name}.pdi"
+    set bootbin_file "${workspace_dir}/boot/BOOT.BIN"
+    create_versal_bif ${workspace_dir}/boot/boot.bif \
+                      ${workspace_dir}/${app_name}/_ide/bootimage/resources/${wrapper_name}.pdi \
+                      ${workspace_dir}/${app_name}/Debug/${app_name}.elf
+    exec bootgen -arch versal -image ${workspace_dir}/boot/boot.bif -w -o ${bootbin_file}
+    # Copy the generated BOOT.BIN file
     if {[file exists $bootbin_file] == 1} {
-      file copy -force $bootbin_file "./boot/${target_name}/BOOT.BIN"
+      file copy -force $bootbin_file "./boot/${target}/"
     } else {
-      print_sysproj $sysproj_name "No ${wrapper_name}.pdi file found."
+      print_sysproj $sysproj_name "File not found: ${bootbin_file}"
     }
   # For Zynq and Zynq MP designs
   } else {

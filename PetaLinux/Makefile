@@ -1,4 +1,4 @@
-# Opsero Electronic Design Inc. 2023
+# Opsero Electronic Design Inc. 2024
 #
 # This Makefile can be used to build the PetaLinux projects.
 
@@ -88,18 +88,22 @@ ifeq ($(call get_template_name,$(TARGET)), microblaze)
 	SSTATE_ARCH = microblaze
 	BUILD_PRODUCTS = $(PETL_FSBOOT_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_MCS)
+	PKG_CMD = petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET))
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
 	SSTATE_ARCH = arm
 	BUILD_PRODUCTS = $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
+	PKG_CMD = petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
 	SSTATE_ARCH = arch64
 	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
+	PKG_CMD = petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 else ifeq ($(call get_template_name,$(TARGET)), versal)
 	SSTATE_ARCH = arch64
 	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
+	PKG_CMD = petalinux-package --boot --plm --psmfw --u-boot --dtb
 endif
 
 ifneq ($(SSTATE_PATH),)
@@ -152,35 +156,11 @@ petalinux: check_target
 
 petalinux_locked: package
 
-# Package rule for microblaze designs
-ifeq ($(call get_template_name,$(TARGET)), microblaze)
 package: $(PKG_PRODUCTS)
 $(PKG_PRODUCTS): $(BUILD_PRODUCTS)
 	@echo 'Packaging PetaLinux project for $(TARGET)'
-	cd $(TARGET) && petalinux-package --boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET))
+	cd $(TARGET) && $(PKG_CMD)
 	
-# Package rule for zynq designs
-else ifeq ($(call get_template_name,$(TARGET)), zynq)
-package: $(PKG_PRODUCTS)
-$(PKG_PRODUCTS): $(BUILD_PRODUCTS)
-	@echo 'Packaging PetaLinux project for $(TARGET)'
-	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
-	
-# Package rule for zynqMP designs
-else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
-package: $(PKG_PRODUCTS)
-$(PKG_PRODUCTS): $(BUILD_PRODUCTS)
-	@echo 'Packaging PetaLinux project for $(TARGET)'
-	cd $(TARGET) && petalinux-package --boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
-	
-# Package rule for versal designs
-else ifeq ($(call get_template_name,$(TARGET)), versal)
-package: $(PKG_PRODUCTS)
-$(PKG_PRODUCTS): $(BUILD_PRODUCTS)
-	@echo 'Packaging PetaLinux project for $(TARGET)'
-	cd $(TARGET) && petalinux-package --boot --plm --psmfw --u-boot --dtb
-endif
-
 $(BUILD_PRODUCTS): $(PETL_CFG_DONE)
 	cd $(TARGET) && petalinux-build
 

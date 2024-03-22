@@ -175,6 +175,9 @@ proc custom_app_mods {platform_name app_name workspace_dir} {
   if {[str_contains $proc_instance "psu_cortex"] || [str_contains $platform_name "vcu118"]} {
     # Copy the XDMA application from common/src
     file copy "common/src/xdmapcie_rc_enumerate_example.c" ${workspace_dir}/${app_name}/src
+  } elseif {[str_contains $proc_instance "psv_cortexa72_"]} {
+    # Copy the XDMA application from common/src
+    file copy "common/src/xdmapcie_rc_enumerate_example.c" ${workspace_dir}/${app_name}/src
   } else {
     # Copy the AXI PCIe application from common/src
     file copy "common/src/pcie_enumerate.c" ${workspace_dir}/${app_name}/src
