@@ -24,6 +24,7 @@ vck190_fmcp1_target := versal 0 0
 vck190_fmcp2_target := versal 0 0
 vmk180_fmcp1_target := versal 0 0
 vmk180_fmcp2_target := versal 0 0
+vpk120_target := versal 0 0
 vcu118_target := microblaze 128 SPIx4
 vcu118_dual_target := microblaze 128 SPIx4
 zc706_hpc_target := zynq 0 0

@@ -17,7 +17,7 @@
 #*****************************************************************************************
 
 # Check the version of Vivado used
-set version_required "2022.1"
+set version_required "2024.1"
 set ver [lindex [split $::env(XILINX_VIVADO) /] end]
 if {![string equal $ver $version_required]} {
   puts "###############################"
@@ -49,6 +49,7 @@ dict set target_dict vck190_fmcp1 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vck190_fmcp2 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp1 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp2 { xilinx.com vmk180 { X4 X4 } versal }
+dict set target_dict vpk120 { xilinx.com vpk120 { X4 X4 } versal }
 dict set target_dict vcu118 { xilinx.com vcu118 { X4 } mb }
 dict set target_dict vcu118_dual { xilinx.com vcu118 { X4 X4 } mb }
 dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }
@@ -207,10 +208,10 @@ set_property -name "top" -value "${block_name}_wrapper" -objects $obj
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
-  create_run -name synth_1 -part ${fpga_part} -flow {Vivado Synthesis 2022} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
+  create_run -name synth_1 -part ${fpga_part} -flow {Vivado Synthesis 2024} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_1]
-  set_property flow "Vivado Synthesis 2022" [get_runs synth_1]
+  set_property flow "Vivado Synthesis 2024" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
 
@@ -219,10 +220,10 @@ current_run -synthesis [get_runs synth_1]
 
 # Create 'impl_1' run (if not found)
 if {[string equal [get_runs -quiet impl_1] ""]} {
-  create_run -name impl_1 -part ${fpga_part} -flow {Vivado Implementation 2022} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
+  create_run -name impl_1 -part ${fpga_part} -flow {Vivado Implementation 2024} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_1]
-  set_property flow "Vivado Implementation 2022" [get_runs impl_1]
+  set_property flow "Vivado Implementation 2024" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
 if {$bd_script == "versal"} {

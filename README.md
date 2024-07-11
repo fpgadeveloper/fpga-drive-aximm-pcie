@@ -15,16 +15,16 @@ Important links:
 
 ## Requirements
 
-This project is designed for version 2022.1 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
+This project is designed for version 2024.1 of the Xilinx tools (Vivado/Vitis/PetaLinux). 
 If you are using an older version of the Xilinx tools, then refer to the 
 [release tags](https://github.com/fpgadeveloper/fpga-drive-aximm-pcie/tags "releases")
 to find the version of this repository that matches your version of the tools.
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2022.1
-* Vitis 2022.1
-* PetaLinux Tools 2022.1
+* Vivado 2024.1
+* Vitis 2024.1
+* PetaLinux Tools 2024.1
 * [FPGA Drive FMC Gen4]
 * M.2 NVMe PCIe Solid State Drive
 * One of the supported carriers listed [here](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/)
@@ -53,6 +53,7 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 | [VCK190]            | `vck190_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
 | [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
 | [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
+| [VPK120]            | `vpk120`          | SSD1 & SSD2 | FMCP        | YES |
 | [VCU118]            | `vcu118`          | SSD1        | FMCP        | YES |
 | [VCU118]            | `vcu118_dual`     | SSD1 & SSD2 | FMCP        | YES |
 | [ZC706]             | `zc706_hpc`       | SSD1        | HPC         | YES |
@@ -76,8 +77,8 @@ git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
 Source Vivado and PetaLinux tools:
 
 ```
-source <path-to-petalinux>/2022.1/settings.sh
-source <path-to-vivado>/2022.1/settings64.sh
+source <path-to-petalinux>/2024.1/settings.sh
+source <path-to-vivado>/2024.1/settings64.sh
 ```
 
 Build all (Vivado project and PetaLinux):

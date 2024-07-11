@@ -1,4 +1,4 @@
-# Opsero Electronic Design Inc. 2023
+# Opsero Electronic Design Inc. 2024
 #
 # This Makefile can be used to build the Vitis workspace.
 
@@ -30,6 +30,7 @@ vck190_fmcp1_target := versal
 vck190_fmcp2_target := versal
 vmk180_fmcp1_target := versal
 vmk180_fmcp2_target := versal
+vpk120_target := versal
 vcu118_target := microblaze
 vcu118_dual_target := microblaze
 zc706_hpc_target := zynq
