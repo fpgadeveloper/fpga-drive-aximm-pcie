@@ -54,7 +54,7 @@ if {[str_contains $target "vck190"]} {
   set pcie_blk_locn { "X1Y0" "X1Y2" }
   set ref_board "VMK180"
 } elseif {[str_contains $target "vpk120"]} {
-  set pcie_blk_locn { "X0Y1" "X1Y0" }
+  set pcie_blk_locn { "X1Y0" "X0Y1" }
   set ref_board "VPK120"
 }
 
