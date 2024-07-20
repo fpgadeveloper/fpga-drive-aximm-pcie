@@ -1,0 +1,29 @@
+/include/ "system-conf.dtsi"
+/ {
+
+reserved-memory {
+        #address-cells = <2>;
+        #size-cells = <2>;
+        ranges;
+        pl_ddr: buffer@0
+        {
+        no-map;
+        reg = <0x08 0x00 0x00 0x80000000>;
+        };
+
+        lpddr_memory: buffer@1
+        {
+        no-map;
+        reg = <0x500 0x0 0x2 0x0>;
+        };
+
+};
+
+
+};
+
+&amba_pl {
+        zyxclmm_drm {
+                compatible = "xlnx,zocl-versal";
+        };
+};

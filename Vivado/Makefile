@@ -28,6 +28,7 @@ vc707_hpc2_target := 0
 vc709_hpc_target := 0
 vck190_fmcp1_target := 0
 vck190_fmcp2_target := 0
+vek280_target := 0
 vmk180_fmcp1_target := 0
 vmk180_fmcp2_target := 0
 vpk120_target := 0

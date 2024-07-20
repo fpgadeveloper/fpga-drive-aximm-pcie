@@ -22,6 +22,7 @@ pz_7030_target := zynq 0 0
 uzev_dual_target := zynqMP 0 0
 vck190_fmcp1_target := versal 0 0
 vck190_fmcp2_target := versal 0 0
+vek280_target := versal 0 0
 vmk180_fmcp1_target := versal 0 0
 vmk180_fmcp2_target := versal 0 0
 vpk120_target := versal 0 0
