@@ -98,15 +98,15 @@ CONFIG.S_AXI_DATA_WIDTH $data_width \
 CONFIG.M_AXI_DATA_WIDTH $data_width] [get_bd_cells axi_pcie_0]
 
 # Add port for PCIe bus
-create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pcie_7x_mgt
-connect_bd_intf_net [get_bd_intf_pins axi_pcie_0/pcie_7x_mgt] [get_bd_intf_ports pcie_7x_mgt]
+create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pcie_7x_mgt_0
+connect_bd_intf_net [get_bd_intf_pins axi_pcie_0/pcie_7x_mgt] [get_bd_intf_ports pcie_7x_mgt_0]
 
 # Add differential buffer for the 100MHz PCIe reference clock
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf ref_clk_buf
 set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDSGTE}] [get_bd_cells ref_clk_buf]
 connect_bd_net [get_bd_pins ref_clk_buf/IBUF_OUT] [get_bd_pins axi_pcie_0/REFCLK]
-create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk
-connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk]
+create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk_0
+connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk_0]
 
 # Add interrupt concat and connect interrupts
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat xlconcat_0
@@ -125,9 +125,9 @@ connect_bd_net [get_bd_pins axi_pcie_0/mmcm_lock] [get_bd_pins proc_sys_reset_0/
 
 # Create the perst port and connect it
 # Active HIGH PERST output for FMC designs (FMC form factor)
-create_bd_port -dir O -from 0 -to 0 -type rst perst
+create_bd_port -dir O -from 0 -to 0 -type rst perst_0
 connect_bd_net [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
-connect_bd_net [get_bd_pins /proc_sys_reset_0/peripheral_reset] [get_bd_ports perst]
+connect_bd_net [get_bd_pins /proc_sys_reset_0/peripheral_reset] [get_bd_ports perst_0]
 connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_pcie_0/axi_aresetn]
 
 # Add two peripheral interconnects (for GP0 and GP1) and a mem interconnect (for HP0)

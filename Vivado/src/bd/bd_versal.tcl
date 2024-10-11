@@ -52,19 +52,26 @@ set is_vmk180 [str_contains $target "vmk180"]
 set is_vek280 [str_contains $target "vek280"]
 set is_vpk120 [str_contains $target "vpk120"]
 
-# Board specific PCIe and GT LOCs
+# Board specific params
 if {$is_vck190} {
-  set pcie_blk_locn { "X1Y0" "X1Y2" }
   set ref_board "VCK190"
 } elseif {$is_vmk180} {
-  set pcie_blk_locn { "X1Y0" "X1Y2" }
   set ref_board "VMK180"
 } elseif {$is_vpk120} {
-  set pcie_blk_locn { "X1Y0" "X0Y1" }
   set ref_board "VPK120"
 } elseif {$is_vek280} {
-  set pcie_blk_locn { "X1Y1" "X1Y2" }
-  set ref_board "VEK280"
+  if {$target == "vek280_es_revb"} {
+    set ref_board "VEK280_ES_REVB"
+  } else {
+    set ref_board "VEK280"
+  }
+}
+
+# PCIe LOCs
+if {$dual_design} {
+  set pcie_blk_locn [list [dict get $gt_loc_dict $target 0 pcie] [dict get $gt_loc_dict $target 1 pcie]]
+} else {
+  set pcie_blk_locn [list [dict get $gt_loc_dict $target 0 pcie] ]
 }
 
 # BAR addresses and sizes

@@ -36,33 +36,30 @@ set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx
 # Possible targets
 dict set target_dict kc705_hpc { xilinx.com kc705 { X4 } mb }
 dict set target_dict kc705_lpc { xilinx.com kc705 { X1 } mb }
-dict set target_dict kcu105_hpc { xilinx.com kcu105 { X4 } mb }
-dict set target_dict kcu105_hpc_dual { xilinx.com kcu105 { X4 X4 } mb }
+dict set target_dict kcu105_hpc { xilinx.com kcu105 { X4 X4 } mb }
 dict set target_dict kcu105_lpc { xilinx.com kcu105 { X1 } mb }
 dict set target_dict pz_7015 { avnet.com picozed_7015_fmc2 { X1 } zynq }
 dict set target_dict pz_7030 { avnet.com picozed_7030_fmc2 { X1 } zynq }
-dict set target_dict uzev_dual { avnet.com ultrazed_7ev_cc { X4 X4 } zynqmp }
+dict set target_dict uzev { avnet.com ultrazed_7ev_cc { X4 X4 } zynqmp }
 dict set target_dict vc707_hpc1 { xilinx.com vc707 { X4 } mb }
 dict set target_dict vc707_hpc2 { xilinx.com vc707 { X4 } mb }
 dict set target_dict vc709_hpc { xilinx.com vc709 { X4 } mb }
 dict set target_dict vck190_fmcp1 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vck190_fmcp2 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vek280 { xilinx.com vek280 { X4 X4 } versal }
+dict set target_dict vek280_es_revb { xilinx.com vek280_es_revb { X4 X4 } versal }
 dict set target_dict vmk180_fmcp1 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp2 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vpk120 { xilinx.com vpk120 { X4 } versal }
-dict set target_dict vcu118 { xilinx.com vcu118 { X4 } mb }
-dict set target_dict vcu118_dual { xilinx.com vcu118 { X4 X4 } mb }
+dict set target_dict vcu118 { xilinx.com vcu118 { X4 X4 } mb }
 dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }
 dict set target_dict zc706_lpc { xilinx.com zc706 { X1 } zynq }
 dict set target_dict zcu104 { xilinx.com zcu104 { X1 } zynqmp }
-dict set target_dict zcu106_hpc0 { xilinx.com zcu106 { X4 } zynqmp }
-dict set target_dict zcu106_hpc0_dual { xilinx.com zcu106 { X4 X4 } zynqmp }
+dict set target_dict zcu106_hpc0 { xilinx.com zcu106 { X4 X4 } zynqmp }
 dict set target_dict zcu106_hpc1 { xilinx.com zcu106 { X1 } zynqmp }
-dict set target_dict zcu111 { xilinx.com zcu111 { X4 } zynqmp }
-dict set target_dict zcu111_dual { xilinx.com zcu111 { X4 X4 } zynqmp }
-dict set target_dict zcu208 { xilinx.com zcu208 { X4 } zynqmp }
-dict set target_dict zcu208_dual { xilinx.com zcu208 { X4 X4 } zynqmp }
+dict set target_dict zcu111 { xilinx.com zcu111 { X4 X4 } zynqmp }
+dict set target_dict zcu208 { xilinx.com zcu208 { X4 X4 } zynqmp }
+dict set target_dict zcu216 { xilinx.com zcu216 { X4 X4 } zynqmp }
 
 # Function to display the options and get user input
 proc selectTarget {target_dict} {
@@ -247,6 +244,9 @@ if { $target == "uzev_dual" } {
 current_run -implementation [get_runs impl_1]
 
 puts "INFO: Project created:${design_name}"
+
+# Create the GT LOC dictionary that is used by the block design script
+source $origin_dir/src/bd/gt_locs.tcl
 
 # Create block design
 source $origin_dir/src/bd/bd_${bd_script}.tcl

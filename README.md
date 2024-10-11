@@ -36,36 +36,57 @@ FMC connectors. The table below lists the target design name, the M2 ports suppo
 the FMC connector on which to connect the FPGA Drive FMC Gen4. Some of the target designs
 require a license to generate a bitstream with the AMD Xilinx tools.
 
+### FPGA designs
+
 | Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
 |---------------------|-------------------|-------------|-------------|-----|
 | [KC705]             | `kc705_hpc`       | SSD1        | HPC         | YES |
 | [KC705]             | `kc705_lpc`       | SSD1        | LPC         | YES |
-| [KCU105]            | `kcu105_hpc`      | SSD1        | HPC         | YES |
-| [KCU105]            | `kcu105_hpc_dual` | SSD1 & SSD2 | HPC         | YES |
+| [KCU105]            | `kcu105_hpc`      | SSD1 & SSD2 | HPC         | YES |
 | [KCU105]            | `kcu105_lpc`      | SSD1        | LPC         | YES |
-| PicoZed 7015        | `pz_7015`         | SSD1        | LPC         | NO  |
-| PicoZed 7030        | `pz_7030`         | SSD1        | LPC         | NO  |
-| [UltraZed-EV carrier] | `uzev_dual`       | SSD1 & SSD2 | HPC         | NO  |
 | [VC707]             | `vc707_hpc1`      | SSD1        | HPC1        | YES |
 | [VC707]             | `vc707_hpc2`      | SSD1        | HPC2        | YES |
 | [VC709]             | `vc709_hpc`       | SSD1        | HPC         | YES |
-| [VCK190]            | `vck190_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
-| [VCK190]            | `vck190_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
-| [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
-| [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
-| [VPK120]            | `vpk120`          | SSD1 & SSD2 | FMCP        | YES |
-| [VCU118]            | `vcu118`          | SSD1        | FMCP        | YES |
-| [VCU118]            | `vcu118_dual`     | SSD1 & SSD2 | FMCP        | YES |
+| [VCU118]            | `vcu118`          | SSD1 & SSD2 | FMCP        | YES |
+
+### Zynq-7000 designs
+
+| Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
+|---------------------|-------------------|-------------|-------------|-----|
+| PicoZed 7015        | `pz_7015`         | SSD1        | LPC         | NO  |
+| PicoZed 7030        | `pz_7030`         | SSD1        | LPC         | NO  |
 | [ZC706]             | `zc706_hpc`       | SSD1        | HPC         | YES |
 | [ZC706]             | `zc706_lpc`       | SSD1        | HPC         | YES |
+
+### Zynq UltraScale+ designs
+
+| Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
+|---------------------|-------------------|-------------|-------------|-----|
+| [UltraZed-EV carrier] | `uzev`          | SSD1 & SSD2 | HPC         | NO  |
 | [ZCU104]            | `zcu104`          | SSD1        | LPC         | NO  |
-| [ZCU106]            | `zcu106_hpc0`     | SSD1        | HPC0        | NO  |
-| [ZCU106]            | `zcu106_hpc0_dual`| SSD1 & SSD2 | HPC0        | NO  |
+| [ZCU106]            | `zcu106_hpc0`     | SSD1 & SSD2 | HPC0        | NO  |
 | [ZCU106]            | `zcu106_hpc1`     | SSD1        | HPC1        | NO  |
-| [ZCU111]            | `zcu111`          | SSD1        | FMCP        | YES |
-| [ZCU111]            | `zcu111_dual`     | SSD1 & SSD2 | FMCP        | YES |
-| [ZCU208]            | `zcu208`          | SSD1        | FMCP        | YES |
-| [ZCU208]            | `zcu208_dual`     | SSD1 & SSD2 | FMCP        | YES |
+| [ZCU111]            | `zcu111`          | SSD1 & SSD2 | FMCP        | YES |
+| [ZCU208]            | `zcu208`          | SSD1 & SSD2 | FMCP        | YES |
+| [ZCU216]            | `zcu216`          | SSD1 & SSD2 | FMCP        | YES |
+
+### Versal ACAP designs
+
+| Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
+|---------------------|-------------------|-------------|-------------|-----|
+| [VCK190]            | `vck190_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
+| [VCK190]            | `vck190_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
+| [VEK280]            | `vek280`          | SSD1 & SSD2 | FMCP1       | YES |
+| [VEK280] ES RevB    | `vek280`          | SSD1 & SSD2 | FMCP1       | YES |
+| [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
+| [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
+| [VPK120]            | `vpk120`          | SSD1 (note 1) | FMCP        | YES |
+
+Notes:
+
+1. The [VPK120] has enough GTs to interface with both SSDs, however it has only 2 integrated PCIe blocks
+   one of which is on the opposite side of the device to the GT quads, making routing a challenge.
+   For this reason the [VPK120] design supports only 1x SSD.
 
 ## Build instructions
 
@@ -85,7 +106,7 @@ Build all (Vivado project and PetaLinux):
 
 ```
 cd fpga-drive-aximm-pcie/PetaLinux
-make petalinux TARGET=uzev_dual
+make petalinux TARGET=uzev
 ```
 
 More comprehensive build instructions can be found in the user guide:
@@ -116,6 +137,8 @@ updates on the awesome projects we work on.
 [VC709]: https://www.xilinx.com/vc709
 [VCK190]: https://www.xilinx.com/vck190
 [VMK180]: https://www.xilinx.com/vmk180
+[VEK280]: https://www.xilinx.com/vek280
+[VPK120]: https://www.xilinx.com/vpk120
 [VCU108]: https://www.xilinx.com/vcu108
 [VCU118]: https://www.xilinx.com/vcu118
 [KCU105]: https://www.xilinx.com/kcu105
@@ -123,6 +146,7 @@ updates on the awesome projects we work on.
 [ZC706]: https://www.xilinx.com/zc706
 [ZCU111]: https://www.xilinx.com/zcu111
 [ZCU208]: https://www.xilinx.com/zcu208
+[ZCU216]: https://www.xilinx.com/zcu216
 [PicoZed FMC Carrier v2]: https://www.avnet.com/wps/portal/silica/products/product-highlights/2016/xilinx-picozed-fmc-carrier-card-v2/
 [UltraZed EG PCIe Carrier]: https://www.xilinx.com/products/boards-and-kits/1-mb9rqb.html
 [UltraZed-EV carrier]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html

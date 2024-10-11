@@ -28,27 +28,7 @@ users are advised to use a Linux virtual machine to build the PetaLinux projects
    source <vivado-install-dir>/settings64.sh
    ```
 4. Build the Vivado and PetaLinux project for your specific target platform by running the following
-   commands and replacing `<target>` with one of the following: 
-   `kc705_hpc`, 
-   `kc705_lpc`, 
-   `kcu105_hpc`, 
-   `kcu105_hpc_dual`, 
-   `kcu105_lpc`, 
-   `pz_7015`, 
-   `pz_7030`, 
-   `uzev_dual`, 
-   `vcu118`, 
-   `vcu118_dual`, 
-   `zc706_hpc`, 
-   `zc706_lpc`, 
-   `zcu104`, 
-   `zcu106_hpc0`, 
-   `zcu106_hpc0_dual`, 
-   `zcu106_hpc1`, 
-   `zcu111`, 
-   `zcu111_dual`, 
-   `zcu208`, 
-   `zcu208_dual`
+   commands and replacing `<target>` with one of the target design labels found in the build instructions.
    ```
    cd PetaLinux
    make petalinux TARGET=<target>
@@ -267,7 +247,7 @@ Find the modification here:
 
 ## Known Issues
 
-### KCU105 Dual design fails to boot when one or both SSDs are not connected
+### KCU105 HPC design fails to boot when one or both SSDs are not connected
 
 In the case where only one or neither SSD is connected, the PetaLinux boot freezes during the PCIe
 enumeration. For example, if we connect SSD1 but not SSD2, PetaLinux boot stops after the following

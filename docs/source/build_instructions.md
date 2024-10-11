@@ -29,12 +29,11 @@ the FMC connector on which to connect the FPGA Drive FMC Gen4.
 |---------------------|-------------------|-------------|-------------|-----|
 | [KC705]             | `kc705_hpc`       | SSD1        | HPC         | YES |
 | [KC705]             | `kc705_lpc`       | SSD1        | LPC         | YES |
-| [KCU105]            | `kcu105_hpc`      | SSD1        | HPC         | YES |
-| [KCU105]            | `kcu105_hpc_dual` | SSD1 & SSD2 | HPC         | YES |
+| [KCU105]            | `kcu105_hpc`      | SSD1 & SSD2 | HPC         | YES |
 | [KCU105]            | `kcu105_lpc`      | SSD1        | LPC         | YES |
 | PicoZed 7015        | `pz_7015`         | SSD1        | LPC         | NO  |
 | PicoZed 7030        | `pz_7030`         | SSD1        | LPC         | NO  |
-| UltraZed-EV carrier | `uzev_dual`       | SSD1 & SSD2 | HPC         | NO  |
+| UltraZed-EV carrier | `uzev`            | SSD1 & SSD2 | HPC         | NO  |
 | [VC707]             | `vc707_hpc1`      | SSD1        | HPC1        | YES |
 | [VC707]             | `vc707_hpc2`      | SSD1        | HPC2        | YES |
 | [VC709]             | `vc709_hpc`       | SSD1        | HPC         | YES |
@@ -42,18 +41,14 @@ the FMC connector on which to connect the FPGA Drive FMC Gen4.
 | [VCK190]            | `vck190_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
 | [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
 | [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
-| [VCU118]            | `vcu118`          | SSD1        | FMCP        | YES |
-| [VCU118]            | `vcu118_dual`     | SSD1 & SSD2 | FMCP        | YES |
+| [VCU118]            | `vcu118`          | SSD1 & SSD2 | FMCP        | YES |
 | [ZC706]             | `zc706_hpc`       | SSD1        | HPC         | YES |
 | [ZC706]             | `zc706_lpc`       | SSD1        | HPC         | YES |
 | [ZCU104]            | `zcu104`          | SSD1        | LPC         | NO  |
-| [ZCU106]            | `zcu106_hpc0`     | SSD1        | HPC0        | NO  |
-| [ZCU106]            | `zcu106_hpc0_dual`| SSD1 & SSD2 | HPC0        | NO  |
+| [ZCU106]            | `zcu106_hpc0`     | SSD1 & SSD2 | HPC0        | NO  |
 | [ZCU106]            | `zcu106_hpc1`     | SSD1        | HPC1        | NO  |
-| [ZCU111]            | `zcu111`          | SSD1        | FMCP        | YES |
-| [ZCU111]            | `zcu111_dual`     | SSD1 & SSD2 | FMCP        | YES |
-| [ZCU208]            | `zcu208`          | SSD1        | FMCP        | YES |
-| [ZCU208]            | `zcu208_dual`     | SSD1 & SSD2 | FMCP        | YES |
+| [ZCU111]            | `zcu111`          | SSD1 & SSD2 | FMCP        | YES |
+| [ZCU208]            | `zcu208`          | SSD1 & SSD2 | FMCP        | YES |
 
 ## Windows users
 
@@ -114,34 +109,7 @@ to build the Vivado and PetaLinux projects with a single command.
    ```
    make project TARGET=<target>
    ```
-   Valid targets are: 
-   `kc705_hpc`, 
-   `kc705_lpc`, 
-   `kcu105_hpc`, 
-   `kcu105_hpc_dual`, 
-   `kcu105_lpc`, 
-   `pz_7015`, 
-   `pz_7030`, 
-   `uzev_dual`, 
-   `vc707_hpc1`,
-   `vc707_hpc2`,
-   `vc709_hpc`,
-   `vck190_fmcp1`,
-   `vck190_fmcp2`,
-   `vmk180_fmcp1`,
-   `vmk180_fmcp2`,
-   `vcu118`, 
-   `vcu118_dual`, 
-   `zc706_hpc`, 
-   `zc706_lpc`, 
-   `zcu104`, 
-   `zcu106_hpc0`, 
-   `zcu106_hpc0_dual`, 
-   `zcu106_hpc1`, 
-   `zcu111`, 
-   `zcu111_dual`, 
-   `zcu208`, and 
-   `zcu208_dual`.
+   Valid target labels are listed in the table of target designs above.
    That will create the Vivado project and block design without generating a bitstream or exporting to XSA.
 4. Open the generated project in the Vivado GUI and click **Generate Bitstream**. Once the build is
    complete, select **File->Export->Export Hardware** and be sure to tick **Include bitstream** and use
@@ -191,31 +159,7 @@ design if it has not already been done.
    cd PetaLinux
    make petalinux TARGET=<target>
    ```
-   Valid targets are: 
-   `kc705_hpc`, 
-   `kc705_lpc`, 
-   `kcu105_hpc`, 
-   `kcu105_hpc_dual`, 
-   `kcu105_lpc`, 
-   `pz_7015`, 
-   `pz_7030`, 
-   `uzev_dual`, 
-   `vck190_fmcp1`,
-   `vck190_fmcp2`,
-   `vmk180_fmcp1`,
-   `vmk180_fmcp2`,
-   `vcu118`, 
-   `vcu118_dual`, 
-   `zc706_hpc`, 
-   `zc706_lpc`, 
-   `zcu104`, 
-   `zcu106_hpc0`, 
-   `zcu106_hpc0_dual`, 
-   `zcu106_hpc1`, 
-   `zcu111`, 
-   `zcu111_dual`, 
-   `zcu208`, and 
-   `zcu208_dual`.
+   Valid targets are listed in the table of target designs above.
    Note that if you skipped the Vivado build steps above, the Makefile will first generate and
    build the Vivado project, and then build the PetaLinux project.
 

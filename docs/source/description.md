@@ -36,18 +36,8 @@ the older version FPGA Drive FMC (Rev-B) with only one M.2 connector, you will o
 ![FPGA Drive FMC with two SSDs loaded](images/fpga-drive-fmc-dual-load.jpg)
 
 The target designs that are intended to be used with two SSDs can be loaded as shown
-in the above image. The dual designs may not function as expected if only one SSD is loaded.
+in the above image.
 
-At the moment there are dual designs for these carriers:
-
-* [KCU105]
-* [ZCU106]
-* [ZCU111]
-* [ZCU208]
-* Avnet UltraZed-EV Starter Kit
-* [VCK190]
-* [VMK180]
-* [VCU118]
 
 [AC701]: https://www.xilinx.com/ac701
 [KC705]: https://www.xilinx.com/kc705

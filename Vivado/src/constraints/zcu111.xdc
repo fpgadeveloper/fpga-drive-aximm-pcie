@@ -1,30 +1,78 @@
-# These constraints apply to the ZCU111 FMC+ with FPGA Drive FMC using SSD1 only
-# ------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+# Constraints for Opsero FPGA Drive FMC Gen4 ref design for ZCU111 using 2x SSDs
+#----------------------------------------------------------------------------------------
 
-# SSD1 PCI Express reset LA00_P_CC (perst_0) - IOSTANDARD determined by VADJ
-set_property PACKAGE_PIN AP9 [get_ports {perst_0[0]}]
+# SSD1 PCI Express reset (perst_0)
+set_property PACKAGE_PIN AP9 [get_ports {perst_0[0]}]; # LA00_CC_P
 set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]
 
-# PEDET_0 - LA00_N_CC - F16 - IOSTANDARD determined by VADJ
+# SSD2 PCI Express reset (perst_1)
+set_property PACKAGE_PIN AG12 [get_ports {perst_1[0]}]; # LA04_P
+set_property IOSTANDARD LVCMOS18 [get_ports {perst_1[0]}]
 
-# Disable signal for 3.3V power supply for SSD2 - LA07_P (disable_ssd2_pwr)
-set_property PACKAGE_PIN AK13 [get_ports disable_ssd2_pwr]
+# SSD1 PE Detect (pedet_0, not connected in the design)
+# set_property PACKAGE_PIN AR9 [get_ports {pedet_0[0]}]; # LA00_CC_N
+# set_property IOSTANDARD LVCMOS18 [get_ports {pedet_0[0]}]
+
+# SSD2 PE Detect (pedet_1, not connected in the design)
+# set_property PACKAGE_PIN AH12 [get_ports {pedet_1[0]}]; # LA04_N
+# set_property IOSTANDARD LVCMOS18 [get_ports {pedet_1[0]}]
+
+# Disable signal for 3.3V power supply for SSD2 (disable_ssd2_pwr)
+set_property PACKAGE_PIN AK13 [get_ports disable_ssd2_pwr]; # LA07_P
 set_property IOSTANDARD LVCMOS18 [get_ports disable_ssd2_pwr]
 
-# PCI Express reference clock 100MHz
-# IOSTANDARD for GT reference clock does not need to be specified
-# SSD1 ref clock connects to MGT bank 129, CLK0 input
-set_property PACKAGE_PIN W33 [get_ports {ref_clk_0_clk_p[0]}]
-set_property PACKAGE_PIN W34 [get_ports {ref_clk_0_clk_n[0]}]
+##############################
+# PCIe reference clock 100MHz
+##############################
+
+# SSD1 ref clock
+set_property PACKAGE_PIN W33 [get_ports {ref_clk_0_clk_p[0]}]; # GBTCLK0_M2C_P
+set_property PACKAGE_PIN W34 [get_ports {ref_clk_0_clk_n[0]}]; # GBTCLK0_M2C_N
 create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
 
-# MGT locations
-# SSD1 FMCP_DP0-3 (PCIe lanes 0-3) are connected to MGT bank 129 (X0Y8-X0Y11) in this order: 0->0, 1->1, 2->2, 3->3
-set_property LOC GTYE4_CHANNEL_X0Y8 [get_cells {*_i/xdma_0/inst/pcie4_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_0_0_pcie4_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_0_0_pcie4_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[2].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y9 [get_cells {*_i/xdma_0/inst/pcie4_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_0_0_pcie4_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_0_0_pcie4_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[2].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y10 [get_cells {*_i/xdma_0/inst/pcie4_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_0_0_pcie4_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_0_0_pcie4_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[2].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y11 [get_cells {*_i/xdma_0/inst/pcie4_ip_i/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/*_xdma_0_0_pcie4_ip_gt_i/inst/gen_gtwizard_gtye4_top.*_xdma_0_0_pcie4_ip_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[2].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
+# SSD2 ref clock
+set_property PACKAGE_PIN U33 [get_ports {ref_clk_1_clk_p[0]}]; # GBTCLK1_M2C_P
+set_property PACKAGE_PIN U34 [get_ports {ref_clk_1_clk_n[0]}]; # GBTCLK1_M2C_N
+create_clock -period 10.000 -name ref_clk_1_clk_p -waveform {0.000 5.000} [get_ports ref_clk_1_clk_p]
 
-# ZCU111 FMC+ transceivers for SSD1 are best aligned with PCIE_X0Y0
-set_property LOC PCIE40E4_X0Y0 [get_cells *_i/xdma_0/inst/pcie4_ip_i/inst/*_pcie_4_0_pipe_inst/pcie_4_0_e4_inst]
+############################
+# SSD1 Gigabit transceivers
+############################
+
+set_property LOC GTYE4_CHANNEL_X0Y8 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_0*channel_inst[0]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y9 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_0*channel_inst[1]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y10 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_0*channel_inst[2]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y11 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_0*channel_inst[3]*" }]
+
+############################
+# SSD2 Gigabit transceivers
+############################
+
+set_property LOC GTYE4_CHANNEL_X0Y12 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_1*channel_inst[0]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y13 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_1*channel_inst[1]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y14 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_1*channel_inst[2]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y15 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*xdma_1*channel_inst[3]*" }]
+
+############################
+# SSD1 PCIe block
+############################
+
+set_property LOC PCIE40E4_X0Y0 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.PCIE.* && NAME =~ "*xdma_0*" }]
+
+############################
+# SSD2 PCIe block
+############################
+
+set_property LOC PCIE40E4_X0Y1 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.PCIE.* && NAME =~ "*xdma_1*" }]
+
+# The following USER_CLOCK_ROOT constraints correct a timing issue that 
+# seems to affect the RFSoC boards.
+# This forum post led to the solution:
+# https://support.xilinx.com/s/question/0D52E00006nAusUSAS/what-can-i-do-to-fix-a-max-skew-violation-on-the-pcie-pipeclk-port-i-consistently-have-pulse-width-violations-that-are-related-to-this-clock-the-rest-of-the-design-meets-timing?language=en_US
+# We use the USER_CLOCK_ROOT property to assign the output nets to the same CLOCK_ROOT.
+set_property USER_CLOCK_ROOT X0Y4 [get_nets -hier -filter { NAME =~ "*xdma_0*/phy_clk_i/*_CORECLK"}]
+set_property USER_CLOCK_ROOT X0Y4 [get_nets -hier -filter { NAME =~ "*xdma_0*/phy_clk_i/CLK_PCLK2_GT"}]
+set_property USER_CLOCK_ROOT X0Y6 [get_nets -hier -filter { NAME =~ "*xdma_1*/phy_clk_i/*_CORECLK"}]
+set_property USER_CLOCK_ROOT X0Y6 [get_nets -hier -filter { NAME =~ "*xdma_1*/phy_clk_i/CLK_PCLK2_GT"}]
 

@@ -57,48 +57,28 @@ if {$board_name == "kc705"} {
 } elseif {$board_name == "vc709"} {
   set ddr_name "ddr3_sdram_socket_j1"
   set pcie_ip "axi_pcie3"
-  set pcie_loc {X0Y2}
   set baddr {0x10000000}
   set haddr {0x1FFFFFFF}
   set axi2pci {0x0000000070000000}
   set barsize {256M}
 } elseif {$target == "kcu105_hpc"} {
   set pcie_ip "axi_pcie3"
-  set pcie_loc {X0Y2}
-  set baddr {0x10000000}
-  set haddr {0x1FFFFFFF}
-  set axi2pci {0x0000000060000000}
-  set barsize {512M}
-} elseif {$target == "kcu105_hpc_dual"} {
-  set pcie_ip "axi_pcie3"
-  set pcie_loc {X0Y2 X0Y1}
   set baddr {0x10000000 0x20000000}
   set haddr {0x1FFFFFFF 0x2FFFFFFF}
   set axi2pci {0x0000000060000000 0x0000000070000000}
   set barsize {256M 256M}
 } elseif {$target == "kcu105_lpc"} {
   set pcie_ip "axi_pcie3"
-  set pcie_loc {X0Y1}
   set baddr {0x10000000}
   set haddr {0x1FFFFFFF}
   set axi2pci {0x0000000060000000}
   set barsize {512M}
-} elseif {$target == "vcu118_dual"} {
+} elseif {$target == "vcu118"} {
   set pcie_ip "xdma"
-  set pcie_loc {X0Y1 X0Y3}
-  set select_quad {"GTY_Quad_121" "GTY_Quad_126"}
   set baddr {0x10000000 0x20000000}
   set haddr {0x1FFFFFFF 0x2FFFFFFF}
   set axi2pci {0x0000000060000000 0x0000000070000000}
   set barsize {256M 256M}
-} elseif {$target == "vcu118"} {
-  set pcie_ip "xdma"
-  set pcie_loc {X0Y1}
-  set select_quad "GTY_Quad_121"
-  set baddr {0x10000000}
-  set haddr {0x1FFFFFFF}
-  set axi2pci {0x0000000060000000}
-  set barsize {512M}
 }
 
 # Create the list of interrupts
@@ -186,6 +166,9 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
   # Add the AXI PCIe interrupt to the list of interrupts
   append ints "$ip_name/interrupt_out "
   
+  # Get the PCIe block LOC
+  set pcie_blk_locn [dict get $gt_loc_dict $target $i pcie]
+
   # Configure AXI PCIe IP
   if {$pcie_ip == "axi_pcie"} {
     set_property -dict [list CONFIG.INCLUDE_RC {Root_Port_of_PCI_Express_Root_Complex} \
@@ -203,7 +186,10 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     CONFIG.BASEADDR [lindex $baddr $i] \
     CONFIG.HIGHADDR [lindex $haddr $i] \
     CONFIG.S_AXI_DATA_WIDTH {128} \
-    CONFIG.M_AXI_DATA_WIDTH {128}] [get_bd_cells $ip_name]
+    CONFIG.M_AXI_DATA_WIDTH {128} \
+    CONFIG.PCIE_BLK_LOCN $pcie_blk_locn \
+    CONFIG.XLNX_REF_BOARD {None} \
+    ] [get_bd_cells $ip_name]
 
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master "/$ip_name/axi_aclk_out (62 MHz)" Clk_slave {/mig_0/ui_clk (200 MHz)} Clk_xbar {/mig_0/ui_clk (200 MHz)} Master "/$ip_name/M_AXI" Slave {/mig_0/S_AXI} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins $ip_name/M_AXI]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_0/ui_addn_clk_0 (100 MHz)} Clk_slave "/$ip_name/axi_aclk_out (62 MHz)" Clk_xbar {/mig_0/ui_clk (200 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI]
@@ -224,12 +210,13 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     #    
     # PCIe AXI CTRL interface base address (BASEADDR and HIGHADDR) needs to be manually set since Vivado 2017.1
     # See https://forums.xilinx.com/t5/Embedded-Linux/Vivado-2017-1-not-setting-correct-BASEADDR-for-AXI-Bridge-for/m-p/769279#M19963
+    
     set_property -dict [list CONFIG.AXIBAR_NUM {1} \
     CONFIG.BASEADDR [lindex $baddr $i] \
     CONFIG.HIGHADDR [lindex $haddr $i] \
     CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
     CONFIG.mode_selection {Advanced} \
-    CONFIG.pcie_blk_locn [lindex $pcie_loc $i] \
+    CONFIG.pcie_blk_locn $pcie_blk_locn \
     CONFIG.pl_link_cap_max_link_width [lindex $num_lanes $i] \
     CONFIG.sys_reset_polarity {ACTIVE_LOW} \
     CONFIG.pf0_link_status_slot_clock_config {true} \
@@ -257,6 +244,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave "/$ip_name/axi_aclk (125 MHz)" Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Periph)} Slave "/$ip_name/S_AXI_CTL" ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins $ip_name/S_AXI_CTL]
     
   } elseif {$pcie_ip == "xdma"} {
+    set select_quad [dict get $gt_loc_dict $target $i quad]
     set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
     CONFIG.mode_selection {Advanced} \
     CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
@@ -274,9 +262,9 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     CONFIG.pf0_class_code_interface {00} \
     CONFIG.pf0_class_code {060400} \
     CONFIG.xdma_axilite_slave {true} \
-    CONFIG.pcie_blk_locn [lindex $pcie_loc $i] \
+    CONFIG.pcie_blk_locn $pcie_blk_locn \
     CONFIG.en_gt_selection {true} \
-    CONFIG.select_quad [lindex $select_quad $i] \
+    CONFIG.select_quad $select_quad \
     CONFIG.INS_LOSS_NYQ {5} \
     CONFIG.plltype {QPLL1} \
     CONFIG.ins_loss_profile {Chip-to-Chip} \
@@ -352,7 +340,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     CONFIG.HIGHADDR [lindex $haddr $i] \
     CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
     CONFIG.mode_selection {Advanced} \
-    CONFIG.pcie_blk_locn [lindex $pcie_loc $i] \
+    CONFIG.pcie_blk_locn $pcie_blk_locn \
     CONFIG.pl_link_cap_max_link_width [lindex $num_lanes $i] \
     CONFIG.pf0_link_status_slot_clock_config {true} \
     CONFIG.ins_loss_profile {Chip-to-Chip} \
@@ -460,12 +448,14 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
   }
 }
 
-# Constant LOW to enable 3.3V power supply of SSD2 and clock source (dual designs only)
+# Constant LOW to enable 3.3V power supply of SSD2 and clock source
+set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+create_bd_port -dir O disable_ssd2_pwr
+connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 if {[llength $num_lanes] > 1} {
-  set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
   set_property -dict [list CONFIG.CONST_VAL {0}] $const_dis_ssd2_pwr
-  create_bd_port -dir O disable_ssd2_pwr
-  connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
+} else {
+  set_property -dict [list CONFIG.CONST_VAL {1}] $const_dis_ssd2_pwr
 }
 
 # Add UART

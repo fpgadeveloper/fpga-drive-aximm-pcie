@@ -19,6 +19,7 @@ Vivado/zcu104*/
 Vivado/zcu106*/
 Vivado/zcu111*/
 Vivado/zcu208*/
+Vivado/zcu216*/
 Vitis/.*/
 Vitis/.*
 Vitis/boot/
@@ -38,6 +39,7 @@ PetaLinux/zcu104*/
 PetaLinux/zcu106*/
 PetaLinux/zcu111*/
 PetaLinux/zcu208*/
+PetaLinux/zcu216*/
 docs/build/
 bootimages/
 PetaLinux/offline.txt

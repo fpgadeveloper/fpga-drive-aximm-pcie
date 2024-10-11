@@ -1,4 +1,72 @@
-#GPIO LEDs
+#----------------------------------------------------------------------------------------
+# Constraints for Opsero FPGA Drive FMC Gen4 ref design for VCU118-FMCP using 2x SSDs
+#----------------------------------------------------------------------------------------
+
+# SSD1 PCI Express reset (perst_0)
+set_property PACKAGE_PIN AL35 [get_ports {perst_0[0]}]; # LA00_CC_P
+set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]
+
+# SSD2 PCI Express reset (perst_1)
+set_property PACKAGE_PIN AR37 [get_ports {perst_1[0]}]; # LA04_P
+set_property IOSTANDARD LVCMOS18 [get_ports {perst_1[0]}]
+
+# SSD1 PE Detect (pedet_0, not connected in the design)
+# set_property PACKAGE_PIN AL36 [get_ports {pedet_0[0]}]; # LA00_CC_N
+# set_property IOSTANDARD LVCMOS18 [get_ports {pedet_0[0]}]
+
+# SSD2 PE Detect (pedet_1, not connected in the design)
+# set_property PACKAGE_PIN AT37 [get_ports {pedet_1[0]}]; # LA04_N
+# set_property IOSTANDARD LVCMOS18 [get_ports {pedet_1[0]}]
+
+# Disable signal for 3.3V power supply for SSD2 (disable_ssd2_pwr)
+set_property PACKAGE_PIN AP36 [get_ports disable_ssd2_pwr]; # LA07_P
+set_property IOSTANDARD LVCMOS18 [get_ports disable_ssd2_pwr]
+
+##############################
+# PCIe reference clock 100MHz
+##############################
+
+# SSD1 ref clock
+set_property PACKAGE_PIN AK38 [get_ports {ref_clk_0_clk_p[0]}]; # GBTCLK0_M2C_P
+set_property PACKAGE_PIN AK39 [get_ports {ref_clk_0_clk_n[0]}]; # GBTCLK0_M2C_N
+create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
+
+# SSD2 ref clock
+set_property PACKAGE_PIN T38 [get_ports {ref_clk_1_clk_p[0]}]; # GBTCLK1_M2C_P
+set_property PACKAGE_PIN T39 [get_ports {ref_clk_1_clk_n[0]}]; # GBTCLK1_M2C_N
+create_clock -period 10.000 -name ref_clk_1_clk_p -waveform {0.000 5.000} [get_ports ref_clk_1_clk_p]
+
+############################
+# SSD1 Gigabit transceivers
+############################
+
+set_property LOC GTYE4_CHANNEL_X0Y8 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_0*channel_inst[0]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y9 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_0*channel_inst[1]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y10 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_0*channel_inst[2]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y11 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_0*channel_inst[3]*" }]
+
+############################
+# SSD2 Gigabit transceivers
+############################
+
+set_property LOC GTYE4_CHANNEL_X0Y28 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[0]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y29 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[1]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y30 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[2]*" }]
+set_property LOC GTYE4_CHANNEL_X0Y31 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTYE4_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[3]*" }]
+
+############################
+# SSD1 PCIe block
+############################
+
+set_property LOC PCIE40E4_X0Y1 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.PCIE.* && NAME =~ "*axi_pcie_0*" }]
+
+############################
+# SSD2 PCIe block
+############################
+
+set_property LOC PCIE40E4_X0Y3 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.PCIE.* && NAME =~ "*axi_pcie_1*" }]
+
+# GPIO LEDs
 set_property PACKAGE_PIN AT32 [get_ports init_calib_complete]
 set_property IOSTANDARD LVCMOS12 [get_ports init_calib_complete]
 set_property PACKAGE_PIN AV34 [get_ports user_link_up_0]
@@ -15,27 +83,6 @@ set_property IOSTANDARD LVCMOS12 [get_ports user_link_up_0]
 #set_property IOSTANDARD LVCMOS12 [get_ports gpio_led_6]
 #set_property PACKAGE_PIN BA37 [get_ports gpio_led_7]
 #set_property IOSTANDARD LVCMOS12 [get_ports gpio_led_7]
-
-# PCI Express reset (perst) - IOSTANDARD determined by VADJ which is fixed to 1.8V on VCU118
-set_property PACKAGE_PIN AL35 [get_ports {perst_0[0]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {perst_0[0]}]
-
-# PEDET - AL36 - IOSTANDARD determined by VADJ which is fixed to 1.8V on VCU118
-
-# PCI Express reference clock 100MHz
-# IOSTANDARD for GT reference clock does not need to be specified
-set_property PACKAGE_PIN AK38 [get_ports {ref_clk_0_clk_p[0]}]
-set_property PACKAGE_PIN AK39 [get_ports {ref_clk_0_clk_n[0]}]
-create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
-
-# MGT locations (SSD1: Bank 121 X0Y8-X0Y11, SSD2: Bank 126 X0Y28-X0Y31)
-set_property LOC GTYE4_CHANNEL_X0Y8 [get_cells -hier -filter {NAME =~ *_i/axi_pcie_0/*/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y9 [get_cells -hier -filter {NAME =~ *_i/axi_pcie_0/*/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y10 [get_cells -hier -filter {NAME =~ *_i/axi_pcie_0/*/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
-set_property LOC GTYE4_CHANNEL_X0Y11 [get_cells -hier -filter {NAME =~ *_i/axi_pcie_0/*/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
-
-# VCU118 FMCP transceivers for SSD1 are best aligned with PCIE_X0Y1
-set_property LOC PCIE40E4_X0Y1 [get_cells -hier -filter {NAME =~ *_i/axi_pcie_0/*/pcie_4_0_e4_inst}]
 
 # Configuration via Quad SPI flash for VCU118
 set_property CONFIG_MODE SPIx4 [current_design]

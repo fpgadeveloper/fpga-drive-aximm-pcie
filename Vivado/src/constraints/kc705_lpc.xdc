@@ -1,47 +1,51 @@
-#GPIO LEDs
+#----------------------------------------------------------------------------------------
+# Constraints for Opsero FPGA Drive FMC Gen4 ref design for KC705-LPC using 1x SSD
+#----------------------------------------------------------------------------------------
+
+# SSD1 PCI Express reset (perst_0)
+set_property PACKAGE_PIN AD23 [get_ports {perst_0[0]}]; # LA00_CC_P
+set_property IOSTANDARD LVCMOS25 [get_ports {perst_0[0]}]
+
+# SSD1 PE Detect (pedet_0, not connected in the design)
+# set_property PACKAGE_PIN AE24 [get_ports {pedet_0[0]}]; # LA00_CC_N
+# set_property IOSTANDARD LVCMOS25 [get_ports {pedet_0[0]}]
+
+# Disable signal for 3.3V power supply for SSD2 (disable_ssd2_pwr)
+set_property PACKAGE_PIN AG25 [get_ports disable_ssd2_pwr]; # LA07_P
+set_property IOSTANDARD LVCMOS25 [get_ports disable_ssd2_pwr]
+
+##############################
+# PCIe reference clock 100MHz
+##############################
+
+# SSD1 ref clock
+set_property PACKAGE_PIN N8 [get_ports {ref_clk_0_clk_p[0]}]; # GBTCLK0_M2C_P
+set_property PACKAGE_PIN N7 [get_ports {ref_clk_0_clk_n[0]}]; # GBTCLK0_M2C_N
+create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
+
+############################
+# SSD1 Gigabit transceivers
+############################
+
+set_property LOC GTXE2_CHANNEL_X0Y11 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ IO.GT.GTXE2_CHANNEL && NAME =~ "*axi_pcie_0*pipe_lane[0]*" }]
+
+############################
+# SSD1 PCIe block
+############################
+
+set_property LOC PCIE_X0Y0 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ HARD_IP.pcie.* && NAME =~ "*axi_pcie_0*" }]
+
+# System reset (CPU_RESET)
+set_property PACKAGE_PIN AB7 [get_ports reset]
+set_property IOSTANDARD LVCMOS15 [get_ports reset]
+
+# GPIO LEDs
 set_property PACKAGE_PIN AB8 [get_ports mmcm_lock]
 set_property IOSTANDARD LVCMOS15 [get_ports mmcm_lock]
 set_property PACKAGE_PIN AA8 [get_ports init_calib_complete]
 set_property IOSTANDARD LVCMOS15 [get_ports init_calib_complete]
 set_property PACKAGE_PIN AC9 [get_ports user_link_up_0]
 set_property IOSTANDARD LVCMOS15 [get_ports user_link_up_0]
-
-# System clock 200MHz
-set_property PACKAGE_PIN AD12 [get_ports sys_diff_clock_clk_p]
-set_property PACKAGE_PIN AD11 [get_ports sys_diff_clock_clk_n]
-set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_p]
-set_property IOSTANDARD LVDS [get_ports sys_diff_clock_clk_n]
-
-# PCI Express reset (perst) - IOSTANDARD determined by VADJ
-set_property PACKAGE_PIN AD23 [get_ports perst_0[0]]
-set_property IOSTANDARD LVCMOS25 [get_ports perst_0[0]]
-
-# PCI Express reference clock 100MHz
-# IOSTANDARD for GT reference clock does not need to be specified
-#set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports {ref_clk_0_clk_p[0]}]
-set_property PACKAGE_PIN N8 [get_ports {ref_clk_0_clk_p[0]}]
-set_property PACKAGE_PIN N7 [get_ports {ref_clk_0_clk_n[0]}]
-create_clock -period 10.000 -name ref_clk_0_clk_p -waveform {0.000 5.000} [get_ports ref_clk_0_clk_p]
-
-# System reset (CPU_RESET)
-set_property PACKAGE_PIN AB7 [get_ports reset]
-set_property IOSTANDARD LVCMOS15 [get_ports reset]
-
-# MGT locations
-set_property BEL GTXE2_CHANNEL [get_cells {*_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.gt_ges.gt_top_i/pipe_wrapper_i/pipe_lane[0].gt_wrapper_i/gtx_channel.gtxe2_channel_i}]
-set_property LOC GTXE2_CHANNEL_X0Y11 [get_cells {*_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.gt_ges.gt_top_i/pipe_wrapper_i/pipe_lane[0].gt_wrapper_i/gtx_channel.gtxe2_channel_i}]
-set_property PACKAGE_PIN F5 [get_ports {pci_exp_0_rxn[0]}]
-set_property PACKAGE_PIN F6 [get_ports {pci_exp_0_rxp[0]}]
-set_property PACKAGE_PIN F1 [get_ports {pci_exp_0_txn[0]}]
-set_property PACKAGE_PIN F2 [get_ports {pci_exp_0_txp[0]}]
-
-# PCIe integrated block
-set_property LOC PCIE_X0Y0 [get_cells *_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.pcie_top_i/pcie_7x_i/pcie_block_i]
-
-set_false_path -to [get_pins *_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.gt_ges.gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/S*]
-
-set_property BEL GTXE2_COMMON [get_cells {*_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.gt_ges.gt_top_i/pipe_wrapper_i/pipe_lane[0].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i/qpll_wrapper_i/gtx_common.gtxe2_common_i}]
-set_property LOC GTXE2_COMMON_X0Y2 [get_cells {*_i/axi_pcie_0/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.gt_ges.gt_top_i/pipe_wrapper_i/pipe_lane[0].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i/qpll_wrapper_i/gtx_common.gtxe2_common_i}]
 
 # Configuration via Quad SPI settings for KC705
 #set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]

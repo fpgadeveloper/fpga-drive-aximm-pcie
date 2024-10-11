@@ -11,33 +11,13 @@ proc str_contains {str substr} {
   }
 }
 
-# Board specific PCIe and GT LOCs
-if {[str_contains $target "zcu104"]} {
-  set select_quad_0 "GTH_Quad_226"
-  set pcie_blk_locn_0 "X0Y0"
-} elseif {[str_contains $target "zcu106_hpc0"]} {
-  set select_quad_0 "GTH_Quad_226"
-  set select_quad_1 "GTH_Quad_227"
-  set pcie_blk_locn_0 "X0Y1"
-  set pcie_blk_locn_1 "X0Y0"
-} elseif {[str_contains $target "zcu106_hpc1"]} {
-  set select_quad_0 "GTH_Quad_223"
-  set pcie_blk_locn_0 "X0Y0"
-} elseif {[str_contains $target "zcu111"]} {
-  set select_quad_0 "GTY_Quad_129"
-  set select_quad_1 "GTY_Quad_130"
-  set pcie_blk_locn_0 "X0Y0"
-  set pcie_blk_locn_1 "X0Y1"
-} elseif {[str_contains $target "zcu208"]} {
-  set select_quad_0 "GTY_Quad_130"
-  set select_quad_1 "GTY_Quad_131"
-  set pcie_blk_locn_0 "PCIE4C_X0Y0"
-  set pcie_blk_locn_1 "PCIE4C_X0Y1"
-} elseif {[str_contains $target "uzev"]} {
-  set select_quad_0 "GTH_Quad_225"
-  set select_quad_1 "GTH_Quad_224"
-  set pcie_blk_locn_0 "X0Y1"
-  set pcie_blk_locn_1 "X0Y0"
+# GT and PCIe LOCs
+set select_quad_0 [dict get $gt_loc_dict $target 0 quad]
+set pcie_blk_locn_0 [dict get $gt_loc_dict $target 0 pcie]
+
+if {$dual_design} {
+  set select_quad_1 [dict get $gt_loc_dict $target 1 quad]
+  set pcie_blk_locn_1 [dict get $gt_loc_dict $target 1 pcie]
 }
 
 # CHECKING IF PROJECT EXISTS
@@ -127,6 +107,17 @@ if {[lindex $num_lanes 0] == "X4"} {
   set pf_device_id 9131
 }
 
+# We need to get the correct name format of the PCIe selection
+set pcie_blk [get_property CONFIG.pcie_blk_locn [get_bd_cells xdma_0]]
+# Find the position of the last underscore
+set last_underscore_index [string last "_" $pcie_blk]
+# Check if the string contains an underscore
+if {$last_underscore_index >= 0} {
+    set pcie_blk_locn_0 "[string range $pcie_blk 0 [expr {$last_underscore_index - 1}]]_$pcie_blk_locn_0"
+    if {$dual_design} {
+      set pcie_blk_locn_1 "[string range $pcie_blk 0 [expr {$last_underscore_index - 1}]]_$pcie_blk_locn_1"
+    }
+}
 # ##########################################################
 # Configure DMA/Bridge Subsystem for PCIe IP
 # ##########################################################
