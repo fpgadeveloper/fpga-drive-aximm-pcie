@@ -2,22 +2,22 @@
 
 ## List of supported boards
 
-| Carrier board                                                    | FMC Slot |
-|------------------------------------------------------------------|------|
-| Zynq-7000 [PicoZed FMC Carrier Card V2] with [PicoZed 7030]      | LPC  |
-| Kintex-7 [KC705 Evaluation board]                                | LPC & HPC |
-| Virtex-7 [VC707 Evaluation board]                                | HPC1 & HPC2 |
-| Virtex-7 [VC709 Evaluation board]                                | HPC  |
-| Zynq-7000 [ZC706 Evaluation board]                               | LPC & HPC |
-| Kintex UltraScale [KCU105 Evaluation board]                      | LPC & HPC |
-| Virtex UltraScale+ [VCU118 Evaluation board]                     | FMCP |
-| Zynq UltraScale+ [ZCU104 Evaluation board]                       | LPC  |
-| Zynq UltraScale+ [ZCU106 Evaluation board]                       | HPC0 & HPC1 |
-| Zynq UltraScale+ [ZCU111 Evaluation board]                       | FMC+ |
-| Zynq UltraScale+ [ZCU208 Evaluation board]                       | FMC+ |
-| Zynq UltraScale+ [UltraZed EV Carrier Card]                      | HPC  |
-| Versal AI Core [VCK190 Evaluation board]                         | FMCP1 & FMCP2 |
-| Versal Prime [VMK180 Evaluation board]                           | FMCP1 & FMCP2 |
+{% set unique_boards = {} %}
+{% for design in data.designs %}
+    {% if design.board not in unique_boards %}
+        {% set _ = unique_boards.update({design.board: {"group": design.group, "link": design.link, "connectors": []}}) %}
+    {% endif %}
+    {% set _ = unique_boards[design.board]["connectors"].append(design.connector) %}
+{% endfor %}
+
+{% for group in data.groups %}
+### {{ group.name }} boards
+
+| Carrier board        | Supported FMC connector(s)    |
+|---------------------|--------------|
+{% for name,board in unique_boards.items() %}{% if board.group == group.label %}| [{{ name }}]({{ board.link }}) | {% for connector in board.connectors %}{{ connector }} {% endfor %} |
+{% endif %}{% endfor %}
+{% endfor %}
 
 For list of the target designs showing the number of SSDs supported, refer to the build instructions.
 

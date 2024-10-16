@@ -31,9 +31,12 @@ if {![string equal $ver $version_required]} {
 }
 
 # Add Xilinx board store to the repo paths
-set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
+set repo_paths [get_param board.repoPaths]
+lappend repo_paths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
+set_param board.repoPaths $repo_paths
 
 # Possible targets
+dict set target_dict auboard { avnet.com auboard_15p { X4 } mb }
 dict set target_dict kc705_hpc { xilinx.com kc705 { X4 } mb }
 dict set target_dict kc705_lpc { xilinx.com kc705 { X1 } mb }
 dict set target_dict kcu105_hpc { xilinx.com kcu105 { X4 X4 } mb }
@@ -51,6 +54,7 @@ dict set target_dict vek280_es_revb { xilinx.com vek280_es_revb { X4 X4 } versal
 dict set target_dict vmk180_fmcp1 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp2 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vpk120 { xilinx.com vpk120 { X4 } versal }
+dict set target_dict vpk180 { xilinx.com vpk180 { X4 } versal }
 dict set target_dict vcu118 { xilinx.com vcu118 { X4 X4 } mb }
 dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }
 dict set target_dict zc706_lpc { xilinx.com zc706 { X1 } zynq }
@@ -230,14 +234,6 @@ if {$bd_script == "versal"} {
 } else {
   set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
   set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects $obj
-}
-
-# UZ-EV design requires post hook script
-if { $target == "uzev_dual" } {
-  add_files -fileset utils_1 -norecurse $origin_dir/scripts/uzev_post_hook.tcl
-  set_property STEPS.OPT_DESIGN.TCL.POST [ get_files $origin_dir/scripts/uzev_post_hook.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
-  # Suppress the critical warnings generated when the post hook overrides the IP's LOCs
-  set_msg_config -id "Constraints 18-4427" -new_severity WARNING
 }
 
 # set the current impl run

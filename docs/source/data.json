@@ -1,0 +1,264 @@
+{
+  "groups": [
+    {
+      "label": "fpga",
+      "name": "FPGA"
+    },
+    {
+      "label": "z7",
+      "name": "Zynq-7000"
+    },
+    {
+      "label": "zu",
+      "name": "Zynq UltraScale+"
+    },
+    {
+      "label": "versal",
+      "name": "Versal"
+    }
+    ],
+  "designs": [
+    {
+      "label": "auboard",
+      "board": "AUBoard",
+      "link": "https://www.xilinx.com/products/boards-and-kits/1-1xj8wo9.html",
+      "ports": "SSD1",
+      "connector": "HPC",
+      "group": "fpga",
+      "license": "NO"
+    },
+    {
+      "label": "kc705_hpc",
+      "board": "KC705",
+      "link": "https://www.xilinx.com/kc705",
+      "ports": "SSD1",
+      "connector": "HPC",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "kc705_lpc",
+      "board": "KC705",
+      "link": "https://www.xilinx.com/kc705",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "kcu105_hpc",
+      "board": "KCU105",
+      "link": "https://www.xilinx.com/kcu105",
+      "ports": "SSD1 & SSD2",
+      "connector": "HPC",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "kcu105_lpc",
+      "board": "KCU105",
+      "link": "https://www.xilinx.com/kcu105",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "pz_7015",
+      "board": "PicoZed 7015",
+      "link": "https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "z7",
+      "license": "NO"
+    },
+    {
+      "label": "pz_7030",
+      "board": "PicoZed 7030",
+      "link": "https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "z7",
+      "license": "NO"
+    },
+    {
+      "label": "uzev",
+      "board": "UltraZed-EV Carrier",
+      "link": "https://www.xilinx.com/products/boards-and-kits/1-1s78dxb.html",
+      "ports": "SSD1 & SSD2",
+      "connector": "HPC",
+      "license": "NO"
+    },
+    {
+      "label": "vc707_hpc1",
+      "board": "VC707",
+      "link": "https://www.xilinx.com/vc707",
+      "ports": "SSD1",
+      "connector": "HPC1",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "vc707_hpc2",
+      "board": "VC707",
+      "link": "https://www.xilinx.com/vc707",
+      "ports": "SSD1",
+      "connector": "HPC2",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "vc709_hpc",
+      "board": "VC709",
+      "link": "https://www.xilinx.com/vc709",
+      "ports": "SSD1",
+      "connector": "HPC",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "vck190_fmcp1",
+      "board": "VCK190",
+      "link": "https://www.xilinx.com/vck190",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP1",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vck190_fmcp2",
+      "board": "VCK190",
+      "link": "https://www.xilinx.com/vck190",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP2",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vmk180_fmcp1",
+      "board": "VMK180",
+      "link": "https://www.xilinx.com/vmk180",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP1",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vmk180_fmcp2",
+      "board": "VMK180",
+      "link": "https://www.xilinx.com/vmk180",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP2",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vek280",
+      "board": "VEK280",
+      "link": "https://www.xilinx.com/vek280",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vpk120",
+      "board": "VPK120",
+      "link": "https://www.xilinx.com/vpk120",
+      "ports": "SSD1",
+      "connector": "FMCP",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vpk180",
+      "board": "VPK180",
+      "link": "https://www.xilinx.com/vpk180",
+      "ports": "SSD1",
+      "connector": "FMCP",
+      "group": "versal",
+      "license": "YES"
+    },
+    {
+      "label": "vcu118",
+      "board": "VCU118",
+      "link": "https://www.xilinx.com/vcu118",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP",
+      "group": "fpga",
+      "license": "YES"
+    },
+    {
+      "label": "zc706_hpc",
+      "board": "ZC706",
+      "link": "https://www.xilinx.com/zc706",
+      "ports": "SSD1",
+      "connector": "HPC",
+      "group": "z7",
+      "license": "YES"
+    },
+    {
+      "label": "zc706_lpc",
+      "board": "ZC706",
+      "link": "https://www.xilinx.com/zc706",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "z7",
+      "license": "YES"
+    },
+    {
+      "label": "zcu104",
+      "board": "ZCU104",
+      "link": "https://www.xilinx.com/zcu104",
+      "ports": "SSD1",
+      "connector": "LPC",
+      "group": "zu",
+      "license": "NO"
+    },
+    {
+      "label": "zcu106_hpc0",
+      "board": "ZCU106",
+      "link": "https://www.xilinx.com/zcu106",
+      "ports": "SSD1 & SSD2",
+      "connector": "HPC0",
+      "group": "zu",
+      "license": "NO"
+    },
+    {
+      "label": "zcu106_hpc1",
+      "board": "ZCU106",
+      "link": "https://www.xilinx.com/zcu106",
+      "ports": "SSD1 & SSD2",
+      "connector": "HPC1",
+      "group": "zu",
+      "license": "NO"
+    },
+    {
+      "label": "zcu111",
+      "board": "ZCU111",
+      "link": "https://www.xilinx.com/zcu111",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP",
+      "group": "zu",
+      "license": "YES"
+    },
+    {
+      "label": "zcu208",
+      "board": "ZCU208",
+      "link": "https://www.xilinx.com/zcu208",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP",
+      "group": "zu",
+      "license": "YES"
+    },
+    {
+      "label": "zcu216",
+      "board": "ZCU216",
+      "link": "https://www.xilinx.com/zcu216",
+      "ports": "SSD1 & SSD2",
+      "connector": "FMCP",
+      "group": "zu",
+      "license": "YES"
+    }
+  ]
+}

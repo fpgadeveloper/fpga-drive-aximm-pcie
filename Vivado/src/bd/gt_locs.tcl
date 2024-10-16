@@ -9,6 +9,8 @@
 #   * Get the GT quad:    dict get $gt_loc_dict <target> <ssd index> quad
 #   * Get the PCIe LOC:   dict get $gt_loc_dict <target> <ssd index> pcie
 
+dict set gt_loc_dict auboard 0 quad GTH_Quad_225
+dict set gt_loc_dict auboard 0 pcie X0Y0
 dict set gt_loc_dict kc705_hpc 0 quad GTX_Quad_118
 dict set gt_loc_dict kc705_hpc 0 pcie X0Y0
 dict set gt_loc_dict kc705_lpc 0 quad GTX_Quad_117
@@ -59,6 +61,8 @@ dict set gt_loc_dict vmk180_fmcp2 1 quad GTY_Quad_205
 dict set gt_loc_dict vmk180_fmcp2 1 pcie X1Y2
 dict set gt_loc_dict vpk120 0 quad GTYP_Quad_200
 dict set gt_loc_dict vpk120 0 pcie X1Y0
+dict set gt_loc_dict vpk180 0 quad GTYP_Quad_200
+dict set gt_loc_dict vpk180 0 pcie X1Y0
 dict set gt_loc_dict vek280 0 quad GTYP_Quad_205
 dict set gt_loc_dict vek280 0 pcie X1Y1
 dict set gt_loc_dict vek280 1 quad GTYP_Quad_206

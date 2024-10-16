@@ -12,6 +12,7 @@ TARGET ?= none
 JOBS ?= 8
 
 # valid targets (template name, flash size, flash interface)
+auboard_target := microblaze 64 SPIx4
 kc705_hpc_target := microblaze 128 BPIx16
 kc705_lpc_target := microblaze 128 BPIx16
 kcu105_hpc_target := microblaze 32 SPIx4
@@ -26,6 +27,7 @@ vek280_es_revb_target := versal 0 0
 vmk180_fmcp1_target := versal 0 0
 vmk180_fmcp2_target := versal 0 0
 vpk120_target := versal 0 0
+vpk180_target := versal 0 0
 vcu118_target := microblaze 128 SPIx4
 zc706_hpc_target := zynq 0 0
 zc706_lpc_target := zynq 0 0

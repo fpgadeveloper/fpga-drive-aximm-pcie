@@ -12,6 +12,7 @@ TARGET ?= none
 JOBS ?= 8
 
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
+auboard_target := microblaze both
 kc705_hpc_target := microblaze both
 kc705_lpc_target := microblaze both
 kcu105_hpc_target := microblaze both
@@ -27,6 +28,7 @@ vck190_fmcp2_target := versal both
 vmk180_fmcp1_target := versal both
 vmk180_fmcp2_target := versal both
 vpk120_target := versal both
+vpk180_target := versal both
 vcu118_target := microblaze both
 zc706_hpc_target := zynq both
 zc706_lpc_target := zynq both

@@ -20,7 +20,7 @@ numfig = True
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'FPGA Drive FMC Reference Designs'
-copyright = '2023, Opsero Electronic Design Inc.'
+copyright = '2024, Opsero Electronic Design Inc.'
 author = 'Jeff Johnson'
 
 # -- General configuration ---------------------------------------------------
@@ -53,4 +53,30 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+import os
+import json
+from sphinx.util.fileutil import copy_asset
+from jinja2 import Environment, FileSystemLoader
 
+# Load the JSON data
+def load_json():
+    with open('data.json') as f:
+        return json.load(f)
+
+# Add the data as a context variable for Jinja2 templates
+html_context = {
+    'data': load_json(),
+}
+
+# Function to process Jinja2 templates in .md files
+def render_jinja(app, docname, source):
+    env = Environment(
+        loader=FileSystemLoader(app.srcdir),
+    )
+    template = env.from_string(source[0])
+    rendered_content = template.render(html_context)
+    source[0] = rendered_content
+
+# Connect the Jinja2 rendering function to the Sphinx build process
+def setup(app):
+    app.connect('source-read', render_jinja)

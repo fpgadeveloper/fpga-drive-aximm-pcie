@@ -79,6 +79,12 @@ if {$board_name == "kc705"} {
   set haddr {0x1FFFFFFF 0x2FFFFFFF}
   set axi2pci {0x0000000060000000 0x0000000070000000}
   set barsize {256M 256M}
+} elseif {$target == "auboard"} {
+  set pcie_ip "xdma"
+  set baddr {0x10000000}
+  set haddr {0x1FFFFFFF}
+  set axi2pci {0x0000000060000000}
+  set barsize {512M}
 }
 
 # Create the list of interrupts
@@ -106,6 +112,18 @@ if {$board_name == "kcu105"} {
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {reset ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_HIGH)}}  [get_bd_pins ddr4_0/sys_rst]
   # 50MHz additional clock required by AXI Quad SPI
   set_property -dict [list CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {50}] [get_bd_cells ddr4_0]
+# AUBoard MIG setup
+} elseif {$board_name == "auboard_15p"} {
+  set mig_name "ddr4_0"
+  set mig_slave_interface "/ddr4_0/C0_DDR4_S_AXI"
+  set mig_ui_clk "/ddr4_0/c0_ddr4_ui_clk"
+  create_bd_cell -type ip -vlnv xilinx.com:ip:ddr4 $mig_name
+
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {ddr4_sdram ( DDR4 SDRAM ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_DDR4]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {system_clock_300mhz ( System differential clock ) } Manual_Source {Auto}}  [get_bd_intf_pins ddr4_0/C0_SYS_CLK]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {system_resetn ( FPGA Reset ) } Manual_Source {New External Port (ACTIVE_HIGH)}}  [get_bd_pins ddr4_0/sys_rst]
+  # 50MHz additional clock required by AXI Quad SPI
+  set_property -dict [list CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {50}] [get_bd_cells ddr4_0]
 # Series-7 boards MIG setup
 } else {
   set mig_name "mig_0"
@@ -125,10 +143,10 @@ if {$board_name == "kcu105"} {
   # Create ports
   create_bd_port -dir O init_calib_complete
   connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
-} elseif {$board_name == "vcu118"} {
+} elseif {$board_name == "vcu118" || $board_name == "auboard_15p"} {
   apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { axi_intc {1} axi_periph {Enabled} cache {16KB} clk {/ddr4_0/addn_ui_clkout1 (100 MHz)} debug_module {Debug Only} ecc {None} local_mem {128KB} preset {None}}  [get_bd_cells microblaze_0]
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/ddr4_0/addn_ui_clkout1 (100 MHz)} Clk_slave {/ddr4_0/c0_ddr4_ui_clk (300 MHz)} Clk_xbar {/ddr4_0/addn_ui_clkout1 (100 MHz)} Master {/microblaze_0 (Cached)} Slave {/ddr4_0/C0_DDR4_S_AXI} intc_ip {New AXI SmartConnect} master_apm {0}}  [get_bd_intf_pins ddr4_0/C0_DDR4_S_AXI]
-  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {Custom} Manual_Source {/ddr4_0/c0_ddr4_ui_clk_sync_rst (ACTIVE_HIGH)}}  [get_bd_pins rst_ddr4_0_100M/ext_reset_in]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {Custom} Manual_Source {Auto}}  [get_bd_pins rst_ddr4_0_100M/ext_reset_in]
   # Create ports
   create_bd_port -dir O init_calib_complete
   connect_bd_net [get_bd_ports init_calib_complete] [get_bd_pins ddr4_0/c0_init_calib_complete]
@@ -147,10 +165,14 @@ if {$board_name == "kcu105"} {
 set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} CONFIG.C_USE_MSR_INSTR {1} CONFIG.C_USE_PCMP_INSTR {1} CONFIG.C_USE_BARREL {1} CONFIG.C_USE_DIV {1} CONFIG.C_USE_HW_MUL {2} CONFIG.C_UNALIGNED_EXCEPTIONS {1} CONFIG.C_ILL_OPCODE_EXCEPTION {1} CONFIG.C_M_AXI_I_BUS_EXCEPTION {1} CONFIG.C_M_AXI_D_BUS_EXCEPTION {1} CONFIG.C_DIV_ZERO_EXCEPTION {1} CONFIG.C_PVR {2} CONFIG.C_OPCODE_0x0_ILLEGAL {1} CONFIG.C_ICACHE_LINE_LEN {8} CONFIG.C_ICACHE_VICTIMS {8} CONFIG.C_ICACHE_STREAMS {1} CONFIG.C_DCACHE_VICTIMS {8} CONFIG.C_USE_MMU {3} CONFIG.C_MMU_ZONES {2}] [get_bd_cells microblaze_0]
 
 # Reset for AXI PCIe blocks (IP reset is active low, but board reset is active high, so we use an inverter)
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic reset_invert
-set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells reset_invert]
-connect_bd_net [get_bd_ports reset] [get_bd_pins reset_invert/Op1]
-set system_rst [get_bd_pins reset_invert/Res]
+if {$board_name == "auboard_15p"} {
+  set system_rst [get_bd_ports system_resetn]
+} else {
+  create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic reset_invert
+  set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells reset_invert]
+  connect_bd_net [get_bd_ports reset] [get_bd_pins reset_invert/Op1]
+  set system_rst [get_bd_pins reset_invert/Res]
+}
 
 # For each SSD (maximum of 2)
 set reset_index 0
@@ -245,6 +267,14 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
     
   } elseif {$pcie_ip == "xdma"} {
     set select_quad [dict get $gt_loc_dict $target $i quad]
+    # We need to get the correct name format of the PCIe selection
+    set pcie_blk [get_property CONFIG.pcie_blk_locn [get_bd_cells $ip_name]]
+    # Find the position of the last underscore
+    set last_underscore_index [string last "_" $pcie_blk]
+    # Check if the string contains an underscore
+    if {$last_underscore_index >= 0} {
+        set pcie_blk_locn "[string range $pcie_blk 0 [expr {$last_underscore_index - 1}]]_$pcie_blk_locn"
+    }
     set_property -dict [list CONFIG.functional_mode {AXI_Bridge} \
     CONFIG.mode_selection {Advanced} \
     CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
@@ -374,7 +404,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
   
   # Add MGT external port for PCIe
   create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pci_exp_$i
-  if {$board_name == "vcu118"} {
+  if {$board_name == "vcu118" || $board_name == "auboard_15p"} {
     connect_bd_intf_net [get_bd_intf_pins axi_pcie_$i/pcie_mgt] [get_bd_intf_ports pci_exp_$i]
   } else {
     connect_bd_intf_net [get_bd_intf_pins axi_pcie_$i/pcie_7x_mgt] [get_bd_intf_ports pci_exp_$i]
@@ -382,7 +412,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
 
   # Add Link up output port
   create_bd_port -dir O user_link_up_$i
-  if {$board_name == "vcu118"} {
+  if {$board_name == "vcu118" || $board_name == "auboard_15p"} {
     connect_bd_net [get_bd_ports user_link_up_$i] [get_bd_pins axi_pcie_$i/user_lnk_up]
   } else {
     connect_bd_net [get_bd_ports user_link_up_$i] [get_bd_pins axi_pcie_$i/user_link_up]
@@ -401,7 +431,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
   } elseif {$board_name == "kcu105"} {
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_DS_ODIV2] [get_bd_pins axi_pcie_$i/refclk]
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/sys_clk_gt]
-  } elseif {$board_name == "vcu118"} {
+  } elseif {$board_name == "vcu118" || $board_name == "auboard_15p"} {
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_DS_ODIV2] [get_bd_pins axi_pcie_$i/sys_clk]
     connect_bd_net [get_bd_pins ref_clk_buf_$i/IBUF_OUT] [get_bd_pins axi_pcie_$i/sys_clk_gt]
   } else {
@@ -471,7 +501,11 @@ append ints "axi_timer_0/interrupt "
 
 # Add IIC
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_iic iic_main
-apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {iic_main ( IIC ) } Manual_Source {Auto}}  [get_bd_intf_pins iic_main/IIC]
+if {$board_name == "auboard_15p"} {
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {main_i2c ( Main I2C ) } Manual_Source {Auto}}  [get_bd_intf_pins iic_main/IIC]
+} else {
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {iic_main ( IIC ) } Manual_Source {Auto}}  [get_bd_intf_pins iic_main/IIC]
+}
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/iic_main/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins iic_main/S_AXI]
 append ints "iic_main/iic2intc_irpt "
 
@@ -554,6 +588,12 @@ if {$board_name == "kcu105"} {
   set_property -dict [list CONFIG.QSPI_BOARD_INTERFACE {spi_flash} CONFIG.USE_BOARD_FLOW {true}] [get_bd_cells axi_quad_spi_0]
   apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_quad_spi_0/AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
   apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {spi_flash ( QSPI flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_quad_spi_0/SPI_1]
+  connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout2]
+  append ints "axi_quad_spi_0/ip2intc_irpt "
+} elseif {$board_name == "auboard_15p"} {
+  create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi axi_quad_spi_0
+  set_property -dict [list CONFIG.C_SPI_MODE {2} CONFIG.C_USE_STARTUP {1} CONFIG.C_USE_STARTUP_INT {1} ] [get_bd_cells axi_quad_spi_0]
+  apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_quad_spi_0/AXI_LITE} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
   connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins ddr4_0/addn_ui_clkout2]
   append ints "axi_quad_spi_0/ip2intc_irpt "
 # Add linear flash on Series-7 boards

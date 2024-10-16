@@ -49,6 +49,9 @@ set_property LOC GTHE3_CHANNEL_X0Y19 [get_cells -hierarchical -filter { PRIMITIV
 # SSD2 Gigabit transceivers
 ############################
 
+# Reset the LOC on all of the GTs
+set_property LOC "" [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTHE3_CHANNEL && NAME =~ "*axi_pcie_1*" }]
+
 set_property LOC GTHE3_CHANNEL_X0Y12 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTHE3_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[0]*" }]
 set_property LOC GTHE3_CHANNEL_X0Y14 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTHE3_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[1]*" }]
 set_property LOC GTHE3_CHANNEL_X0Y13 [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.GTHE3_CHANNEL && NAME =~ "*axi_pcie_1*channel_inst[2]*" }]

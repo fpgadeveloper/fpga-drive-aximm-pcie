@@ -3,6 +3,7 @@ Vivado/.Xil/
 *.log
 *.jou
 Vitis/*_workspace/
+Vivado/auboard*/
 Vivado/kc705*/
 Vivado/kcu105*/
 Vivado/vc707*/
@@ -11,6 +12,7 @@ Vivado/vck190*/
 Vivado/vek280*/
 Vivado/vmk180*/
 Vivado/vpk120*/
+Vivado/vpk180*/
 Vivado/vcu118*/
 Vivado/uzev*/
 Vivado/pz_70*/
@@ -23,6 +25,7 @@ Vivado/zcu216*/
 Vitis/.*/
 Vitis/.*
 Vitis/boot/
+PetaLinux/auboard*/
 PetaLinux/kc705*/
 PetaLinux/kcu105*/
 PetaLinux/vc707*/
@@ -31,6 +34,7 @@ PetaLinux/vck190*/
 PetaLinux/vek280*/
 PetaLinux/vmk180*/
 PetaLinux/vpk120*/
+PetaLinux/vpk180*/
 PetaLinux/vcu118*/
 PetaLinux/uzev*/
 PetaLinux/pz_70*/

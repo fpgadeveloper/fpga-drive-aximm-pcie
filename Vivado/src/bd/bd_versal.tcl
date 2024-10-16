@@ -51,20 +51,18 @@ set is_vck190 [str_contains $target "vck190"]
 set is_vmk180 [str_contains $target "vmk180"]
 set is_vek280 [str_contains $target "vek280"]
 set is_vpk120 [str_contains $target "vpk120"]
+set is_vpk180 [str_contains $target "vpk180"]
 
-# Board specific params
-if {$is_vck190} {
-  set ref_board "VCK190"
-} elseif {$is_vmk180} {
-  set ref_board "VMK180"
-} elseif {$is_vpk120} {
-  set ref_board "VPK120"
-} elseif {$is_vek280} {
-  if {$target == "vek280_es_revb"} {
-    set ref_board "VEK280_ES_REVB"
-  } else {
-    set ref_board "VEK280"
-  }
+# Work out the ref board label
+set ref_board [string toupper $target]
+set underscore_pos [string first "_" $ref_board]
+if {$underscore_pos != -1} {
+  set ref_board [string range $ref_board 0 [expr {$underscore_pos - 1}]]
+}
+
+# Exception: If the target is VEK280 ES Rev-B then set the ref_board like this
+if {$target == "vek280_es_revb"} {
+  set ref_board "VEK280_ES_REVB"
 }
 
 # PCIe LOCs
@@ -86,7 +84,7 @@ set intr_list {}
 create_bd_cell -type ip -vlnv xilinx.com:ip:versal_cips versal_cips_0
 
 # Configure the CIPS using automation feature
-if {$is_vpk120 || $is_vek280} {
+if {$is_vpk120 || $is_vek280 || $is_vpk180} {
   apply_bd_automation -rule xilinx.com:bd_rule:cips -config { \
     board_preset {Yes} \
     boot_config {Custom} \
@@ -134,7 +132,7 @@ set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} 
 }
 
 # Extra config for this design
-if {$is_vpk120} {
+if {$is_vpk120 || $is_vpk180} {
   set_property -dict [list \
     CONFIG.PS_PMC_CONFIG { DDR_MEMORY_MODE {Connectivity to DDR via NOC}  \
     DEBUG_MODE JTAG  DESIGN_MODE 1  \
@@ -335,6 +333,7 @@ proc create_qdma_support { index } {
   global pcie_blk_locn
   global target
   global is_vpk120
+  global is_vpk180
   global is_vck190
   global is_vmk180
   global is_vek280
@@ -346,7 +345,7 @@ proc create_qdma_support { index } {
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 m_axis_rc
 
-  if {$is_vpk120 || $is_vek280} {
+  if {$is_vpk120 || $is_vek280 || $is_vpk180} {
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie5_cfg_control_rtl:1.0 pcie_cfg_control
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie5_cfg_status_rtl:1.0 pcie_cfg_status
   } else {
@@ -398,7 +397,7 @@ proc create_qdma_support { index } {
 
   # Create instance: gt_quad_0, and set properties
   set gt_quad_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:gt_quad_base gt_quad_0 ]
-  if {$is_vpk120 || $is_vek280} {
+  if {$is_vpk120 || $is_vek280 || $is_vpk180} {
     set_property -dict [ list \
      CONFIG.GT_TYPE {GTYP} \
      CONFIG.PORTS_INFO_DICT {\

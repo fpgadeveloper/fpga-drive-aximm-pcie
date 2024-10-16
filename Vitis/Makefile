@@ -15,34 +15,34 @@ TARGET ?= none
 JOBS ?= 8
 
 # valid targets
+auboard_target := microblaze
 kc705_hpc_target := microblaze
 kc705_lpc_target := microblaze
 kcu105_hpc_target := microblaze
-kcu105_hpc_dual_target := microblaze
 kcu105_lpc_target := microblaze
 pz_7015_target := zynq
 pz_7030_target := zynq
-uzev_dual_target := zynqMP
+uzev_target := zynqMP
 vc707_hpc1_target := microblaze
 vc707_hpc2_target := microblaze
 vc709_hpc_target := microblaze
 vck190_fmcp1_target := versal
 vck190_fmcp2_target := versal
+vek280_target := versal
+vek280_es_revb_target := versal
 vmk180_fmcp1_target := versal
 vmk180_fmcp2_target := versal
 vpk120_target := versal
+vpk180_target := versal
 vcu118_target := microblaze
-vcu118_dual_target := microblaze
 zc706_hpc_target := zynq
 zc706_lpc_target := zynq
 zcu104_target := zynqMP
 zcu106_hpc0_target := zynqMP
-zcu106_hpc0_dual_target := zynqMP
 zcu106_hpc1_target := zynqMP
 zcu111_target := zynqMP
-zcu111_dual_target := zynqMP
 zcu208_target := zynqMP
-zcu208_dual_target := zynqMP
+zcu216_target := zynqMP
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 

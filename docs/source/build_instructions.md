@@ -25,30 +25,14 @@ This repo contains several designs that target the various supported development
 FMC connectors. The table below lists the target design name, the M2 ports supported by the design and 
 the FMC connector on which to connect the FPGA Drive FMC Gen4.
 
+{% for group in data.groups %}
+### {{ group.name }} designs
+
 | Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
 |---------------------|-------------------|-------------|-------------|-----|
-| [KC705]             | `kc705_hpc`       | SSD1        | HPC         | YES |
-| [KC705]             | `kc705_lpc`       | SSD1        | LPC         | YES |
-| [KCU105]            | `kcu105_hpc`      | SSD1 & SSD2 | HPC         | YES |
-| [KCU105]            | `kcu105_lpc`      | SSD1        | LPC         | YES |
-| PicoZed 7015        | `pz_7015`         | SSD1        | LPC         | NO  |
-| PicoZed 7030        | `pz_7030`         | SSD1        | LPC         | NO  |
-| UltraZed-EV carrier | `uzev`            | SSD1 & SSD2 | HPC         | NO  |
-| [VC707]             | `vc707_hpc1`      | SSD1        | HPC1        | YES |
-| [VC707]             | `vc707_hpc2`      | SSD1        | HPC2        | YES |
-| [VC709]             | `vc709_hpc`       | SSD1        | HPC         | YES |
-| [VCK190]            | `vck190_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
-| [VCK190]            | `vck190_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
-| [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
-| [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
-| [VCU118]            | `vcu118`          | SSD1 & SSD2 | FMCP        | YES |
-| [ZC706]             | `zc706_hpc`       | SSD1        | HPC         | YES |
-| [ZC706]             | `zc706_lpc`       | SSD1        | HPC         | YES |
-| [ZCU104]            | `zcu104`          | SSD1        | LPC         | NO  |
-| [ZCU106]            | `zcu106_hpc0`     | SSD1 & SSD2 | HPC0        | NO  |
-| [ZCU106]            | `zcu106_hpc1`     | SSD1        | HPC1        | NO  |
-| [ZCU111]            | `zcu111`          | SSD1 & SSD2 | FMCP        | YES |
-| [ZCU208]            | `zcu208`          | SSD1 & SSD2 | FMCP        | YES |
+{% for design in data.designs %}{% if design.group == group.label %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.ports }} | {{ design.connector }} | {{ design.license }} |
+{% endif %}{% endfor %}
+{% endfor %}
 
 ## Windows users
 
@@ -197,12 +181,16 @@ Now when you use `make` to build the PetaLinux projects, they will be configured
 
 [supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 [FPGA Drive FMC Gen4]: https://fpgadrive.com
+[AUBoard]: https://www.xilinx.com/products/boards-and-kits/1-1xj8wo9.html
 [AC701]: https://www.xilinx.com/ac701
 [KC705]: https://www.xilinx.com/kc705
 [VC707]: https://www.xilinx.com/vc707
 [VC709]: https://www.xilinx.com/vc709
 [VCK190]: https://www.xilinx.com/vck190
+[VEK280]: https://www.xilinx.com/vek280
 [VMK180]: https://www.xilinx.com/vmk180
+[VPK120]: https://www.xilinx.com/vpk120
+[VPK180]: https://www.xilinx.com/vpk180
 [VCU108]: https://www.xilinx.com/vcu108
 [VCU118]: https://www.xilinx.com/vcu118
 [KCU105]: https://www.xilinx.com/kcu105
@@ -210,6 +198,7 @@ Now when you use `make` to build the PetaLinux projects, they will be configured
 [ZC706]: https://www.xilinx.com/zc706
 [ZCU111]: https://www.xilinx.com/zcu111
 [ZCU208]: https://www.xilinx.com/zcu208
+[ZCU216]: https://www.xilinx.com/zcu216
 [Trenz TEBF0808]: https://shop.trenz-electronic.de/en/TEBF0808-04A-UltraITX-Baseboard-for-Trenz-Electronic-TE080X-UltraSOM
 [MicroZed 7020 FMC Carrier]: https://www.avnet.com/opasdata/d120001/medias/docus/187/PB-AES-MBCC-FMC-G-V2-Product-Brief.pdf
 [PicoZed FMC Carrier v2]: https://www.avnet.com/wps/portal/silica/products/product-highlights/2016/xilinx-picozed-fmc-carrier-card-v2/

@@ -21,7 +21,7 @@
    };
 
    chosen {
-      xlnx,eeprom= &mac_eeprom;
+      nvmem= &mac_eeprom;
    };
 
    clock_5p49v5935_ref25: ref25m { /* 25MHz reference crystal (internal) - U3 */
@@ -60,6 +60,8 @@
    status = "okay";
    phy-mode = "rgmii-id";
    phy-handle = <&phy0>;
+   nvmem-cells = <&mac_address>;
+   nvmem-cell-names = "mac-address";
    phy0: phy@0 {
       reg = <0x0>;
       ti,rx-internal-delay = <0x5>;
@@ -80,8 +82,13 @@
          reg = <0>;
          /* Ethernet MAC ID EEPROM */
          mac_eeprom: mac_eeprom@51 { /* U5 on UZ3EG IOCC & PCIEC and U7 on the UZ7EV EVCC */
+            #address-cells = <1>;
+            #size-cells = <1>;
             compatible = "atmel,24c02";
             reg = <0x51>;
+            mac_address: mac-address@FA {
+               reg = <0xFA 0x06>;
+            };
          };
 
          vc5: clock-generator@6a { /* IDT (Renesas) 5P49V5935 I2C clock generator */
@@ -216,5 +223,15 @@
    phy-names = "sata-phy";
    /* <psgtr_phandle> <lane_number> <controller_type> <instance> <refclk> */
    phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
+
+   /* Missing SATA controller parameters not included in 2022.2 generated Xilinx device trees */
+   ceva,p0-burst-params = /bits/ 8 <0x13 0x08 0x4A 0x06>;
+   ceva,p0-cominit-params = /bits/ 8 <0x18 0x40 0x18 0x28>;
+   ceva,p0-comwake-params = /bits/ 8 <0x06 0x14 0x08 0x0E>;
+   ceva,p0-retry-params = /bits/ 16 <0x96A4 0x3FFC>;
+   ceva,p1-burst-params = /bits/ 8 <0x13 0x08 0x4A 0x06>;
+   ceva,p1-cominit-params = /bits/ 8 <0x18 0x40 0x18 0x28>;
+   ceva,p1-comwake-params = /bits/ 8 <0x06 0x14 0x08 0x0E>;
+   ceva,p1-retry-params = /bits/ 16 <0x96A4 0x3FFC>;
 };
 

@@ -40,6 +40,7 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 
 | Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
 |---------------------|-------------------|-------------|-------------|-----|
+| [AUBoard]           | `auboard`         | SSD1        | HPC         | NO  |
 | [KC705]             | `kc705_hpc`       | SSD1        | HPC         | YES |
 | [KC705]             | `kc705_lpc`       | SSD1        | LPC         | YES |
 | [KCU105]            | `kcu105_hpc`      | SSD1 & SSD2 | HPC         | YES |
@@ -81,12 +82,13 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 | [VMK180]            | `vmk180_fmcp1`    | SSD1 & SSD2 | FMCP1       | YES |
 | [VMK180]            | `vmk180_fmcp2`    | SSD1 & SSD2 | FMCP2       | YES |
 | [VPK120]            | `vpk120`          | SSD1 (note 1) | FMCP        | YES |
+| [VPK180]            | `vpk180`          | SSD1 (note 1) | FMCP        | YES |
 
 Notes:
 
-1. The [VPK120] has enough GTs to interface with both SSDs, however it has only 2 integrated PCIe blocks
+1. The [VPK120] and [VPK180] have enough GTs to interface with both SSDs, however they have only 2 integrated PCIe blocks
    one of which is on the opposite side of the device to the GT quads, making routing a challenge.
-   For this reason the [VPK120] design supports only 1x SSD.
+   For this reason the [VPK120] and [VPK180] designs supports only 1x SSD.
 
 ## Build instructions
 
