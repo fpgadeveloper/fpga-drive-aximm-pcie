@@ -87,6 +87,7 @@
       "link": "https://www.xilinx.com/products/boards-and-kits/1-1s78dxb.html",
       "ports": "SSD1 & SSD2",
       "connector": "HPC",
+      "group": "zu",
       "license": "NO"
     },
     {
@@ -228,7 +229,7 @@
       "label": "zcu106_hpc1",
       "board": "ZCU106",
       "link": "https://www.xilinx.com/zcu106",
-      "ports": "SSD1 & SSD2",
+      "ports": "SSD1",
       "connector": "HPC1",
       "group": "zu",
       "license": "NO"
