@@ -1,0 +1,86 @@
+# This is a boot script for U-Boot
+# Generate boot.scr:
+# mkimage -c none -A arm -T script -d boot.cmd.default boot.scr
+#
+################
+fitimage_name=@@FIT_IMAGE@@
+kernel_name=@@KERNEL_IMAGE@@
+ramdisk_name=@@RAMDISK_IMAGE1@@
+rootfs_name=@@RAMDISK_IMAGE@@
+@@PRE_BOOTENV@@
+
+setexpr platform *f11a0004
+setenv qemu "3000000"
+
+if test "${platform}" = "${qemu}"; then
+	echo "Since QEMU does not support SSIT, so disabling sysmon secure mode for kernel"
+	fdt addr $fdtcontroladdr
+	fdt get value bootargs /chosen bootargs
+	setenv bootargs $bootargs versal_sysmon.secure_mode=0
+fi
+
+for boot_target in ${boot_targets};
+do
+	echo "Trying to load boot images from ${boot_target}"
+	if test "${boot_target}" = "jtag" ; then
+		@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ @@RAMDISK_IMAGE_ADDRESS@@ @@DEVICETREE_ADDRESS@@
+	fi
+	if test "${boot_target}" = "mmc0" || test "${boot_target}" = "mmc1" || test "${boot_target}" = "usb0" || test "${boot_target}" = "usb1"; then
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /@@UENV_TEXTFILE@@; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@UENV_MMC_LOAD_ADDRESS@@ @@UENV_TEXTFILE@@;
+			echo "Importing environment(@@UENV_TEXTFILE@@) from ${boot_target}..."
+			env import -t @@UENV_MMC_LOAD_ADDRESS@@ $filesize
+			if test -n $uenvcmd; then
+				echo "Running uenvcmd ...";
+				run uenvcmd;
+			fi
+		fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /${fitimage_name}; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@FIT_IMAGE_LOAD_ADDRESS@@ ${fitimage_name};
+			bootm @@FIT_IMAGE_LOAD_ADDRESS@@;
+                fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /${kernel_name}; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@KERNEL_LOAD_ADDRESS@@ ${kernel_name};
+		fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /system.dtb; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@DEVICETREE_ADDRESS@@ system.dtb;
+		fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /devicetree/openamp.dtbo; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@DEVICETREE_OVERLAY_ADDRESS@@ devicetree/openamp.dtbo;
+			fdt addr @@DEVICETREE_ADDRESS@@
+			fdt resize 8192
+			fdt apply @@DEVICETREE_OVERLAY_ADDRESS@@
+		fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /${ramdisk_name} && test "${skip_tinyramdisk}" != "yes"; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@RAMDISK_IMAGE_ADDRESS@@ ${ramdisk_name};
+			@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ @@RAMDISK_IMAGE_ADDRESS@@ @@DEVICETREE_ADDRESS@@
+		fi
+		if test -e ${devtype} ${devnum}:${distro_bootpart} /${rootfs_name} && test "${skip_ramdisk}" != "yes"; then
+			fatload ${devtype} ${devnum}:${distro_bootpart} @@RAMDISK_IMAGE_ADDRESS@@ ${rootfs_name};
+			@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ @@RAMDISK_IMAGE_ADDRESS@@ @@DEVICETREE_ADDRESS@@
+		fi
+		@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ - @@DEVICETREE_ADDRESS@@
+	fi
+	if test "${boot_target}" = "xspi0" || test "${boot_target}" = "qspi" || test "${boot_target}" = "qspi0"; then
+		sf probe 0 0 0;
+		sf read @@FIT_IMAGE_LOAD_ADDRESS@@ @@QSPI_FIT_IMAGE_OFFSET@@ @@QSPI_FIT_IMAGE_SIZE@@
+		bootm @@FIT_IMAGE_LOAD_ADDRESS@@;
+		echo "Booting using Fit image failed"
+
+		sf read @@KERNEL_LOAD_ADDRESS@@ @@QSPI_KERNEL_OFFSET@@ @@QSPI_KERNEL_SIZE@@
+		sf read @@RAMDISK_IMAGE_ADDRESS@@ @@QSPI_RAMDISK_OFFSET@@ @@QSPI_RAMDISK_SIZE@@
+		@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ @@RAMDISK_IMAGE_ADDRESS@@ @@DEVICETREE_ADDRESS@@;
+		echo "Booting using Separate images failed"
+	fi
+	if test "${boot_target}" = "nand" || test "${boot_target}" = "nand0"; then
+		nand info;
+		nand read @@FIT_IMAGE_LOAD_ADDRESS@@ @@NAND_FIT_IMAGE_OFFSET@@ @@NAND_FIT_IMAGE_SIZE@@
+		bootm @@FIT_IMAGE_LOAD_ADDRESS@@;
+		echo "Booting using Fit image failed"
+
+		nand read @@KERNEL_LOAD_ADDRESS@@ @@NAND_KERNEL_OFFSET@@ @@NAND_KERNEL_SIZE@@
+		nand read @@RAMDISK_IMAGE_ADDRESS@@ @@NAND_RAMDISK_OFFSET@@ @@NAND_RAMDISK_SIZE@@
+		@@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ @@RAMDISK_IMAGE_ADDRESS@@ @@DEVICETREE_ADDRESS@@;
+		echo "Booting using Separate images failed"
+	fi
+done

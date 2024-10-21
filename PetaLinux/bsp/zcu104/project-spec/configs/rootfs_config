@@ -78,6 +78,13 @@ CONFIG_system-zynqmp=y
 # CONFIG_cpio-rmt is not set
 
 #
+# crda 
+#
+# CONFIG_crda is not set
+# CONFIG_crda-dbg is not set
+# CONFIG_crda-dev is not set
+
+#
 # dbus 
 #
 # CONFIG_dbus is not set
@@ -169,7 +176,7 @@ CONFIG_fpga-manager-script=y
 #
 # haveged 
 #
-CONFIG_haveged=y
+# CONFIG_haveged is not set
 
 #
 # i2c-tools 
@@ -523,13 +530,6 @@ CONFIG_can-utils=y
 # CONFIG_lrzsz is not set
 # CONFIG_lrzsz-dbg is not set
 # CONFIG_lrzsz-dev is not set
-
-#
-# mailx 
-#
-# CONFIG_mailx is not set
-# CONFIG_mailx-dbg is not set
-# CONFIG_mailx-dev is not set
 
 #
 # minicom 
@@ -1035,13 +1035,6 @@ CONFIG_pciutils=y
 # CONFIG_perl-dev is not set
 
 #
-# python3-nose 
-#
-# CONFIG_python3-nose is not set
-# CONFIG_python3-nose-dbg is not set
-# CONFIG_python3-nose-dev is not set
-
-#
 # python3-numpy 
 #
 # CONFIG_python3-numpy is not set
@@ -1433,7 +1426,6 @@ CONFIG_libdfx=y
 # libgcrypt 
 #
 # CONFIG_libgcrypt is not set
-# CONFIG_dumpsexp-dev is not set
 # CONFIG_libgcrypt-dbg is not set
 # CONFIG_libgcrypt-dev is not set
 
@@ -1991,6 +1983,11 @@ CONFIG_libdfx=y
 # CONFIG_libtirpc-dev is not set
 
 #
+# wolfssl
+#
+# CONFIG_wolfssl is not set
+
+#
 # openssl 
 #
 # CONFIG_openssl is not set
@@ -2101,14 +2098,14 @@ CONFIG_libdfx=y
 #
 # xrt
 #
-CONFIG_xrt=y
+# CONFIG_xrt is not set
 # CONFIG_xrt-dev is not set
 # CONFIG_xrt-dbg is not set
 
 #
 # zocl
 #
-CONFIG_zocl=y
+# CONFIG_zocl is not set
 # CONFIG_zocl-dev is not set
 # CONFIG_zocl-dbg is not set
 
@@ -2254,11 +2251,11 @@ CONFIG_opencl-headers=y
 # CONFIG_cryptodev-linux-dbg is not set
 
 #
-# dstat 
+# dool 
 #
-# CONFIG_dstat is not set
-# CONFIG_dstat-dev is not set
-# CONFIG_dstat-dbg is not set
+# CONFIG_dool is not set
+# CONFIG_dool-dev is not set
+# CONFIG_dool-dbg is not set
 
 #
 # encodings 
@@ -2268,17 +2265,11 @@ CONFIG_opencl-headers=y
 # CONFIG_encodings-dbg is not set
 
 #
-# epiphany 
-#
-# CONFIG_epiphany is not set
-# CONFIG_epiphany-dev is not set
-# CONFIG_epiphany-dbg is not set
-
-#
 # libudev 
 #
 # CONFIG_libudev is not set
 CONFIG_udev-extraconf=y
+CONFIG_linux-xlnx-udev-rules=y
 
 #
 # fbset 
@@ -2464,6 +2455,12 @@ CONFIG_udev-extraconf=y
 # CONFIG_iso-codes-dev is not set
 
 #
+# inetutils-tftpd 
+#
+# CONFIG_inetutils-tftpd is not set
+# CONFIG_inetutils-tftpd-dbg is not set
+
+#
 # json-c 
 #
 # CONFIG_json-c is not set
@@ -2624,7 +2621,7 @@ CONFIG_packagegroup-core-boot=y
 #
 # packagegroup-core-ssh-dropbear 
 #
-CONFIG_packagegroup-core-ssh-dropbear=y
+# CONFIG_packagegroup-core-ssh-dropbear is not set
 # CONFIG_packagegroup-core-ssh-dropbear-dev is not set
 # CONFIG_packagegroup-core-ssh-dropbear-dbg is not set
 
@@ -3197,18 +3194,6 @@ CONFIG_tcf-agent=y
 # CONFIG_watchdog-config-dev is not set
 
 #
-# watchdog-init
-#
-CONFIG_watchdog-init=y
-
-#
-# webkitgtk 
-#
-# CONFIG_webkitgtk is not set
-# CONFIG_webkitgtk-dbg is not set
-# CONFIG_webkitgtk-dev is not set
-
-#
 # x11perf 
 #
 # CONFIG_x11perf is not set
@@ -3278,13 +3263,6 @@ CONFIG_watchdog-init=y
 # CONFIG_xf86-input-evdev is not set
 # CONFIG_xf86-input-evdev-dbg is not set
 # CONFIG_xf86-input-evdev-dev is not set
-
-#
-# xf86-input-keyboard 
-#
-# CONFIG_xf86-input-keyboard is not set
-# CONFIG_xf86-input-keyboard-dev is not set
-# CONFIG_xf86-input-keyboard-dbg is not set
 
 #
 # xf86-input-mouse 
@@ -3555,7 +3533,7 @@ CONFIG_hellopm=y
 #
 # dosfstools 
 #
-# CONFIG_dosfstools is not set
+CONFIG_dosfstools=y
 # CONFIG_dosfstools-dev is not set
 # CONFIG_dosfstools-dbg is not set
 
@@ -3599,7 +3577,6 @@ CONFIG_libdrm-tests=y
 # CONFIG_libdrm-dev is not set
 # CONFIG_libdrm-freedreno is not set
 # CONFIG_libdrm-radeon is not set
-CONFIG_libdrm-kms=y
 # CONFIG_libdrm-dbg is not set
 # CONFIG_libdrm-omap is not set
 
@@ -3686,14 +3663,6 @@ CONFIG_libdrm-kms=y
 # CONFIG_gnome-common is not set
 # CONFIG_gnome-common-dev is not set
 # CONFIG_gnome-common-dbg is not set
-
-#
-# gnome-desktop3 
-#
-# CONFIG_gnome-desktop3 is not set
-# CONFIG_gnome-desktop3-dbg is not set
-# CONFIG_gnome-desktop3-dev is not set
-# CONFIG_libgnome-desktop3 is not set
 
 #
 # gnome-themes-extra 
@@ -4067,6 +4036,13 @@ CONFIG_packagegroup-petalinux-v4lutils=y
 # CONFIG_packagegroup-petalinux-v4lutils-dev is not set
 
 #
+# packagegroup-petalinux-vitis-acceleration-essential 
+#
+# CONFIG_packagegroup-petalinux-vitis-acceleration-essential is not set
+# CONFIG_packagegroup-petalinux-vitis-acceleration-essential-dbg is not set
+# CONFIG_packagegroup-petalinux-vitis-acceleration-essential-dev is not set
+
+#
 # packagegroup-petalinux-weston 
 #
 # CONFIG_packagegroup-petalinux-weston is not set
@@ -4090,12 +4066,13 @@ CONFIG_packagegroup-petalinux-x11=y
 #
 # Image Features
 #
-CONFIG_imagefeature-ssh-server-dropbear=y
-# CONFIG_imagefeature-ssh-server-openssh is not set
+# CONFIG_imagefeature-ssh-server-dropbear is not set
+CONFIG_imagefeature-ssh-server-openssh=y
 CONFIG_imagefeature-hwcodecs=y
 # CONFIG_imagefeature-package-management is not set
 # CONFIG_imagefeature-debug-tweaks is not set
-# CONFIG_auto-login is not set
+# CONFIG_imagefeature-empty-root-password is not set
+# CONFIG_imagefeature-serial-autologin-root is not set
 CONFIG_Init-manager-systemd=y
 # CONFIG_Init-manager-sysvinit is not set
 
@@ -4111,7 +4088,8 @@ CONFIG_gstreamer-vcu-examples=y
 # PetaLinux RootFS Settings
 #
 CONFIG_ADD_EXTRA_USERS="root:root;petalinux::passwd-expire;"
-CONFIG_ADD_USERS_TO_GROUPS="petalinux:audio,video;"
+CONFIG_CREATE_NEW_GROUPS="aie;"
+CONFIG_ADD_USERS_TO_GROUPS="petalinux:audio,video,aie,input;"
 CONFIG_ADD_USERS_TO_SUDOERS="petalinux"
 
 # Tools for FPGA Drive FMC

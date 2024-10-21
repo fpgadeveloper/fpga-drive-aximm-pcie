@@ -27,3 +27,11 @@ reserved-memory {
                 compatible = "xlnx,zocl-versal";
         };
 };
+
+&qdma_0{
+	ranges = <0x02000000 0x00 0xA8000000 0x00 0xA8000000 0x00 0x08000000>;
+};
+
+&qdma_1{
+	ranges = <0x02000000 0x00 0xB0000000 0x00 0xB0000000 0x00 0x10000000>;
+};

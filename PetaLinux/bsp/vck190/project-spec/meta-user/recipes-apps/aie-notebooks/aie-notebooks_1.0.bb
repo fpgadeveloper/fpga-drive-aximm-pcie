@@ -15,6 +15,7 @@ SRC_URI = "file://LICENSE				\
 
 COMPATIBLE_MACHINE = "^$"
 COMPATIBLE_MACHINE:versal-ai-core = "versal-ai-core"
+COMPATIBLE_MACHINE:versal-ai-edge = "${SOC_VARIANT_ARCH}"
 
 RDEPENDS_${PN} = "packagegroup-petalinux-jupyter	\
                   aie-oob				\
@@ -30,3 +31,4 @@ do_install() {
 }
 
 PACKAGE_ARCH:versal-ai-core = "${SOC_VARIANT_ARCH}"
+PACKAGE_ARCH:versal-ai-edge = "${SOC_VARIANT_ARCH}"

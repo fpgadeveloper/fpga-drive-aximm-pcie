@@ -7,7 +7,8 @@ CONFIG_gstreamer-vcu-examples
 CONFIG_packagegroup-petalinux-v4lutils
 CONFIG_packagegroup-petalinux-audio
 CONFIG_gstreamer-vcu-notebooks
-CONFIG_board-fpga-autoload
+CONFIG_zcu106-1.0
+CONFIG_zcu106-2.0
 
 CONFIG_e2fsprogs
 CONFIG_e2fsprogs-mke2fs

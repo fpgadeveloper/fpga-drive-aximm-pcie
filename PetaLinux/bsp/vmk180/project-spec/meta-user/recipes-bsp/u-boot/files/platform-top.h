@@ -1,3 +1,14 @@
+#if defined(CONFIG_MICROBLAZE)
+#include <configs/microblaze-generic.h>
+#define CONFIG_SYS_BOOTM_LEN 0xF000000
+#endif
+#if defined(CONFIG_ARCH_ZYNQ)
+#include <configs/zynq-common.h>
+#endif
+#if defined(CONFIG_ARCH_ZYNQMP)
+#include <configs/xilinx_zynqmp.h>
+#endif
+#if defined(CONFIG_ARCH_VERSAL)
 #include <configs/xilinx_versal.h>
 
 /*
@@ -49,11 +60,13 @@
 		"i2c mw 0x1E 0x42.1 0x00 0x1;" \
 		"i2c mw 0x1E 0x22.1 0x80 0x1\0" \
 	
-#define CONFIG_EXTRA_ENV_SETTINGS \
+#define CFG_EXTRA_ENV_SETTINGS \
 	ENV_MEM_LAYOUT_SETTINGS \
 	IR38164_VADJ_SETTINGS \
 	BOOTENV
 
-#define CONFIG_BOOTCOMMAND "run vadj_1v2_en; run distro_bootcmd"
-
-
+#define CONFIG_BOOTCOMMAND "run vadj_1v5_en; run distro_bootcmd"
+#endif
+#if defined(CONFIG_ARCH_VERSAL_NET)
+#include <configs/xilinx_versal_net.h>
+#endif

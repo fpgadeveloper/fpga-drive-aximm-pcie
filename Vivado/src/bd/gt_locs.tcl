@@ -67,6 +67,8 @@ dict set gt_loc_dict vek280 0 quad GTYP_Quad_205
 dict set gt_loc_dict vek280 0 pcie X1Y1
 dict set gt_loc_dict vek280 1 quad GTYP_Quad_206
 dict set gt_loc_dict vek280 1 pcie X1Y2
+dict set gt_loc_dict vhk158 0 quad GTYP_Quad_200
+dict set gt_loc_dict vhk158 0 pcie X1Y0
 dict set gt_loc_dict vcu118_fmcp 0 quad GTY_Quad_121
 dict set gt_loc_dict vcu118_fmcp 0 pcie X0Y1
 dict set gt_loc_dict vcu118_fmcp 1 quad GTY_Quad_126

@@ -80,6 +80,7 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 |-----------------------|-----------------|-------------|-------------|-------|
 | [VCK190]              | `vck190_fmcp1`  | SSD1 & SSD2 | FMCP1       | YES   |
 | [VCK190]              | `vck190_fmcp2`  | SSD1 & SSD2 | FMCP2       | YES   |
+| [VHK158]              | `vhk158`        | SSD1        | FMCP        | YES   |
 | [VMK180]              | `vmk180_fmcp1`  | SSD1 & SSD2 | FMCP1       | YES   |
 | [VMK180]              | `vmk180_fmcp2`  | SSD1 & SSD2 | FMCP2       | YES   |
 | [VEK280]              | `vek280`        | SSD1 & SSD2 | FMCP        | YES   |
@@ -102,6 +103,7 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 [ZCU208]: https://www.xilinx.com/zcu208
 [ZCU216]: https://www.xilinx.com/zcu216
 [VCK190]: https://www.xilinx.com/vck190
+[VHK158]: https://www.xilinx.com/vhk158
 [VMK180]: https://www.xilinx.com/vmk180
 [VEK280]: https://www.xilinx.com/vek280
 [VPK120]: https://www.xilinx.com/vpk120

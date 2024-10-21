@@ -1,0 +1,167 @@
+Opsero Electronic Design Inc. 2024
+Jeff Johnson
+QDMA Bridge Support Fixes for RC Linux Driver 2024.1
+====================================================
+
+This patch incorporates and adds to the patch from AMD Xilinx Answer record AR76647:
+https://adaptivesupport.amd.com/s/article/76647?language=en_US
+We found that the patch from the answer record was not sufficient to achieve a working design. PetaLinux
+2024.1 device tree autogeneration for QDMA produces "reg" and "reg-names" parameters placing resource "breg"
+first and "cfg" second. Function xilinx_pl_dma_pcie_parse_dt expects to read "cfg" resource in index 0 which
+leads to errors on boot. This patch uses platform_get_resource_byname, rather than by index.
+
+diff --git a/drivers/pci/controller/pcie-xilinx-dma-pl.c b/drivers/pci/controller/pcie-xilinx-dma-pl.c
+index 96639fe47099..09c3e1f0be8f 100644
+--- a/drivers/pci/controller/pcie-xilinx-dma-pl.c
++++ b/drivers/pci/controller/pcie-xilinx-dma-pl.c
+@@ -13,6 +13,7 @@
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/of_platform.h>
+ 
+ #include "../pci.h"
+ #include "pcie-xilinx-common.h"
+@@ -71,10 +72,24 @@
+ 
+ /* Phy Status/Control Register definitions */
+ #define XILINX_PCIE_DMA_REG_PSCR_LNKUP	BIT(11)
++#define QDMA_BRIDGE_BASE_OFF		0xcd8
+ 
+ /* Number of MSI IRQs */
+ #define XILINX_NUM_MSI_IRQS	64
+ 
++enum xilinx_pl_dma_version {
++	XDMA,
++	QDMA,
++};
++
++/**
++ * struct xilinx_pl_dma_variant - PL DMA PCIe variant information
++ * @version: DMA version
++ */
++struct xilinx_pl_dma_variant {
++	enum xilinx_pl_dma_version version;
++};
++
+ struct xilinx_msi {
+ 	struct irq_domain	*msi_domain;
+ 	unsigned long		*bitmap;
+@@ -88,6 +103,7 @@ struct xilinx_msi {
+  * struct pl_dma_pcie - PCIe port information
+  * @dev: Device pointer
+  * @reg_base: IO Mapped Register Base
++ * @cfg_base: IO Mapped Configuration Base
+  * @irq: Interrupt number
+  * @cfg: Holds mappings of config space window
+  * @phys_reg_base: Physical address of reg base
+@@ -97,10 +113,12 @@ struct xilinx_msi {
+  * @msi: MSI information
+  * @intx_irq: INTx error interrupt number
+  * @lock: Lock protecting shared register access
++ * @variant: PL DMA PCIe version check pointer
+  */
+ struct pl_dma_pcie {
+ 	struct device			*dev;
+ 	void __iomem			*reg_base;
++	void __iomem			*cfg_base;
+ 	int				irq;
+ 	struct pci_config_window	*cfg;
+ 	phys_addr_t			phys_reg_base;
+@@ -110,16 +128,23 @@ struct pl_dma_pcie {
+ 	struct xilinx_msi		msi;
+ 	int				intx_irq;
+ 	raw_spinlock_t			lock;
++	const struct xilinx_pl_dma_variant   *variant;
+ };
+ 
+ static inline u32 pcie_read(struct pl_dma_pcie *port, u32 reg)
+ {
++	if (port->variant->version == QDMA)
++		return readl(port->reg_base + reg + QDMA_BRIDGE_BASE_OFF);
++
+ 	return readl(port->reg_base + reg);
+ }
+ 
+ static inline void pcie_write(struct pl_dma_pcie *port, u32 val, u32 reg)
+ {
+-	writel(val, port->reg_base + reg);
++	if (port->variant->version == QDMA)
++		writel(val, port->reg_base + reg + QDMA_BRIDGE_BASE_OFF);
++	else
++		writel(val, port->reg_base + reg);
+ }
+ 
+ static inline bool xilinx_pl_dma_pcie_link_up(struct pl_dma_pcie *port)
+@@ -172,6 +197,9 @@ static void __iomem *xilinx_pl_dma_pcie_map_bus(struct pci_bus *bus,
+ 	if (!xilinx_pl_dma_pcie_valid_device(bus, devfn))
+ 		return NULL;
+ 
++	if (port->variant->version == QDMA)
++		return port->cfg_base + PCIE_ECAM_OFFSET(bus->number, devfn, where);
++
+ 	return port->reg_base + PCIE_ECAM_OFFSET(bus->number, devfn, where);
+ }
+ 
+@@ -711,7 +739,12 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
+ 	struct resource *res;
+ 	int err;
+ 
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (port->variant->version == QDMA) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
++	}
++	else {
++		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	}
+ 	if (!res) {
+ 		dev_err(dev, "Missing \"reg\" property\n");
+ 		return -ENXIO;
+@@ -724,6 +757,15 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
+ 
+ 	port->reg_base = port->cfg->win;
+ 
++	if (port->variant->version == QDMA) {
++		port->cfg_base = port->cfg->win;
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
++		port->reg_base = devm_ioremap_resource(dev, res);
++		if (IS_ERR(port->reg_base))
++			return PTR_ERR(port->reg_base);
++		port->phys_reg_base = res->start;
++	}
++
+ 	err = xilinx_request_msi_irq(port);
+ 	if (err) {
+ 		pci_ecam_free(port->cfg);
+@@ -753,6 +795,8 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
+ 	if (!bus)
+ 		return -ENODEV;
+ 
++	port->variant = of_device_get_match_data(dev);
++
+ 	err = xilinx_pl_dma_pcie_parse_dt(port, bus->res);
+ 	if (err) {
+ 		dev_err(dev, "Parsing DT failed\n");
+@@ -784,9 +828,22 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static const struct xilinx_pl_dma_variant xdma_host = {
++	.version = XDMA,
++};
++
++static const struct xilinx_pl_dma_variant qdma_host = {
++	.version = QDMA,
++};
++
+ static const struct of_device_id xilinx_pl_dma_pcie_of_match[] = {
+ 	{
+ 		.compatible = "xlnx,xdma-host-3.00",
++		.data = &xdma_host,
++	},
++	{
++		.compatible = "xlnx,qdma-host-3.00",
++		.data = &qdma_host,
+ 	},
+ 	{}
+ };

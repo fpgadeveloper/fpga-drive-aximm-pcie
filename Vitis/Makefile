@@ -15,6 +15,7 @@ TARGET ?= none
 JOBS ?= 8
 
 # valid targets
+# UPDATER START
 auboard_target := microblaze
 kc705_hpc_target := microblaze
 kc705_lpc_target := microblaze
@@ -28,10 +29,11 @@ vc707_hpc2_target := microblaze
 vc709_hpc_target := microblaze
 vck190_fmcp1_target := versal
 vck190_fmcp2_target := versal
-vek280_target := versal
-vek280_es_revb_target := versal
+vhk158_target := versal
 vmk180_fmcp1_target := versal
 vmk180_fmcp2_target := versal
+vek280_target := versal
+vek280_es_revb_target := versal
 vpk120_target := versal
 vpk180_target := versal
 vcu118_target := microblaze
@@ -43,6 +45,7 @@ zcu106_hpc1_target := zynqMP
 zcu111_target := zynqMP
 zcu208_target := zynqMP
 zcu216_target := zynqMP
+# UPDATER END
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 
