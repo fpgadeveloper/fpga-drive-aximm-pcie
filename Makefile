@@ -12,6 +12,7 @@ TARGET ?= none
 JOBS ?= 8
 
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
+# UPDATER START
 auboard_target := microblaze both
 kc705_hpc_target := microblaze both
 kc705_lpc_target := microblaze both
@@ -25,8 +26,11 @@ vc707_hpc2_target := microblaze baremetal_only
 vc709_hpc_target := microblaze baremetal_only
 vck190_fmcp1_target := versal both
 vck190_fmcp2_target := versal both
+vhk158_target := versal both
 vmk180_fmcp1_target := versal both
 vmk180_fmcp2_target := versal both
+vek280_target := versal both
+vek280_es_revb_target := versal both
 vpk120_target := versal both
 vpk180_target := versal both
 vcu118_target := microblaze both
@@ -37,6 +41,9 @@ zcu106_hpc0_target := zynqMP both
 zcu106_hpc1_target := zynqMP both
 zcu111_target := zynqMP both
 zcu208_target := zynqMP both
+zcu216_target := zynqMP both
+# UPDATER END
+
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 
