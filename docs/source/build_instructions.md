@@ -26,12 +26,20 @@ FMC connectors. The table below lists the target design name, the M2 ports suppo
 the FMC connector on which to connect the FPGA Drive FMC Gen4.
 
 {% for group in data.groups %}
+    {% set designs_in_group = [] %}
+    {% for design in data.designs %}
+        {% if design.group == group.label and design.publish != "NO" %}
+            {% set _ = designs_in_group.append(design.label) %}
+        {% endif %}
+    {% endfor %}
+    {% if designs_in_group | length > 0 %}
 ### {{ group.name }} designs
 
 | Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
 |---------------------|-------------------|-------------|-------------|-----|
-{% for design in data.designs %}{% if design.group == group.label %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.ports }} | {{ design.connector }} | {{ design.license }} |
+{% for design in data.designs %}{% if design.group == group.label and design.publish != "NO" %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.ports }} | {{ design.connector }} | {{ design.license }} |
 {% endif %}{% endfor %}
+{% endif %}
 {% endfor %}
 
 ## Windows users
