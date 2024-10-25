@@ -22,23 +22,40 @@ def load_json():
 # Create design tables for the README.md file
 # This function determines the formatting of the design tables
 def create_tables(data):
-    tables = []
-    links = {}
+    # Emoji dict
+    to_emoji = {"YES": ":white_check_mark:", "NO": ":x:"}
+    # Determine which groups actually have designs
+    used_groups = []
     for group in data['groups']:
-        tables.append('### {} designs'.format(group['name']))
-        tables.append('')
-        tables.append('| Target board          | Target design   | M2 ports    | FMC Slot    | License<br> required |')
-        tables.append('|-----------------------|-----------------|-------------|-------------|-------|')
         for design in data['designs']:
             if design['publish'] == 'NO':
                 continue
             if design['group'] == group['label']:
-                col1 = '[{0}]'.format(design['board']).ljust(21)
-                col2 = '`{0}`'.format(design['label']).ljust(15)
-                col3 = '{0}'.format(design['ports']).ljust(11)
-                col4 = '{0}'.format(design['connector']).ljust(11)
-                col5 = '{0}'.format(design['license']).ljust(5)
-                tables.append('| {0} | {1} | {2} | {3} | {4} |'.format(col1,col2,col3,col4,col5))
+                used_groups.append(group)
+                break
+    # Print tables for each used group
+    tables = []
+    links = {}
+    for group in used_groups:
+        tables.append('### {} designs'.format(group['name']))
+        tables.append('')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |')
+        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|')
+        for design in data['designs']:
+            if design['publish'] == 'NO':
+                continue
+            if design['group'] == group['label']:
+                cols = []
+                cols.append('[{0}]'.format(design['board']).ljust(21))
+                cols.append('`{0}`'.format(design['label']).ljust(15))
+                cols.append('{0}'.format(design['lanes'][0][1]).ljust(24))
+                if len(design['lanes']) == 2:
+                    cols.append('{0}'.format(design['lanes'][1][1]).ljust(24))
+                else:
+                    cols.append('-'.ljust(24))
+                cols.append('{0}'.format(design['connector']).ljust(11))
+                cols.append('{0}'.format(design['license']).ljust(5))
+                tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']
         tables.append('')
     # Add the board links
@@ -125,6 +142,13 @@ def get_vitis_targets(data):
         targets.append(target)
     return(targets)
 
+def get_vitis_build_targets(data):
+    targets = []
+    for design in data['designs']:
+        target = 'dict set target_dict {} {{ {} }}'.format(design['label'],design['boardname'])
+        targets.append(target)
+    return(targets)
+
 def get_ignore_paths(data):
     paths = []
     for design in data['designs']:
@@ -195,6 +219,11 @@ update_file(vivado_build_tcl,vivado_build_targets)
 vitis_makefile = '../../Vitis/Makefile'
 vitis_targets = get_vitis_targets(data)
 update_file(vitis_makefile,vitis_targets)
+
+# Update the Vitis build.tcl
+vitis_build_tcl = '../../Vitis/tcl/build-vitis.tcl'
+vitis_build_targets = get_vitis_build_targets(data)
+update_file(vitis_build_tcl,vitis_build_targets)
 
 # Update the PetaLinux makefile
 petalinux_makefile = '../../PetaLinux/Makefile'

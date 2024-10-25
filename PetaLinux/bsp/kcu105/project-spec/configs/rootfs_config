@@ -597,6 +597,11 @@ CONFIG_run-postinsts=y
 # CONFIG_libsocketcan-dbg is not set
 
 #
+# wolfssl
+#
+# CONFIG_wolfssl is not set
+
+#
 # openssl 
 #
 # CONFIG_openssl is not set
@@ -667,7 +672,6 @@ CONFIG_run-postinsts=y
 #
 # glibc-xilinx 
 #
-# CONFIG_catchsegv is not set
 # CONFIG_nscd is not set
 # CONFIG_glibc-thread-db is not set
 # CONFIG_sln is not set
@@ -676,7 +680,6 @@ CONFIG_run-postinsts=y
 # CONFIG_ldd is not set
 # CONFIG_tzcode is not set
 # CONFIG_libmemusage is not set
-# CONFIG_libsegfault is not set
 
 #
 # iptables 
@@ -761,7 +764,8 @@ CONFIG_bridge-utils=y
 # Image Features
 #
 # CONFIG_imagefeature-debug-tweaks is not set
-# CONFIG_auto-login is not set
+# CONFIG_imagefeature-empty-root-password is not set
+# CONFIG_imagefeature-serial-autologin-root is not set
 # CONFIG_Init-manager-systemd is not set
 CONFIG_Init-manager-sysvinit=y
 
@@ -775,7 +779,8 @@ CONFIG_Init-manager-sysvinit=y
 # PetaLinux RootFS Settings
 #
 CONFIG_ADD_EXTRA_USERS="root:root;petalinux::passwd-expire;"
-CONFIG_ADD_USERS_TO_GROUPS="petalinux:audio,video;"
+CONFIG_CREATE_NEW_GROUPS="aie;"
+CONFIG_ADD_USERS_TO_GROUPS="petalinux:audio,video,aie,input;"
 CONFIG_ADD_USERS_TO_SUDOERS="petalinux"
 
 # Tools for FPGA Drive FMC

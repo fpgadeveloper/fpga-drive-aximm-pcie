@@ -36,34 +36,37 @@ set template_app "Empty Application"
 set mb_combine_bit_elf 1
 
 # Possible targets (board name in lower case for the board.h file)
+# UPDATER START
+dict set target_dict auboard { auboard_15p }
 dict set target_dict kc705_hpc { kc705 }
 dict set target_dict kc705_lpc { kc705 }
 dict set target_dict kcu105_hpc { kcu105 }
-dict set target_dict kcu105_hpc_dual { kcu105 }
 dict set target_dict kcu105_lpc { kcu105 }
-dict set target_dict pz_7015 { pz }
-dict set target_dict pz_7030 { pz }
-dict set target_dict uzev_dual { uzev }
+dict set target_dict pz_7015 { picozed_7015_fmc2 }
+dict set target_dict pz_7030 { picozed_7030_fmc2 }
+dict set target_dict uzev { ultrazed_7ev_cc }
 dict set target_dict vc707_hpc1 { vc707 }
 dict set target_dict vc707_hpc2 { vc707 }
 dict set target_dict vc709_hpc { vc709 }
 dict set target_dict vck190_fmcp1 { vck190 }
 dict set target_dict vck190_fmcp2 { vck190 }
+dict set target_dict vhk158 { vhk158 }
 dict set target_dict vmk180_fmcp1 { vmk180 }
 dict set target_dict vmk180_fmcp2 { vmk180 }
+dict set target_dict vek280 { vek280 }
+dict set target_dict vek280_es_revb { vek280_es_revb }
 dict set target_dict vpk120 { vpk120 }
+dict set target_dict vpk180 { vpk180 }
 dict set target_dict vcu118 { vcu118 }
-dict set target_dict vcu118_dual { vcu118 }
 dict set target_dict zc706_hpc { zc706 }
 dict set target_dict zc706_lpc { zc706 }
 dict set target_dict zcu104 { zcu104 }
 dict set target_dict zcu106_hpc0 { zcu106 }
-dict set target_dict zcu106_hpc0_dual { zcu106 }
 dict set target_dict zcu106_hpc1 { zcu106 }
 dict set target_dict zcu111 { zcu111 }
-dict set target_dict zcu111_dual { zcu111 }
 dict set target_dict zcu208 { zcu208 }
-dict set target_dict zcu208_dual { zcu208 }
+dict set target_dict zcu216 { zcu216 }
+# UPDATER END
 
 # ----------------------------------------------------------------------------------------------
 # Custom modifications functions

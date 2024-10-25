@@ -1,58 +1,78 @@
 # Description
 
-These are the example designs for the FPGA Drive FMC adapter that allows connecting
-NVMe SSDs to FPGAs via the FPGA Mezzanine Card (FMC) connector.
+These are the reference designs for the [FPGA Drive FMC Gen4] and [M.2 M-key Stack FMC] adapters 
+that allow connecting NVMe SSDs and other M.2 M-key modules to FPGA, MPSoCs and APACs via the FPGA 
+Mezzanine Card (FMC) connector.
 
-![FPGA Drive FMC top side](images/fpga-drive-fmc.jpg)
-    
-The bare metal software application reports on the status of the PCIe link and 
-performs enumeration of the detected PCIe end-points (ie. the SSDs). The project also contains
-scripts to generate PetaLinux for these platforms to allow accessing the SSDs from the Linux
-operating system.
+Both of the FMC cards shown below can be used with these reference designs.
+
+| FPGA Drive FMC Gen4 | M.2 M-key Stack FMC |
+|---|---|
+| ![FPGA Drive FMC Gen4](images/fpga-drive-fmc-gen4.png) | ![M.2 M-key Stack FMC](images/m2-mkey-stack-fmc.png) |
+
+## Hardware Platforms
+
+The hardware designs provided in this reference are based on Vivado and support a range of FPGA, MPSoC and ACAP evaluation
+boards. The repository contains all necessary scripts and code to build these designs for the supported platforms listed below:
+
+{% for group in data.groups %}
+    {% set designs_in_group = [] %}
+    {% for design in data.designs %}
+        {% if design.group == group.label and design.publish != "NO" %}
+            {% set _ = designs_in_group.append(design.label) %}
+        {% endif %}
+    {% endfor %}
+    {% if designs_in_group | length > 0 %}
+### {{ group.name }} platforms
+
+| Target board        | FMC Slot<br> Used | Active<br>M.2 Slots | PCIe IP | Standalone<br> Application | PetaLinux |
+|---------------------|---------------|---------|-----|-----|-----|
+{% for design in data.designs %}{% if design.group == group.label and design.publish != "NO" %}| [{{ design.board }}]({{ design.link }}) | {{ design.connector }} | {{ design.lanes | length }}x | [{{ design.ip }}]({{ data.ips[design.ip].link }}) | {% if design.baremetal == "YES" %} ✅ {% else %} ❌ {% endif %} | {% if design.petalinux == "YES" %} ✅ {% else %} ❌ {% endif %} |
+{% endif %}{% endfor %}
+{% endif %}
+{% endfor %}
 
 ## PCIe IP
 
-These designs implement a PCIe root complex to interface with the SSDs. All designs make use of the integrated
-PCIe blocks that are built into the FPGA or MPSoC device. The IP core that is used to exploit the integrated PCIe
-block depends on the device.
+These designs implement one PCIe root complex per active M.2 slot. All designs make use of the integrated
+PCIe blocks that are built into the FPGA, MPSoC or ACAP device. The PCIe IP core used in each design
+depends on the device and is indicated in the "PCIe IP" column in the tables above.
 
-| PCIe IP Core | Dev boards       |
-|---------------------------------------------------------------------------------------------------------------------------|------------------|
-| [AXI Memory Mapped to PCI Express (PCIe) Gen 2 IP](https://www.xilinx.com/products/intellectual-property/axi_pcie.html)   | [KC705], [VC707], PicoZed, [ZC706] |
-| [AXI PCI Express (PCIe) Gen 3 Subsystem IP](https://www.xilinx.com/products/intellectual-property/axi_pcie_gen3.html)     | [VC709], [KCU105]    |
-| [DMA for PCI Express (PCIe) Subsystem IP](https://www.xilinx.com/products/intellectual-property/pcie-dma.html)            | [ZCU104], [ZCU106], [ZCU111], [ZCU208], UltraZed EV |
-| [QDMA Subsystem for PCI Express (PCIe) IP](https://docs.xilinx.com/r/en-US/pg302-qdma) | [VCK190], [VMK180] |
+The table below lists the PCIe IP cores used in these designs and provides links to their product pages. As all of these
+IP make use of hard PCIe blocks that are integrated into the FPGA/MPSoC/ACAP devices, they do not require a license to
+use.
 
-## Single SSD designs
+| IP Label       | IP Name     |
+|----------------|-------------|
+{% for label,ip in data.ips.items() %}| {{ label }} | [{{ ip.name }}]({{ ip.link }}) |
+{% endfor %}
 
-![FPGA Drive FMC with single SSD loaded](images/fpga-drive-fmc-single-load.jpg)
-    
-The target designs that are intended to be used with only one SSD should be loaded as
-shown in the above image. The SSD should be loaded into the first M.2 slot, labelled SSD1. If you are using 
-the older version FPGA Drive FMC (Rev-B) with only one M.2 connector, you will only be able to use the single SSD designs.
+## Active M.2 Slots
 
-## Dual SSD designs
+Some of the designs have only one active M.2 slot due to limitations of the target board.
+The table below illustrates how to load the M.2 slots for designs that can support only
+one M.2 module vs those that can support two.
 
-![FPGA Drive FMC with two SSDs loaded](images/fpga-drive-fmc-dual-load.jpg)
+| One Active Slots | Two Active Slots |
+|---|---|
+| ![FPGA Drive FMC with single SSD loaded](images/fpga-drive-fmc-single-load.jpg) | ![FPGA Drive FMC with two SSDs loaded](images/fpga-drive-fmc-dual-load.jpg) |
 
-The target designs that are intended to be used with two SSDs can be loaded as shown
-in the above image.
+When using designs with only one active slot, you must leave the slot labelled "SLOT 2" or "SSD2" unloaded.
+
+## Software
+
+These reference designs can be driven by either a standalone application or within a PetaLinux environment. 
+The repository includes all necessary scripts and code to build both environments. The table 
+below outlines the corresponding applications available in each environment:
+
+| Environment      | Available Applications  |
+|------------------|-------------------------|
+| Standalone       | PCIe enumeration test |
+| PetaLinux        | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+
+The standalone software application reports on the status of the PCIe link and 
+performs enumeration of the detected PCIe end-points (ie. the M.2 modules).
 
 
-[AC701]: https://www.xilinx.com/ac701
-[KC705]: https://www.xilinx.com/kc705
-[VC707]: https://www.xilinx.com/vc707
-[VC709]: https://www.xilinx.com/vc709
-[VCK190]: https://www.xilinx.com/vck190
-[VMK180]: https://www.xilinx.com/vmk180
-[VCU108]: https://www.xilinx.com/vcu108
-[VCU118]: https://www.xilinx.com/vcu118
-[KCU105]: https://www.xilinx.com/kcu105
-[ZC702]: https://www.xilinx.com/zc702
-[ZC706]: https://www.xilinx.com/zc706
-[ZCU111]: https://www.xilinx.com/zcu111
-[ZCU208]: https://www.xilinx.com/zcu208
-[ZCU104]: https://www.xilinx.com/zcu104
-[ZCU102]: https://www.xilinx.com/zcu102
-[ZCU106]: https://www.xilinx.com/zcu106
-
+[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/

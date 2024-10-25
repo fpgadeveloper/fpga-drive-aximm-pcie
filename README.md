@@ -5,7 +5,9 @@
 This repo contains the example designs for the Opsero [FPGA Drive FMC Gen4] and Opsero [M.2 M-key Stack FMC] 
 mated with several FPGA and MPSoC evaluation boards.
 
-![FPGA Drive FMC top side](docs/source/images/fpga-drive-fmc.jpg "FPGA Drive FMC")
+| FPGA Drive FMC Gen4 | M.2 M-key Stack FMC |
+|---------------------|---------------------|
+| ![FPGA Drive FMC Gen4](docs/source/images/fpga-drive-fmc-gen4.png "FPGA Drive FMC Gen4") | ![M.2 M-key Stack FMC](docs/source/images/m2-mkey-stack-fmc.png "M.2 M-key Stack FMC") |
 
 Important links:
 
@@ -41,53 +43,51 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 <!-- updater start -->
 ### FPGA designs
 
-| Target board          | Target design   | M2 ports    | FMC Slot    | License<br> required |
-|-----------------------|-----------------|-------------|-------------|-------|
-| [AUBoard]             | `auboard`       | SSD1        | HPC         | NO    |
-| [KC705]               | `kc705_hpc`     | SSD1        | HPC         | YES   |
-| [KC705]               | `kc705_lpc`     | SSD1        | LPC         | YES   |
-| [KCU105]              | `kcu105_hpc`    | SSD1 & SSD2 | HPC         | YES   |
-| [KCU105]              | `kcu105_lpc`    | SSD1        | LPC         | YES   |
-| [VC707]               | `vc707_hpc1`    | SSD1        | HPC1        | YES   |
-| [VC707]               | `vc707_hpc2`    | SSD1        | HPC2        | YES   |
-| [VC709]               | `vc709_hpc`     | SSD1        | HPC         | YES   |
-| [VCU118]              | `vcu118`        | SSD1 & SSD2 | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
+| [KC705]               | `kc705_hpc`     | 4                        | -                        | HPC         | YES   |
+| [KC705]               | `kc705_lpc`     | 1                        | -                        | LPC         | YES   |
+| [KCU105]              | `kcu105_hpc`    | 4                        | 4                        | HPC         | YES   |
+| [KCU105]              | `kcu105_lpc`    | 1                        | -                        | LPC         | YES   |
+| [VC707]               | `vc707_hpc1`    | 4                        | -                        | HPC1        | YES   |
+| [VC707]               | `vc707_hpc2`    | 4                        | -                        | HPC2        | YES   |
+| [VC709]               | `vc709_hpc`     | 4                        | -                        | HPC         | YES   |
+| [VCU118]              | `vcu118`        | 4                        | 4                        | FMCP        | YES   |
 
 ### Zynq-7000 designs
 
-| Target board          | Target design   | M2 ports    | FMC Slot    | License<br> required |
-|-----------------------|-----------------|-------------|-------------|-------|
-| [PicoZed 7015]        | `pz_7015`       | SSD1        | LPC         | NO    |
-| [PicoZed 7030]        | `pz_7030`       | SSD1        | LPC         | NO    |
-| [ZC706]               | `zc706_hpc`     | SSD1        | HPC         | YES   |
-| [ZC706]               | `zc706_lpc`     | SSD1        | LPC         | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
+| [PicoZed 7015]        | `pz_7015`       | 1                        | -                        | LPC         | NO    |
+| [PicoZed 7030]        | `pz_7030`       | 1                        | -                        | LPC         | NO    |
+| [ZC706]               | `zc706_hpc`     | 4                        | -                        | HPC         | YES   |
+| [ZC706]               | `zc706_lpc`     | 1                        | -                        | LPC         | YES   |
 
 ### Zynq UltraScale+ designs
 
-| Target board          | Target design   | M2 ports    | FMC Slot    | License<br> required |
-|-----------------------|-----------------|-------------|-------------|-------|
-| [UltraZed-EV Carrier] | `uzev`          | SSD1 & SSD2 | HPC         | NO    |
-| [ZCU104]              | `zcu104`        | SSD1        | LPC         | NO    |
-| [ZCU106]              | `zcu106_hpc0`   | SSD1 & SSD2 | HPC0        | NO    |
-| [ZCU106]              | `zcu106_hpc1`   | SSD1        | HPC1        | NO    |
-| [ZCU111]              | `zcu111`        | SSD1 & SSD2 | FMCP        | YES   |
-| [ZCU208]              | `zcu208`        | SSD1 & SSD2 | FMCP        | YES   |
-| [ZCU216]              | `zcu216`        | SSD1 & SSD2 | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
+| [UltraZed-EV Carrier] | `uzev`          | 4                        | 4                        | HPC         | NO    |
+| [ZCU104]              | `zcu104`        | 1                        | -                        | LPC         | NO    |
+| [ZCU106]              | `zcu106_hpc0`   | 4                        | 4                        | HPC0        | NO    |
+| [ZCU106]              | `zcu106_hpc1`   | 1                        | -                        | HPC1        | NO    |
+| [ZCU111]              | `zcu111`        | 4                        | 4                        | FMCP        | YES   |
+| [ZCU208]              | `zcu208`        | 4                        | 4                        | FMCP        | YES   |
+| [ZCU216]              | `zcu216`        | 4                        | 4                        | FMCP        | YES   |
 
 ### Versal designs
 
-| Target board          | Target design   | M2 ports    | FMC Slot    | License<br> required |
-|-----------------------|-----------------|-------------|-------------|-------|
-| [VCK190]              | `vck190_fmcp1`  | SSD1 & SSD2 | FMCP1       | YES   |
-| [VCK190]              | `vck190_fmcp2`  | SSD1 & SSD2 | FMCP2       | YES   |
-| [VHK158]              | `vhk158`        | SSD1        | FMCP        | YES   |
-| [VMK180]              | `vmk180_fmcp1`  | SSD1 & SSD2 | FMCP1       | YES   |
-| [VMK180]              | `vmk180_fmcp2`  | SSD1 & SSD2 | FMCP2       | YES   |
-| [VEK280]              | `vek280`        | SSD1 & SSD2 | FMCP        | YES   |
-| [VPK120]              | `vpk120`        | SSD1        | FMCP        | YES   |
-| [VPK180]              | `vpk180`        | SSD1        | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
+| [VCK190]              | `vck190_fmcp1`  | 4                        | 4                        | FMCP1       | YES   |
+| [VCK190]              | `vck190_fmcp2`  | 4                        | 4                        | FMCP2       | YES   |
+| [VHK158]              | `vhk158`        | 4                        | -                        | FMCP        | YES   |
+| [VMK180]              | `vmk180_fmcp1`  | 4                        | 4                        | FMCP1       | YES   |
+| [VMK180]              | `vmk180_fmcp2`  | 4                        | 4                        | FMCP2       | YES   |
+| [VEK280]              | `vek280`        | 4                        | 4                        | FMCP        | YES   |
+| [VPK120]              | `vpk120`        | 4                        | -                        | FMCP        | YES   |
+| [VPK180]              | `vpk180`        | 4                        | -                        | FMCP        | YES   |
 
-[AUBoard]: https://www.xilinx.com/products/boards-and-kits/1-1xj8wo9.html
 [KC705]: https://www.xilinx.com/kc705
 [KCU105]: https://www.xilinx.com/kcu105
 [VC707]: https://www.xilinx.com/vc707
@@ -116,6 +116,20 @@ Notes:
    one of which is on the opposite side of the device to the GT quads, making routing a challenge.
    For this reason the [VPK120] and [VPK180] designs supports only 1x SSD.
 
+## Software
+
+These reference designs can be driven by either a standalone application or within a PetaLinux environment. 
+The repository includes all necessary scripts and code to build both environments. The table 
+below outlines the corresponding applications available in each environment:
+
+| Environment      | Available Applications  |
+|------------------|-------------------------|
+| Standalone       | PCIe enumeration test |
+| PetaLinux        | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+
+The standalone software application reports on the status of the PCIe link and 
+performs enumeration of the detected PCIe end-points (ie. the M.2 modules).
+
 ## Build instructions
 
 Clone the repo:
@@ -128,6 +142,13 @@ Source Vivado and PetaLinux tools:
 ```
 source <path-to-petalinux>/2024.1/settings.sh
 source <path-to-vivado>/2024.1/settings64.sh
+```
+
+To build the standalone PCIe enumeration test application (Vivado project and Vitis workspace):
+
+```
+cd fpga-drive-aximm-pcie/Vitis
+make workspace TARGET=uzev
 ```
 
 Build all (Vivado project and PetaLinux):

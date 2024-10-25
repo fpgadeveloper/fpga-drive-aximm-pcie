@@ -23,7 +23,7 @@ license.
 
 This repo contains several designs that target the various supported development boards and their
 FMC connectors. The table below lists the target design name, the M2 ports supported by the design and 
-the FMC connector on which to connect the FPGA Drive FMC Gen4.
+the FMC connector on which to connect the mezzanine card.
 
 {% for group in data.groups %}
     {% set designs_in_group = [] %}
@@ -35,9 +35,9 @@ the FMC connector on which to connect the FPGA Drive FMC Gen4.
     {% if designs_in_group | length > 0 %}
 ### {{ group.name }} designs
 
-| Target board        | Target design     | M2 ports    | FMC Slot    | License<br> required |
-|---------------------|-------------------|-------------|-------------|-----|
-{% for design in data.designs %}{% if design.group == group.label and design.publish != "NO" %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.ports }} | {{ design.connector }} | {{ design.license }} |
+| Target board        | Target design     | M.2 Slot 1<br>PCIe Lanes  | M.2 Slot 2<br>PCIe Lanes  | FMC Slot    | License<br> required |
+|---------------------|-------------------|---------------------------|---------------------------|-------------|-----|
+{% for design in data.designs %}{% if design.group == group.label and design.publish != "NO" %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.lanes[0] }} | {{ design.lanes[1] | default("-") }} | {{ design.connector }} | {{ design.license }} |
 {% endif %}{% endfor %}
 {% endif %}
 {% endfor %}
@@ -89,7 +89,7 @@ to build the Vivado and PetaLinux projects with a single command.
 
 1. Open a command terminal and launch the setup script for Vivado:
    ```
-   source <path-to-vivado-install>/2022.1/settings64.sh
+   source <path-to-vivado-install>/2024.1/settings64.sh
    ```
 2. Clone the Git repository and `cd` into the `Vivado` folder of the repo:
    ```
@@ -101,7 +101,8 @@ to build the Vivado and PetaLinux projects with a single command.
    ```
    make project TARGET=<target>
    ```
-   Valid target labels are listed in the table of target designs above.
+   Valid target labels are:
+   {% for design in data.designs %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
    That will create the Vivado project and block design without generating a bitstream or exporting to XSA.
 4. Open the generated project in the Vivado GUI and click **Generate Bitstream**. Once the build is
    complete, select **File->Export->Export Hardware** and be sure to tick **Include bitstream** and use
@@ -121,7 +122,7 @@ design if it has not already been done.
 
 1. Launch the setup scripts for Vitis:
    ```
-   source <path-to-vitis-install>/2022.1/settings64.sh
+   source <path-to-vitis-install>/2024.1/settings64.sh
    ```
 2. To build the Vitis workspace, `cd` to the Vitis directory in the repo,
    then run make to create the Vitis workspace and compile the standalone application:
@@ -129,6 +130,8 @@ design if it has not already been done.
    cd fpga-drive-aximm-pcie/Vitis
    make workspace TARGET=<target>
    ```
+   Valid target labels for the workspaces are:
+   {% for design in data.designs %}{% if design.baremetal == "YES" %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
    You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ### Build PetaLinux project in Linux
@@ -139,11 +142,11 @@ design if it has not already been done.
 
 1. Launch the setup script for Vivado (only if you skipped the Vivado build steps above):
    ```
-   source <path-to-vivado-install>/2022.1/settings64.sh
+   source <path-to-vivado-install>/2024.1/settings64.sh
    ```
 2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg:
    ```
-   source <path-to-petalinux-install>/2022.1/settings.sh
+   source <path-to-petalinux-install>/2024.1/settings.sh
    ```
 3. Build the PetaLinux project for your specific target platform by running the following
    command, replacing `<target>` with a valid value from below:
@@ -151,7 +154,8 @@ design if it has not already been done.
    cd PetaLinux
    make petalinux TARGET=<target>
    ```
-   Valid targets are listed in the table of target designs above.
+   Valid target labels for PetaLinux projects are:
+   {% for design in data.designs %}{% if design.petalinux == "YES" %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
    Note that if you skipped the Vivado build steps above, the Makefile will first generate and
    build the Vivado project, and then build the PetaLinux project.
 
@@ -188,35 +192,6 @@ follow these instructions.
 Now when you use `make` to build the PetaLinux projects, they will be configured for offline build.
 
 [supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
-[FPGA Drive FMC Gen4]: https://fpgadrive.com
-[AUBoard]: https://www.xilinx.com/products/boards-and-kits/1-1xj8wo9.html
-[AC701]: https://www.xilinx.com/ac701
-[KC705]: https://www.xilinx.com/kc705
-[VC707]: https://www.xilinx.com/vc707
-[VC709]: https://www.xilinx.com/vc709
-[VCK190]: https://www.xilinx.com/vck190
-[VEK280]: https://www.xilinx.com/vek280
-[VMK180]: https://www.xilinx.com/vmk180
-[VPK120]: https://www.xilinx.com/vpk120
-[VPK180]: https://www.xilinx.com/vpk180
-[VCU108]: https://www.xilinx.com/vcu108
-[VCU118]: https://www.xilinx.com/vcu118
-[KCU105]: https://www.xilinx.com/kcu105
-[ZC702]: https://www.xilinx.com/zc702
-[ZC706]: https://www.xilinx.com/zc706
-[ZCU111]: https://www.xilinx.com/zcu111
-[ZCU208]: https://www.xilinx.com/zcu208
-[ZCU216]: https://www.xilinx.com/zcu216
-[Trenz TEBF0808]: https://shop.trenz-electronic.de/en/TEBF0808-04A-UltraITX-Baseboard-for-Trenz-Electronic-TE080X-UltraSOM
-[MicroZed 7020 FMC Carrier]: https://www.avnet.com/opasdata/d120001/medias/docus/187/PB-AES-MBCC-FMC-G-V2-Product-Brief.pdf
-[PicoZed FMC Carrier v2]: https://www.avnet.com/wps/portal/silica/products/product-highlights/2016/xilinx-picozed-fmc-carrier-card-v2/
-[ZedBoard]: https://digilent.com/reference/programmable-logic/zedboard/start
-[UltraZed EG PCIe Carrier]: https://www.xilinx.com/products/boards-and-kits/1-mb9rqb.html
-[UltraZed-EV carrier]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html
-[ZCU104]: https://www.xilinx.com/zcu104
-[ZCU102]: https://www.xilinx.com/zcu102
-[ZCU106]: https://www.xilinx.com/zcu106
-[PYNQ-ZU]: https://www.tulembedded.com/FPGA/ProductsPYNQ-ZU.html
 
 
 

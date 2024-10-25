@@ -6,7 +6,8 @@
 FPGA Drive Reference Designs
 ============================
 
-This is the documentation for the reference designs for the `FPGA Drive FMC`_.
+This is the documentation for the reference designs for the
+`FPGA Drive FMC Gen4`_ and the `M.2 M-key Stack FMC`_.
 
 
 .. toctree::
@@ -25,4 +26,6 @@ This is the documentation for the reference designs for the `FPGA Drive FMC`_.
    revision_history
 
 
-.. _FPGA Drive FMC: https://fpgadrive.com
+.. _FPGA Drive FMC Gen4: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+.. _M.2 M-key Stack FMC: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+
