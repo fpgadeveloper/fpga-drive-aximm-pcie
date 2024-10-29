@@ -1,0 +1,20 @@
+===============================================================================
+AI Engine: GMIO Matrix Multiplication Example
+===============================================================================
+The AI Engine matrix multiplication example demonstrates how to use AI Engine
+for scalar computation, and use GMIO for data movement. In this example, to run
+the matrix multiplication on the AI Engine, we use the standard matrix
+multiplication algorithm. The user can change the matrix size and the number of
+cores utilized at compile-time. The expected matrix size must be a multiple of
+50 (number of cores used) with the minimum and maximum value as 100x100 and
+1200x1200 respectively.
+Please note that this example is intended to be a proof of concept only. There
+can be other ways of implementation, which can leverage more of the AIE resource
+and hence can result in better performance figures.
+For more information on rebuilding this application please refer to readme,
+https://github.com/Xilinx/plnx-aie-examples/blob/rel-v2021.1/designs/xgemm-gmio/README
+References
+=================================================================================
+[1] Vivado User Guide - for hardware-related design.
+[2] Vitis User Guide - for AIE application.
+[3] Versal TRM - General subsystem overview.

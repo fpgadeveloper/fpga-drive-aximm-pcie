@@ -49,6 +49,7 @@ dict set target_dict vck190_fmcp1 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vck190_fmcp2 { xilinx.com vck190 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp1 { xilinx.com vmk180 { X4 X4 } versal }
 dict set target_dict vmk180_fmcp2 { xilinx.com vmk180 { X4 X4 } versal }
+dict set target_dict vek280_es_revb { xilinx.com vek280_es_revb { X4 X4 } versal }
 dict set target_dict vcu118 { xilinx.com vcu118 { X4 } mb }
 dict set target_dict vcu118_dual { xilinx.com vcu118 { X4 X4 } mb }
 dict set target_dict zc706_hpc { xilinx.com zc706 { X4 } zynq }

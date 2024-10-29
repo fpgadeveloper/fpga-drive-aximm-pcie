@@ -53,6 +53,9 @@ if {[str_contains $target "vck190"]} {
 } elseif {[str_contains $target "vmk180"]} {
   set pcie_blk_locn { "X1Y0" "X1Y2" }
   set ref_board "VMK180"
+} elseif {[str_contains $target "vek280"]} {
+  set pcie_blk_locn { "X1Y1" "X1Y2" }
+  set ref_board "VEK280_ES_REVB"
 }
 
 # BAR addresses and sizes
@@ -67,18 +70,33 @@ set intr_list {}
 create_bd_cell -type ip -vlnv xilinx.com:ip:versal_cips versal_cips_0
 
 # Configure the CIPS using automation feature
-apply_bd_automation -rule xilinx.com:bd_rule:cips -config { \
-  board_preset {Yes} \
-  boot_config {Custom} \
-  configure_noc {Add new AXI NoC} \
-  debug_config {JTAG} \
-  design_flow {Full System} \
-  mc_type {DDR} \
-  num_mc_ddr {1} \
-  num_mc_lpddr {None} \
-  pl_clocks {None} \
-  pl_resets {None} \
-}  [get_bd_cells versal_cips_0]
+if {[str_contains $target "vek280"]} {
+  apply_bd_automation -rule xilinx.com:bd_rule:cips -config { \
+    board_preset {Yes} \
+    boot_config {Custom} \
+    configure_noc {Add new AXI NoC} \
+    debug_config {JTAG} \
+    design_flow {Full System} \
+    mc_type {LPDDR} \
+    num_mc_ddr {None} \
+    num_mc_lpddr {1} \
+    pl_clocks {None} \
+    pl_resets {None} \
+  }  [get_bd_cells versal_cips_0]
+} else {
+  apply_bd_automation -rule xilinx.com:bd_rule:cips -config { \
+    board_preset {Yes} \
+    boot_config {Custom} \
+    configure_noc {Add new AXI NoC} \
+    debug_config {JTAG} \
+    design_flow {Full System} \
+    mc_type {DDR} \
+    num_mc_ddr {1} \
+    num_mc_lpddr {None} \
+    pl_clocks {None} \
+    pl_resets {None} \
+  }  [get_bd_cells versal_cips_0]
+}
 
 # -----------------------------------------------------------------------------
 # Remove DDR address region 1 from the design
@@ -97,75 +115,214 @@ set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {100} write_bw {100} 
 set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S04_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
 
-# Extra config for this design
+# Extra config for this design:
+# PL CLK0 output clock enabled 350MHz
+# Number of PL Resets 1
+# Enable M_AXI_FPD and M_AXI_LPD, both 128 bit width
+# Enable PS to PL interrupts IRO0-IRQ5
+if {[str_contains $target "vek280"]} {
 set_property -dict [list \
-  CONFIG.PS_PMC_CONFIG { DDR_MEMORY_MODE {Connectivity to DDR via NOC}  \
-  DEBUG_MODE JTAG  DESIGN_MODE 1  \
-  PMC_GPIO0_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 25}}}  \
-  PMC_GPIO1_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 26 .. 51}}}  \
-  PMC_MIO37 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA high} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
-  PMC_OSPI_PERIPHERAL {{ENABLE 0} {IO {PMC_MIO 0 .. 11}} {MODE Single}}  \
-  PMC_QSPI_COHERENCY 0  PMC_QSPI_FBCLK {{ENABLE 1} {IO {PMC_MIO 6}}}  \
-  PMC_QSPI_PERIPHERAL_DATA_MODE x4  \
-  PMC_QSPI_PERIPHERAL_ENABLE 1  \
-  PMC_QSPI_PERIPHERAL_MODE {Dual Parallel}  \
-  PMC_REF_CLK_FREQMHZ 33.3333  \
-  PMC_SD1 {{CD_ENABLE 1} {CD_IO {PMC_MIO 28}} {POW_ENABLE 1} {POW_IO {PMC_MIO 51}} {RESET_ENABLE 0} {RESET_IO {PMC_MIO 12}} {WP_ENABLE 0} {WP_IO {PMC_MIO 1}}}  \
-  PMC_SD1_COHERENCY 0  \
-  PMC_SD1_DATA_TRANSFER_MODE 8Bit  \
-  PMC_SD1_PERIPHERAL {{CLK_100_SDR_OTAP_DLY 0x3} {CLK_200_SDR_OTAP_DLY 0x2} {CLK_50_DDR_ITAP_DLY 0x36} {CLK_50_DDR_OTAP_DLY 0x3} {CLK_50_SDR_ITAP_DLY 0x2C} {CLK_50_SDR_OTAP_DLY 0x4} {ENABLE 1} {IO {PMC_MIO 26 .. 36}}}  PMC_SD1_SLOT_TYPE {SD 3.0} \
-  PMC_USE_PMC_NOC_AXI0 1  \
-  PS_BOARD_INTERFACE ps_pmc_fixed_io  \
-  PS_CAN1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 40 .. 41}}}  \
-  PS_ENET0_MDIO {{ENABLE 1} {IO {PS_MIO 24 .. 25}}}  \
-  PS_ENET0_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 0 .. 11}}}  \
-  PS_ENET1_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 12 .. 23}}}  \
-  PS_GEN_IPI0_ENABLE 1  \
-  PS_GEN_IPI0_MASTER A72  \
-  PS_GEN_IPI1_ENABLE 1  \
-  PS_GEN_IPI2_ENABLE 1  \
-  PS_GEN_IPI3_ENABLE 1  \
-  PS_GEN_IPI4_ENABLE 1  \
-  PS_GEN_IPI5_ENABLE 1  \
-  PS_GEN_IPI6_ENABLE 1  \
-  PS_HSDP_EGRESS_TRAFFIC JTAG  \
-  PS_HSDP_INGRESS_TRAFFIC JTAG  \
-  PS_HSDP_MODE None  \
-  PS_I2C0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 46 .. 47}}}  \
-  PS_I2C1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 44 .. 45}}}  \
-  PS_IRQ_USAGE {{CH0 1} {CH1 1} {CH10 0} {CH11 0} {CH12 0} {CH13 0} {CH14 0} {CH15 0} {CH2 1} {CH3 1} {CH4 1} {CH5 1} {CH6 0} {CH7 0} {CH8 0} {CH9 0}}  \
-  PS_MIO19 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
-  PS_MIO21 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
-  PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
-  PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
-  PS_M_AXI_FPD_DATA_WIDTH 128 \
-  PS_M_AXI_LPD_DATA_WIDTH 128 \
-  PS_NUM_FABRIC_RESETS 1  \
-  PS_PCIE_RESET {{ENABLE 1}}  \
-  PS_PL_CONNECTIVITY_MODE Custom  \
-  PS_UART0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 42 .. 43}}}  \
-  PS_USB3_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 13 .. 25}}}  \
-  PS_USE_FPD_CCI_NOC 1  \
-  PS_USE_FPD_CCI_NOC0 1  \
-  PS_USE_M_AXI_FPD 1  \
-  PS_USE_M_AXI_LPD 1  \
-  PS_USE_NOC_LPD_AXI0 1  \
-  PS_USE_PMCPL_CLK0 1  \
-  PS_USE_PMCPL_CLK1 0  \
-  PS_USE_PMCPL_CLK2 0  \
-  PS_USE_PMCPL_CLK3 0  \
-  SMON_ALARMS Set_Alarms_On  \
-  SMON_ENABLE_TEMP_AVERAGING 0  \
-  SMON_TEMP_AVERAGING_SAMPLES 0 \
+  CONFIG.CLOCK_MODE {Custom} \
+  CONFIG.PS_PMC_CONFIG { \
+    CLOCK_MODE {Custom} \
+    DDR_MEMORY_MODE {Connectivity to DDR via NOC} \
+    DEBUG_MODE {JTAG} \
+    DESIGN_MODE {1} \
+    DEVICE_INTEGRITY_MODE {Sysmon temperature voltage and external IO monitoring} \
+    PMC_CRP_PL0_REF_CTRL_FREQMHZ {350} \
+    PMC_GPIO0_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 25}}} \
+    PMC_GPIO1_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 26 .. 51}}} \
+    PMC_MIO12 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_MIO37 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA high} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_MIO38 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA high} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_OSPI_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 11}} {MODE Single}} \
+    PMC_REF_CLK_FREQMHZ {33.3333} \
+    PMC_SD1 {{CD_ENABLE 1} {CD_IO {PMC_MIO 28}} {POW_ENABLE 1} {POW_IO {PMC_MIO 51}} {RESET_ENABLE 0} {RESET_IO {PMC_MIO 12}} {WP_ENABLE 0} {WP_IO {PMC_MIO 1}}} \
+    PMC_SD1_PERIPHERAL {{CLK_100_SDR_OTAP_DLY 0x3} {CLK_200_SDR_OTAP_DLY 0x2} {CLK_50_DDR_ITAP_DLY 0x36} {CLK_50_DDR_OTAP_DLY 0x3} {CLK_50_SDR_ITAP_DLY 0x2C} {CLK_50_SDR_OTAP_DLY 0x4} {ENABLE 1} {IO {PMC_MIO 26 .. 36}}} \
+    PMC_SD1_SLOT_TYPE {SD 3.0} \
+    PMC_USE_PMC_NOC_AXI0 {1} \
+    PS_BOARD_INTERFACE {ps_pmc_fixed_io} \
+    PS_CAN0_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 14 .. 15}}} \
+    PS_CAN1_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 16 .. 17}}} \
+    PS_CRL_CAN0_REF_CTRL_FREQMHZ {160} \
+    PS_CRL_CAN1_REF_CTRL_FREQMHZ {160} \
+    PS_ENET0_MDIO {{ENABLE 1} {IO {PS_MIO 24 .. 25}}} \
+    PS_ENET0_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 0 .. 11}}} \
+    PS_GEN_IPI0_ENABLE {1} \
+    PS_GEN_IPI0_MASTER {A72} \
+    PS_GEN_IPI1_ENABLE {1} \
+    PS_GEN_IPI2_ENABLE {1} \
+    PS_GEN_IPI3_ENABLE {1} \
+    PS_GEN_IPI4_ENABLE {1} \
+    PS_GEN_IPI5_ENABLE {1} \
+    PS_GEN_IPI6_ENABLE {1} \
+    PS_HSDP_EGRESS_TRAFFIC {JTAG} \
+    PS_HSDP_INGRESS_TRAFFIC {JTAG} \
+    PS_HSDP_MODE {NONE} \
+    PS_I2C0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 46 .. 47}}} \
+    PS_I2C1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 44 .. 45}}} \
+    PS_I2CSYSMON_PERIPHERAL {{ENABLE 0} {IO {PMC_MIO 39 .. 40}}} \
+    PS_IRQ_USAGE {{CH0 1} {CH1 1} {CH10 0} {CH11 0} {CH12 0} {CH13 0} {CH14 0} {CH15 0} {CH2 1} {CH3 1} {CH4 1} {CH5 1} {CH6 0} {CH7 0} {CH8 0} {CH9 0}} \
+    PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}} \
+    PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}} \
+    PS_NUM_FABRIC_RESETS {1} \
+    PS_PCIE_EP_RESET1_IO {PS_MIO 18} \
+    PS_PCIE_EP_RESET2_IO {PS_MIO 19} \
+    PS_PCIE_RESET {ENABLE 1} \
+    PS_PL_CONNECTIVITY_MODE {Custom} \
+    PS_UART0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 42 .. 43}}} \
+    PS_USB3_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 13 .. 25}}} \
+    PS_USE_FPD_CCI_NOC {1} \
+    PS_USE_FPD_CCI_NOC0 {1} \
+    PS_USE_M_AXI_FPD {1} \
+    PS_USE_M_AXI_LPD {1} \
+    PS_USE_NOC_LPD_AXI0 {1} \
+    PS_USE_PMCPL_CLK0 {1} \
+    PS_USE_PMCPL_CLK1 {0} \
+    PS_USE_PMCPL_CLK2 {0} \
+    PS_USE_PMCPL_CLK3 {0} \
+    SMON_ALARMS {Set_Alarms_On} \
+    SMON_ENABLE_TEMP_AVERAGING {0} \
+    SMON_INTERFACE_TO_USE {I2C} \
+    SMON_PMBUS_ADDRESS {0x18} \
+    SMON_TEMP_AVERAGING_SAMPLES {0} \
   } \
-  CONFIG.PS_PMC_CONFIG_APPLIED {1} \
-  CONFIG.PS_PL_CONNECTIVITY_MODE {Custom} \
 ] [get_bd_cells versal_cips_0]
+} elseif {$is_vhk158} {
+set_property -dict [list \
+  CONFIG.CLOCK_MODE {Custom} \
+  CONFIG.PS_PL_CONNECTIVITY_MODE {Custom} \
+  CONFIG.PS_PMC_CONFIG { \
+    CLOCK_MODE {Custom} \
+    DDR_MEMORY_MODE {Connectivity to DDR via NOC} \
+    DEBUG_MODE {JTAG} \
+    DESIGN_MODE {1} \
+    DEVICE_INTEGRITY_MODE {Sysmon temperature voltage and external IO monitoring} \
+    PMC_CRP_PL0_REF_CTRL_FREQMHZ {350} \
+    PMC_GPIO0_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 25}}} \
+    PMC_GPIO1_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 26 .. 51}}} \
+    PMC_MIO12 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_MIO37 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA high} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_OSPI_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 11}} {MODE Single}} \
+    PMC_REF_CLK_FREQMHZ {33.333} \
+    PMC_SD1 {{CD_ENABLE 1} {CD_IO {PMC_MIO 28}} {POW_ENABLE 1} {POW_IO {PMC_MIO 51}} {RESET_ENABLE 0} {RESET_IO {PMC_MIO 12}} {WP_ENABLE 0} {WP_IO {PMC_MIO 1}}} \
+    PMC_SD1_PERIPHERAL {{CLK_100_SDR_OTAP_DLY 0x3} {CLK_200_SDR_OTAP_DLY 0x2} {CLK_50_DDR_ITAP_DLY 0x2A} {CLK_50_DDR_OTAP_DLY 0x3} {CLK_50_SDR_ITAP_DLY 0x25} {CLK_50_SDR_OTAP_DLY 0x4} {ENABLE 1} {IO {PMC_MIO 26 .. 36}}} \
+    PMC_SD1_SLOT_TYPE {SD 3.0 AUTODIR} \
+    PMC_USE_PMC_NOC_AXI0 {1} \
+    PS_BOARD_INTERFACE {ps_pmc_fixed_io} \
+    PS_ENET0_MDIO {{ENABLE 1} {IO {PS_MIO 24 .. 25}}} \
+    PS_ENET0_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 0 .. 11}}} \
+    PS_GEN_IPI0_ENABLE {1} \
+    PS_GEN_IPI0_MASTER {A72} \
+    PS_GEN_IPI1_ENABLE {1} \
+    PS_GEN_IPI2_ENABLE {1} \
+    PS_GEN_IPI3_ENABLE {1} \
+    PS_GEN_IPI4_ENABLE {1} \
+    PS_GEN_IPI5_ENABLE {1} \
+    PS_GEN_IPI6_ENABLE {1} \
+    PS_HSDP_EGRESS_TRAFFIC {JTAG} \
+    PS_HSDP_INGRESS_TRAFFIC {JTAG} \
+    PS_HSDP_MODE {NONE} \
+    PS_I2C0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 46 .. 47}}} \
+    PS_I2C1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 44 .. 45}}} \
+    PS_I2CSYSMON_PERIPHERAL {{ENABLE 0} {IO {PMC_MIO 39 .. 40}}} \
+    PS_IRQ_USAGE {{CH0 1} {CH1 1} {CH10 0} {CH11 0} {CH12 0} {CH13 0} {CH14 0} {CH15 0} {CH2 1} {CH3 1} {CH4 1} {CH5 1} {CH6 0} {CH7 0} {CH8 0} {CH9 0}} \
+    PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}} \
+    PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}} \
+    PS_NUM_FABRIC_RESETS {1} \
+    PS_PCIE_EP_RESET1_IO {PS_MIO 18} \
+    PS_PCIE_EP_RESET2_IO {PS_MIO 19} \
+    PS_PCIE_RESET {ENABLE 1} \
+    PS_PL_CONNECTIVITY_MODE {Custom} \
+    PS_UART0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 42 .. 43}}} \
+    PS_USB3_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 13 .. 25}}} \
+    PS_USE_FPD_CCI_NOC {1} \
+    PS_USE_FPD_CCI_NOC0 {1} \
+    PS_USE_M_AXI_FPD {1} \
+    PS_USE_M_AXI_LPD {1} \
+    PS_USE_NOC_LPD_AXI0 {1} \
+    PS_USE_PMCPL_CLK0 {1} \
+    PS_USE_PMCPL_CLK1 {0} \
+    PS_USE_PMCPL_CLK2 {0} \
+    PS_USE_PMCPL_CLK3 {0} \
+    SMON_ALARMS {Set_Alarms_On} \
+    SMON_ENABLE_TEMP_AVERAGING {0} \
+    SMON_INTERFACE_TO_USE {I2C} \
+    SMON_PMBUS_ADDRESS {0x18} \
+    SMON_TEMP_AVERAGING_SAMPLES {0} \
+  } \
+] [get_bd_cells versal_cips_0]
+} else {
+  set_property -dict [list \
+    CONFIG.PS_PMC_CONFIG { DDR_MEMORY_MODE {Connectivity to DDR via NOC}  \
+    DEBUG_MODE JTAG  DESIGN_MODE 1  \
+    PMC_GPIO0_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 0 .. 25}}}  \
+    PMC_GPIO1_MIO_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 26 .. 51}}}  \
+    PMC_MIO37 {{AUX_IO 0} {DIRECTION out} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA high} {PULL pullup} {SCHMITT 0} {SLEW slow} {USAGE GPIO}} \
+    PMC_OSPI_PERIPHERAL {{ENABLE 0} {IO {PMC_MIO 0 .. 11}} {MODE Single}}  \
+    PMC_QSPI_COHERENCY 0  PMC_QSPI_FBCLK {{ENABLE 1} {IO {PMC_MIO 6}}}  \
+    PMC_QSPI_PERIPHERAL_DATA_MODE x4  \
+    PMC_QSPI_PERIPHERAL_ENABLE 1  \
+    PMC_QSPI_PERIPHERAL_MODE {Dual Parallel}  \
+    PMC_REF_CLK_FREQMHZ 33.3333  \
+    PMC_SD1 {{CD_ENABLE 1} {CD_IO {PMC_MIO 28}} {POW_ENABLE 1} {POW_IO {PMC_MIO 51}} {RESET_ENABLE 0} {RESET_IO {PMC_MIO 12}} {WP_ENABLE 0} {WP_IO {PMC_MIO 1}}}  \
+    PMC_SD1_COHERENCY 0  \
+    PMC_SD1_DATA_TRANSFER_MODE 8Bit  \
+    PMC_SD1_PERIPHERAL {{CLK_100_SDR_OTAP_DLY 0x3} {CLK_200_SDR_OTAP_DLY 0x2} {CLK_50_DDR_ITAP_DLY 0x36} {CLK_50_DDR_OTAP_DLY 0x3} {CLK_50_SDR_ITAP_DLY 0x2C} {CLK_50_SDR_OTAP_DLY 0x4} {ENABLE 1} {IO {PMC_MIO 26 .. 36}}}  PMC_SD1_SLOT_TYPE {SD 3.0} \
+    PMC_USE_PMC_NOC_AXI0 1  \
+    PS_BOARD_INTERFACE ps_pmc_fixed_io  \
+    PS_CAN1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 40 .. 41}}}  \
+    PS_ENET0_MDIO {{ENABLE 1} {IO {PS_MIO 24 .. 25}}}  \
+    PS_ENET0_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 0 .. 11}}}  \
+    PS_ENET1_PERIPHERAL {{ENABLE 1} {IO {PS_MIO 12 .. 23}}}  \
+    PS_GEN_IPI0_ENABLE 1  \
+    PS_GEN_IPI0_MASTER A72  \
+    PS_GEN_IPI1_ENABLE 1  \
+    PS_GEN_IPI2_ENABLE 1  \
+    PS_GEN_IPI3_ENABLE 1  \
+    PS_GEN_IPI4_ENABLE 1  \
+    PS_GEN_IPI5_ENABLE 1  \
+    PS_GEN_IPI6_ENABLE 1  \
+    PS_HSDP_EGRESS_TRAFFIC JTAG  \
+    PS_HSDP_INGRESS_TRAFFIC JTAG  \
+    PS_HSDP_MODE None  \
+    PS_I2C0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 46 .. 47}}}  \
+    PS_I2C1_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 44 .. 45}}}  \
+    PS_IRQ_USAGE {{CH0 1} {CH1 1} {CH10 0} {CH11 0} {CH12 0} {CH13 0} {CH14 0} {CH15 0} {CH2 1} {CH3 1} {CH4 1} {CH5 1} {CH6 0} {CH7 0} {CH8 0} {CH9 0}}  \
+    PS_MIO19 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
+    PS_MIO21 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
+    PS_MIO7 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
+    PS_MIO9 {{AUX_IO 0} {DIRECTION in} {DRIVE_STRENGTH 8mA} {OUTPUT_DATA default} {PULL disable} {SCHMITT 0} {SLEW slow} {USAGE Reserved}}  \
+    PS_M_AXI_FPD_DATA_WIDTH 128 \
+    PS_M_AXI_LPD_DATA_WIDTH 128 \
+    PS_NUM_FABRIC_RESETS 1  \
+    PS_PCIE_RESET {{ENABLE 1}}  \
+    PS_PL_CONNECTIVITY_MODE Custom  \
+    PS_UART0_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 42 .. 43}}}  \
+    PS_USB3_PERIPHERAL {{ENABLE 1} {IO {PMC_MIO 13 .. 25}}}  \
+    PS_USE_FPD_CCI_NOC 1  \
+    PS_USE_FPD_CCI_NOC0 1  \
+    PS_USE_M_AXI_FPD 1  \
+    PS_USE_M_AXI_LPD 1  \
+    PS_USE_NOC_LPD_AXI0 1  \
+    PS_USE_PMCPL_CLK0 1  \
+    PS_USE_PMCPL_CLK1 0  \
+    PS_USE_PMCPL_CLK2 0  \
+    PS_USE_PMCPL_CLK3 0  \
+    SMON_ALARMS Set_Alarms_On  \
+    SMON_ENABLE_TEMP_AVERAGING 0  \
+    SMON_TEMP_AVERAGING_SAMPLES 0 \
+    } \
+    CONFIG.PS_PMC_CONFIG_APPLIED {1} \
+    CONFIG.PS_PL_CONNECTIVITY_MODE {Custom} \
+  ] [get_bd_cells versal_cips_0]
+}
 
 # QDMA support block
 proc create_qdma_support { index } {
 
   global pcie_blk_locn
+  global target
   set hier_obj [create_bd_cell -type hier qdma_support_$index]
   current_bd_instance $hier_obj
 
@@ -174,7 +331,13 @@ proc create_qdma_support { index } {
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 m_axis_rc
 
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie4_cfg_control_rtl:1.0 pcie_cfg_control
+  if {[str_contains $target "vek280"]} {
+    create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie5_cfg_control_rtl:1.0 pcie_cfg_control
+    create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie5_cfg_status_rtl:1.0 pcie_cfg_status
+  } else {
+    create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie4_cfg_control_rtl:1.0 pcie_cfg_control
+    create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie4_cfg_status_rtl:1.0 pcie_cfg_status
+  }
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie_cfg_fc_rtl:1.1 pcie_cfg_fc
 
@@ -185,8 +348,6 @@ proc create_qdma_support { index } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie3_cfg_mesg_tx_rtl:1.0 pcie_cfg_mesg_tx
 
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie4_cfg_mgmt_rtl:1.0 pcie_cfg_mgmt
-
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie4_cfg_status_rtl:1.0 pcie_cfg_status
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 pcie_mgt
 
@@ -222,20 +383,37 @@ proc create_qdma_support { index } {
 
   # Create instance: gt_quad_0, and set properties
   set gt_quad_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:gt_quad_base gt_quad_0 ]
-  set_property -dict [ list \
-   CONFIG.PORTS_INFO_DICT {\
-     LANE_SEL_DICT {PROT0 {RX0 RX1 RX2 RX3 TX0 TX1 TX2 TX3}}\
-     GT_TYPE {GTY}\
-     REG_CONF_INTF {APB3_INTF}\
-     BOARD_PARAMETER {}\
-   } \
-   CONFIG.REFCLK_STRING {\
+  if {[str_contains $target "vek280"]} {
+    set_property -dict [ list \
+     CONFIG.GT_TYPE {GTYP} \
+     CONFIG.PORTS_INFO_DICT {\
+       LANE_SEL_DICT {PROT0 {RX0 RX1 RX2 RX3 TX0 TX1 TX2 TX3}}\
+       GT_TYPE {GTYP}\
+       REG_CONF_INTF {APB3_INTF}\
+       BOARD_PARAMETER {}\
+     } \
+     CONFIG.REFCLK_STRING {\
+HSCLK0_LCPLLGTREFCLK0 refclk_PROT0_R0_100_MHz_unique1 HSCLK0_RPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1 HSCLK1_LCPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1 HSCLK1_RPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1} \
+   ] $gt_quad_0
+  } else {
+    set_property -dict [ list \
+     CONFIG.PORTS_INFO_DICT {\
+       LANE_SEL_DICT {PROT0 {RX0 RX1 RX2 RX3 TX0 TX1 TX2 TX3}}\
+       GT_TYPE {GTY}\
+       REG_CONF_INTF {APB3_INTF}\
+       BOARD_PARAMETER {}\
+     } \
+     CONFIG.REFCLK_STRING {\
 HSCLK0_LCPLLGTREFCLK0 refclk_PROT0_R0_100_MHz_unique1 HSCLK0_RPLLGTREFCLK0\
 refclk_PROT0_R0_100_MHz_unique1 HSCLK1_LCPLLGTREFCLK0\
 refclk_PROT0_R0_100_MHz_unique1 HSCLK1_RPLLGTREFCLK0\
 refclk_PROT0_R0_100_MHz_unique1} \
- ] $gt_quad_0
-
+   ] $gt_quad_0
+  }
+  
   # Create instance: pcie, and set properties
   global ref_board
   set pcie [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_versal pcie ]
@@ -842,6 +1020,9 @@ foreach intr $intr_list {
   connect_bd_net [get_bd_pins $intr] [get_bd_pins versal_cips_0/pl_ps_irq$intr_index]
   set intr_index [expr {$intr_index+1}]
 }
+
+# Assign any addresses that haven't already been assigned
+assign_bd_address
 
 validate_bd_design
 save_bd_design

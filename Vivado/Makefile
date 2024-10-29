@@ -30,6 +30,7 @@ vck190_fmcp1_target := 0
 vck190_fmcp2_target := 0
 vmk180_fmcp1_target := 0
 vmk180_fmcp2_target := 0
+vek280_es_revb_target := 0
 vcu118_target := 0
 vcu118_dual_target := 0
 zc706_hpc_target := 0

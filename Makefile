@@ -27,6 +27,7 @@ vck190_fmcp1_target := versal both
 vck190_fmcp2_target := versal both
 vmk180_fmcp1_target := versal both
 vmk180_fmcp2_target := versal both
+vek280_es_revb_target := versal both
 vcu118_target := microblaze both
 vcu118_dual_target := microblaze both
 zc706_hpc_target := zynq both
