@@ -14,10 +14,6 @@ JOBS ?= 8
 # valid targets (template name, flash size, flash interface)
 # UPDATER START
 auboard_target := microblaze 64 SPIx4
-kc705_hpc_target := microblaze 128 BPIx16
-kc705_lpc_target := microblaze 128 BPIx16
-kcu105_hpc_target := microblaze 32 SPIx4
-kcu105_lpc_target := microblaze 32 SPIx4
 pz_7015_target := zynq 0 0
 pz_7030_target := zynq 0 0
 uzev_target := zynqMP 0 0
@@ -30,7 +26,6 @@ vek280_target := versal 0 0
 vek280_es_revb_target := versal 0 0
 vpk120_target := versal 0 0
 vpk180_target := versal 0 0
-vcu118_target := microblaze 128 SPIx4
 zc706_hpc_target := zynq 0 0
 zc706_lpc_target := zynq 0 0
 zcu104_target := zynqMP 0 0

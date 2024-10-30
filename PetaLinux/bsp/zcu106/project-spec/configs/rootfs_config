@@ -4111,3 +4111,6 @@ CONFIG_util-linux-fdisk=y
 CONFIG_pciutils=y
 CONFIG_bridge-utils=y
 CONFIG_nvme-cli=y
+
+CONFIG_zcu106-1.0=n
+CONFIG_zcu106-2.0=n

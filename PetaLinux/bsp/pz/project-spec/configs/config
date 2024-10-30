@@ -291,6 +291,7 @@ CONFIG_SUBSYSTEM_PRODUCT="pz-fpgadrv-2024-1"
 # PZ configs
 
 CONFIG_YOCTO_MACHINE_NAME="zynq-generic"
+CONFIG_YOCTO_INCLUDE_MACHINE_NAME=""
 CONFIG_USER_LAYER_0=""
 CONFIG_SUBSYSTEM_USER_CMDLINE="earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait cma=1536M"
 

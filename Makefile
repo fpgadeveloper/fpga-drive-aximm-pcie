@@ -14,10 +14,10 @@ JOBS ?= 8
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
 # UPDATER START
 auboard_target := microblaze both
-kc705_hpc_target := microblaze both
-kc705_lpc_target := microblaze both
-kcu105_hpc_target := microblaze both
-kcu105_lpc_target := microblaze both
+kc705_hpc_target := microblaze baremetal_only
+kc705_lpc_target := microblaze baremetal_only
+kcu105_hpc_target := microblaze baremetal_only
+kcu105_lpc_target := microblaze baremetal_only
 pz_7015_target := zynq both
 pz_7030_target := zynq both
 uzev_target := zynqMP both
@@ -33,7 +33,7 @@ vek280_target := versal both
 vek280_es_revb_target := versal both
 vpk120_target := versal both
 vpk180_target := versal both
-vcu118_target := microblaze both
+vcu118_target := microblaze baremetal_only
 zc706_hpc_target := zynq both
 zc706_lpc_target := zynq both
 zcu104_target := zynqMP both

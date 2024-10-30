@@ -3,15 +3,20 @@ Jeff Johnson
 QDMA Bridge Support Fixes for RC Linux Driver 2024.1
 ====================================================
 
-This patch incorporates and adds to the patch from AMD Xilinx Answer record AR76647:
+This patch is intended to replace the patch from AMD Xilinx Answer record AR76647:
 https://adaptivesupport.amd.com/s/article/76647?language=en_US
-We found that the patch from the answer record was not sufficient to achieve a working design. PetaLinux
-2024.1 device tree autogeneration for QDMA produces "reg" and "reg-names" parameters placing resource "breg"
-first and "cfg" second. Function xilinx_pl_dma_pcie_parse_dt expects to read "cfg" resource in index 0 which
-leads to errors on boot. This patch uses platform_get_resource_byname, rather than by index.
+Use this patch instead of the one from the above link. Here is what we have added/fixed:
+(1) cfg and breg resources are referenced by name. PetaLinux 2024.1 device tree autogeneration for QDMA 
+    produces "reg" and "reg-names" parameters. The order of resource "breg" and "cfg" depends on the addresses
+    to which they are assigned in Vivado, therefore it is necessary to reference them by name, not index. Function 
+    xilinx_pl_dma_pcie_parse_dt expects to read "cfg" resource in index 0 which leads to errors on boot. This 
+    patch uses platform_get_resource_byname, to reference "cfg" by name rather than by index.
+(2) BDF table completion for the QDMA is added by this patch. The BDF table registers must be configured by the
+    driver for correct operation of the AXI BAR address translation. Without configuring the BDF table, all 
+    transactions with the AXI BAR (S_AXI_BRIDGE) result in DECERR (decode error) which causes kernel panic.
 
 diff --git a/drivers/pci/controller/pcie-xilinx-dma-pl.c b/drivers/pci/controller/pcie-xilinx-dma-pl.c
-index 96639fe47099..09c3e1f0be8f 100644
+index 96639fe47099..bef6881aa64a 100644
 --- a/drivers/pci/controller/pcie-xilinx-dma-pl.c
 +++ b/drivers/pci/controller/pcie-xilinx-dma-pl.c
 @@ -13,6 +13,7 @@
@@ -22,7 +27,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  
  #include "../pci.h"
  #include "pcie-xilinx-common.h"
-@@ -71,10 +72,24 @@
+@@ -71,10 +72,37 @@
  
  /* Phy Status/Control Register definitions */
  #define XILINX_PCIE_DMA_REG_PSCR_LNKUP	BIT(11)
@@ -31,6 +36,19 @@ index 96639fe47099..09c3e1f0be8f 100644
  /* Number of MSI IRQs */
  #define XILINX_NUM_MSI_IRQS	64
  
++/* BDF table */
++#define BDF_ENTRY_ADDR_LO		0x2420
++#define BDF_ENTRY_ADDR_HI		0x2424
++#define BDF_ENTRY_PASID			0x2428
++#define BDF_ENTRY_FUNCTION		0x242C
++#define BDF_ENTRY_WINDOW		0x2430
++#define BDF_ENTRY_REG			0x2434
++
++#define BDF_NUM_WINDOWS			8
++#define BDF_ADDR_BOUNDARY		4096
++#define BDF_TABLE_ENTRY_OFF		0x20
++#define BDF_ACCESS_PERM			0xC0000000
++
 +enum xilinx_pl_dma_version {
 +	XDMA,
 +	QDMA,
@@ -47,7 +65,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  struct xilinx_msi {
  	struct irq_domain	*msi_domain;
  	unsigned long		*bitmap;
-@@ -88,6 +103,7 @@ struct xilinx_msi {
+@@ -88,6 +116,7 @@ struct xilinx_msi {
   * struct pl_dma_pcie - PCIe port information
   * @dev: Device pointer
   * @reg_base: IO Mapped Register Base
@@ -55,7 +73,7 @@ index 96639fe47099..09c3e1f0be8f 100644
   * @irq: Interrupt number
   * @cfg: Holds mappings of config space window
   * @phys_reg_base: Physical address of reg base
-@@ -97,10 +113,12 @@ struct xilinx_msi {
+@@ -97,10 +126,12 @@ struct xilinx_msi {
   * @msi: MSI information
   * @intx_irq: INTx error interrupt number
   * @lock: Lock protecting shared register access
@@ -68,7 +86,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  	int				irq;
  	struct pci_config_window	*cfg;
  	phys_addr_t			phys_reg_base;
-@@ -110,16 +128,23 @@ struct pl_dma_pcie {
+@@ -110,16 +141,23 @@ struct pl_dma_pcie {
  	struct xilinx_msi		msi;
  	int				intx_irq;
  	raw_spinlock_t			lock;
@@ -93,7 +111,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  }
  
  static inline bool xilinx_pl_dma_pcie_link_up(struct pl_dma_pcie *port)
-@@ -172,6 +197,9 @@ static void __iomem *xilinx_pl_dma_pcie_map_bus(struct pci_bus *bus,
+@@ -172,6 +210,9 @@ static void __iomem *xilinx_pl_dma_pcie_map_bus(struct pci_bus *bus,
  	if (!xilinx_pl_dma_pcie_valid_device(bus, devfn))
  		return NULL;
  
@@ -103,7 +121,66 @@ index 96639fe47099..09c3e1f0be8f 100644
  	return port->reg_base + PCIE_ECAM_OFFSET(bus->number, devfn, where);
  }
  
-@@ -711,7 +739,12 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
+@@ -642,13 +683,48 @@ static int xilinx_pl_dma_pcie_setup_irq(struct pl_dma_pcie *port)
+ 	return 0;
+ }
+ 
+-static void xilinx_pl_dma_pcie_init_port(struct pl_dma_pcie *port)
++static int xilinx_pl_dma_pcie_init_port(struct pl_dma_pcie *port)
+ {
+ 	if (xilinx_pl_dma_pcie_link_up(port))
+ 		dev_info(port->dev, "PCIe Link is UP\n");
+ 	else
+ 		dev_info(port->dev, "PCIe Link is DOWN\n");
+ 
++	/* QDMA BDF Table Entry */
++	if (port->variant->version == QDMA) {
++		struct resource res;
++		struct of_pci_range range;
++		struct of_pci_range_parser parser;
++		unsigned long bar_addr, size;
++		int err, i;
++
++		err = of_pci_range_parser_init(&parser, port->dev->of_node);
++		if (err) {
++		       pr_err("parser init failed\n");
++		       return err;
++		}
++
++		for_each_of_pci_range(&parser, &range) {
++		       err = of_pci_range_to_resource(&range, port->dev->of_node, &res);
++		       if (err) {
++			       continue;
++		       }
++		       bar_addr = res.start;
++		       size = res.end - res.start + 1;
++		       for (i = 0; i < BDF_NUM_WINDOWS; i++) {
++			       writel(lower_32_bits(bar_addr) + (i * (size/BDF_NUM_WINDOWS)),
++				       port->reg_base + BDF_ENTRY_ADDR_LO + (i * BDF_TABLE_ENTRY_OFF));
++			       writel(upper_32_bits(bar_addr),
++				       port->reg_base + BDF_ENTRY_ADDR_HI + (i * BDF_TABLE_ENTRY_OFF));
++			       writel(0x0, port->reg_base + BDF_ENTRY_PASID + (i * BDF_TABLE_ENTRY_OFF));
++			       writel(0x0, port->reg_base + BDF_ENTRY_FUNCTION + (i * BDF_TABLE_ENTRY_OFF));
++			       writel(BDF_ACCESS_PERM + (size/(BDF_NUM_WINDOWS * BDF_ADDR_BOUNDARY)),
++				       port->reg_base + BDF_ENTRY_WINDOW + (i * BDF_TABLE_ENTRY_OFF));
++			       writel(0x0, port->reg_base + BDF_ENTRY_REG + (i * BDF_TABLE_ENTRY_OFF));
++		       }
++		}
++	}
++
+ 	/* Disable all interrupts */
+ 	pcie_write(port, ~XILINX_PCIE_DMA_IDR_ALL_MASK,
+ 		   XILINX_PCIE_DMA_REG_IMR);
+@@ -668,6 +744,8 @@ static void xilinx_pl_dma_pcie_init_port(struct pl_dma_pcie *port)
+ 	pcie_write(port, pcie_read(port, XILINX_PCIE_DMA_REG_RPSC) |
+ 			 XILINX_PCIE_DMA_REG_RPSC_BEN,
+ 		   XILINX_PCIE_DMA_REG_RPSC);
++
++	return 0;
+ }
+ 
+ static int xilinx_request_msi_irq(struct pl_dma_pcie *port)
+@@ -711,7 +789,12 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
  	struct resource *res;
  	int err;
  
@@ -117,7 +194,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  	if (!res) {
  		dev_err(dev, "Missing \"reg\" property\n");
  		return -ENXIO;
-@@ -724,6 +757,15 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
+@@ -724,6 +807,15 @@ static int xilinx_pl_dma_pcie_parse_dt(struct pl_dma_pcie *port,
  
  	port->reg_base = port->cfg->win;
  
@@ -133,7 +210,7 @@ index 96639fe47099..09c3e1f0be8f 100644
  	err = xilinx_request_msi_irq(port);
  	if (err) {
  		pci_ecam_free(port->cfg);
-@@ -753,6 +795,8 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
+@@ -753,13 +845,19 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
  	if (!bus)
  		return -ENODEV;
  
@@ -142,7 +219,19 @@ index 96639fe47099..09c3e1f0be8f 100644
  	err = xilinx_pl_dma_pcie_parse_dt(port, bus->res);
  	if (err) {
  		dev_err(dev, "Parsing DT failed\n");
-@@ -784,9 +828,22 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	xilinx_pl_dma_pcie_init_port(port);
++	err = xilinx_pl_dma_pcie_init_port(port);
++	if (err) {
++		dev_err(dev, "Init port failed\n");
++		return err;
++	}
+ 
+ 	err = xilinx_pl_dma_pcie_init_irq_domain(port);
+ 	if (err)
+@@ -784,9 +882,22 @@ static int xilinx_pl_dma_pcie_probe(struct platform_device *pdev)
  	return err;
  }
  

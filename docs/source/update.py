@@ -39,8 +39,8 @@ def create_tables(data):
     for group in used_groups:
         tables.append('### {} designs'.format(group['name']))
         tables.append('')
-        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |')
-        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |')
+        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|')
         for design in data['designs']:
             if design['publish'] == 'NO':
                 continue
@@ -48,12 +48,14 @@ def create_tables(data):
                 cols = []
                 cols.append('[{0}]'.format(design['board']).ljust(21))
                 cols.append('`{0}`'.format(design['label']).ljust(15))
-                cols.append('{0}'.format(design['lanes'][0][1]).ljust(24))
+                cols.append('{0}'.format(design['lanes'][0][1]).ljust(5))
                 if len(design['lanes']) == 2:
-                    cols.append('{0}'.format(design['lanes'][1][1]).ljust(24))
+                    cols.append('{0}'.format(design['lanes'][1][1]).ljust(5))
                 else:
-                    cols.append('-'.ljust(24))
+                    cols.append('-'.ljust(5))
                 cols.append('{0}'.format(design['connector']).ljust(11))
+                cols.append('{0}'.format(to_emoji[design['baremetal']]).ljust(11))
+                cols.append('{0}'.format(to_emoji[design['petalinux']]).ljust(11))
                 cols.append('{0}'.format(design['license']).ljust(5))
                 tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']

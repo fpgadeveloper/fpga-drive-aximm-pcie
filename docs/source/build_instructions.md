@@ -180,8 +180,8 @@ follow these instructions.
                              +---  downloads
                              +---  microblaze
    ```
-3. Create a text file called `offline.txt` that contains a single line of text. The single line of text
-   should be the path where you extracted the sstate-cache files. In this example, the contents of 
+3. Create a text file called `offline.txt` in the `PetaLinux` directory of the project repository. The file should contain
+   a single line of text specifying the path where you extracted the sstate-cache files. In this example, the contents of 
    the file would be:
    ```
    /home/user/petalinux-sstate

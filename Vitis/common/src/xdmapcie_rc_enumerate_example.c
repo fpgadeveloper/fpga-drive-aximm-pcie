@@ -1,28 +1,9 @@
 /******************************************************************************
-*
-* Copyright (C) 2019 Xilinx, Inc.  All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*
-*
-*
+* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All rights reserved.
+* SPDX-License-Identifier: MIT
 *******************************************************************************/
+
 /******************************************************************************/
 /**
 * @file xdmapcie_rc_enumerate_example.c
@@ -77,8 +58,9 @@
 #define XDMAPCIE_LINK_WAIT_MAX_RETRIES 		10
 #define XDMAPCIE_LINK_WAIT_USLEEP_MIN 		90000
 
+#ifndef SDT
 #define XDMAPCIE_DEVICE_ID 	XPAR_XDMAPCIE_0_DEVICE_ID
-
+#endif
 /*
  * Command register offsets
  */
@@ -129,8 +111,11 @@
 
 /************************** Function Prototypes *****************************/
 
+#ifndef SDT
 int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, u16 DeviceId);
-
+#else
+int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, UINTPTR BaseAddress);
+#endif
 
 /************************** Variable Definitions ****************************/
 
@@ -156,7 +141,11 @@ int main(void)
 	int Status;
 
 	/* Initialize Root Complex */
+#ifndef SDT
 	Status = PcieInitRootComplex(&XdmaPcieInstance, XDMAPCIE_DEVICE_ID);
+#else
+	Status = PcieInitRootComplex(&XdmaPcieInstance, XPAR_XXDMAPCIE_0_BASEADDR);
+#endif
 
 	if (Status != XST_SUCCESS) {
 		xil_printf("XdmaPcie rc enumerate Example Failed\r\n");
@@ -187,7 +176,11 @@ int main(void)
 *
 *
 ******************************************************************************/
+#ifndef SDT
 int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, u16 DeviceId)
+#else
+int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, UINTPTR BaseAddress)
+#endif
 {
 	int Status;
 	u32 HeaderData;
@@ -199,7 +192,11 @@ int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, u16 DeviceId)
 
 	XDmaPcie_Config *ConfigPtr;
 
+#ifndef SDT
 	ConfigPtr = XDmaPcie_LookupConfig(DeviceId);
+#else
+	ConfigPtr = XDmaPcie_LookupConfig(BaseAddress);
+#endif
 
 	Status = XDmaPcie_CfgInitialize(XdmaPciePtr, ConfigPtr,
 						ConfigPtr->BaseAddress);

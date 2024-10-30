@@ -2,8 +2,11 @@
 
 ## Description
 
-This repo contains the example designs for the Opsero [FPGA Drive FMC Gen4] and Opsero [M.2 M-key Stack FMC] 
-mated with several FPGA and MPSoC evaluation boards.
+This repository provides example designs for connecting NVMe SSDs and other M.2 M-key modules to various FPGA, MPSoC,
+and ACAP evaluation boards. These designs are compatible with both standalone and PetaLinux environments, and all scripts
+and code are provided for building these environments. The interface between the evaluation board and M.2 modules is 
+facilitated by Opsero's [FPGA Drive FMC Gen4] and [M.2 M-key Stack FMC] mezzanine cards, either of which can be used with
+these designs.
 
 | FPGA Drive FMC Gen4 | M.2 M-key Stack FMC |
 |---------------------|---------------------|
@@ -31,62 +34,62 @@ In order to test this design on hardware, you will need the following:
 * PetaLinux Tools 2024.1
 * [FPGA Drive FMC Gen4] or [M.2 M-key Stack FMC]
 * M.2 NVMe PCIe Solid State Drive
-* One of the supported carriers listed [here](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/)
+* One of the supported carriers listed below
 
 ## Target designs
 
 This repo contains several designs that target various supported development boards and their
 FMC connectors. The table below lists the target design name, the M2 ports supported by the design and 
-the FMC connector on which to connect the FPGA Drive FMC Gen4. Some of the target designs
+the FMC connector on which to connect the mezzanine card. Some of the target designs
 require a license to generate a bitstream with the AMD Xilinx tools.
 
 <!-- updater start -->
 ### FPGA designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
-| [KC705]               | `kc705_hpc`     | 4                        | -                        | HPC         | YES   |
-| [KC705]               | `kc705_lpc`     | 1                        | -                        | LPC         | YES   |
-| [KCU105]              | `kcu105_hpc`    | 4                        | 4                        | HPC         | YES   |
-| [KCU105]              | `kcu105_lpc`    | 1                        | -                        | LPC         | YES   |
-| [VC707]               | `vc707_hpc1`    | 4                        | -                        | HPC1        | YES   |
-| [VC707]               | `vc707_hpc2`    | 4                        | -                        | HPC2        | YES   |
-| [VC709]               | `vc709_hpc`     | 4                        | -                        | HPC         | YES   |
-| [VCU118]              | `vcu118`        | 4                        | 4                        | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|
+| [KC705]               | `kc705_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | YES   |
+| [KC705]               | `kc705_lpc`     | 1     | -     | LPC         | :white_check_mark: | :x:         | YES   |
+| [KCU105]              | `kcu105_hpc`    | 4     | 4     | HPC         | :white_check_mark: | :x:         | YES   |
+| [KCU105]              | `kcu105_lpc`    | 1     | -     | LPC         | :white_check_mark: | :x:         | YES   |
+| [VC707]               | `vc707_hpc1`    | 4     | -     | HPC1        | :white_check_mark: | :x:         | YES   |
+| [VC707]               | `vc707_hpc2`    | 4     | -     | HPC2        | :white_check_mark: | :x:         | YES   |
+| [VC709]               | `vc709_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | YES   |
+| [VCU118]              | `vcu118`        | 4     | 4     | FMCP        | :white_check_mark: | :x:         | YES   |
 
 ### Zynq-7000 designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
-| [PicoZed 7015]        | `pz_7015`       | 1                        | -                        | LPC         | NO    |
-| [PicoZed 7030]        | `pz_7030`       | 1                        | -                        | LPC         | NO    |
-| [ZC706]               | `zc706_hpc`     | 4                        | -                        | HPC         | YES   |
-| [ZC706]               | `zc706_lpc`     | 1                        | -                        | LPC         | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|
+| [PicoZed 7015]        | `pz_7015`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | NO    |
+| [PicoZed 7030]        | `pz_7030`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | NO    |
+| [ZC706]               | `zc706_hpc`     | 4     | -     | HPC         | :white_check_mark: | :white_check_mark: | YES   |
+| [ZC706]               | `zc706_lpc`     | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | YES   |
 
 ### Zynq UltraScale+ designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
-| [UltraZed-EV Carrier] | `uzev`          | 4                        | 4                        | HPC         | NO    |
-| [ZCU104]              | `zcu104`        | 1                        | -                        | LPC         | NO    |
-| [ZCU106]              | `zcu106_hpc0`   | 4                        | 4                        | HPC0        | NO    |
-| [ZCU106]              | `zcu106_hpc1`   | 1                        | -                        | HPC1        | NO    |
-| [ZCU111]              | `zcu111`        | 4                        | 4                        | FMCP        | YES   |
-| [ZCU208]              | `zcu208`        | 4                        | 4                        | FMCP        | YES   |
-| [ZCU216]              | `zcu216`        | 4                        | 4                        | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|
+| [UltraZed-EV Carrier] | `uzev`          | 4     | 4     | HPC         | :white_check_mark: | :white_check_mark: | NO    |
+| [ZCU104]              | `zcu104`        | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | NO    |
+| [ZCU106]              | `zcu106_hpc0`   | 4     | 4     | HPC0        | :white_check_mark: | :white_check_mark: | NO    |
+| [ZCU106]              | `zcu106_hpc1`   | 1     | -     | HPC1        | :white_check_mark: | :white_check_mark: | NO    |
+| [ZCU111]              | `zcu111`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
+| [ZCU208]              | `zcu208`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
+| [ZCU216]              | `zcu216`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
 
 ### Versal designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | License<br> required |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|
-| [VCK190]              | `vck190_fmcp1`  | 4                        | 4                        | FMCP1       | YES   |
-| [VCK190]              | `vck190_fmcp2`  | 4                        | 4                        | FMCP2       | YES   |
-| [VHK158]              | `vhk158`        | 4                        | -                        | FMCP        | YES   |
-| [VMK180]              | `vmk180_fmcp1`  | 4                        | 4                        | FMCP1       | YES   |
-| [VMK180]              | `vmk180_fmcp2`  | 4                        | 4                        | FMCP2       | YES   |
-| [VEK280]              | `vek280`        | 4                        | 4                        | FMCP        | YES   |
-| [VPK120]              | `vpk120`        | 4                        | -                        | FMCP        | YES   |
-| [VPK180]              | `vpk180`        | 4                        | -                        | FMCP        | YES   |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|
+| [VCK190]              | `vck190_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | YES   |
+| [VCK190]              | `vck190_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | YES   |
+| [VHK158]              | `vhk158`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
+| [VMK180]              | `vmk180_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | YES   |
+| [VMK180]              | `vmk180_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | YES   |
+| [VEK280]              | `vek280`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
+| [VPK120]              | `vpk120`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
+| [VPK180]              | `vpk180`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
 
 [KC705]: https://www.xilinx.com/kc705
 [KCU105]: https://www.xilinx.com/kcu105
@@ -112,9 +115,9 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 
 Notes:
 
-1. The [VPK120] and [VPK180] have enough GTs to interface with both SSDs, however they have only 2 integrated PCIe blocks
-   one of which is on the opposite side of the device to the GT quads, making routing a challenge.
-   For this reason the [VPK120] and [VPK180] designs supports only 1x SSD.
+1. The [VPK120], [VPK180] and [VHK158] have enough GTs to interface with both M.2 slots, however they have only 2 integrated PCIe blocks
+   one of which is on the opposite side of the device with respect to the relevant GT quads, making routing a challenge.
+   For this reason these designs supports only 1x M.2 slot.
 
 ## Software
 

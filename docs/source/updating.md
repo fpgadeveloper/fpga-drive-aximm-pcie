@@ -14,15 +14,15 @@ we cannot always provide support if you have trouble updating the designs.
      that you are using.
    * Update the year in all references to `Vivado Synthesis <year>` to the 
      tools version number that you are using. For example, if you are using tools
-     version 2022.1, then the `<year>` should be 2022.
+     version 2024.1, then the `<year>` should be 2024.
    * Update the year in all references to `Vivado Implementation <year>` to the 
      tools version number that you are using. For example, if you are using tools
-     version 2022.1, then the `<year>` should be 2022.
+     version 2024.1, then the `<year>` should be 2024.
 3. In a text editor, open the `Vivado/scripts/xsa.tcl` file and perform the following changes:
    * Update the `version_required` variable value to the tools version number 
      that you are using.
 4. **Windows users only:** In a text editor, open the `Vivado/build-vivado.bat` file and update 
-   the tools version number to the one you are using (eg. 2022.1).
+   the tools version number to the one you are using (eg. 2024.1).
 
 After completing the above, you should now be able to use the [build instructions](build_instructions) to
 build the Vivado project. If there were no significant changes to the tools and/or IP, the build script 
@@ -36,8 +36,7 @@ The BSP files for each supported target platform are contained in the `PetaLinux
 1. Download and install the PetaLinux release that you intend to use.
 2. Download and install the BSP for the target platform for the release that you intend to use.
 
-   * For KC705, KCU105, ZC706, ZCU104, ZCU106, ZCU111, ZCU208 download the BSP from the 
-     [Xilinx downloads] page
+   * For AMD Xilinx eval boards download the BSP from the [Xilinx downloads] page
    * For PicoZed and UltraZed-EV download the BSP from the [Avnet downloads] page
 
 3. Update the BSP files for the target platform in the `PetaLinux/bsp/<platform>` directory. 
@@ -120,36 +119,6 @@ This config file is required to prevent an error message and is required on all 
 # Added to stop this error message: INIT: Id "1" respawning too fast: disabled for 5 minutes
 
 USE_VT = "0"
-```
-
-### Mods for all Microblaze designs
-
-The following modifications apply to all the Microblaze based designs (KC705, KCU105, VC707, VC709).
-
-1. Append the following lines to file `project-spec/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg`:
-
-```
-# Kernel config specific to Microblaze processor designs
-
-CONFIG_GENERIC_MSI_IRQ=y
-CONFIG_PCI_MSI=y
-CONFIG_PCI_REALLOC_ENABLE_AUTO=y
-CONFIG_PCIE_XILINX=y
-CONFIG_NVME_CORE=y
-CONFIG_BLK_DEV_NVME=y
-
-# All the axi_pcie and axi_pcie3 designs using Microblaze need these kernel options to move 
-# the Kernel start address down to make room for more VMALLOC space, which is needed for 
-# the CTL0 interfaces.
-# With one axi_pcie/axi_pcie3 IP in the design, we need 256MB more VMALLOC space.
-# With two axi_pcie/axi_pcie3 IPs in the design, we need 512MB more VMALLOC space.
-# To keep the project simple, we add 512MB more VMALLOC space to ALL Microblaze designs.
-# https://forums.xilinx.com/t5/Embedded-Linux/How-to-increase-size-of-vmalloc-for-PetaLinux-on-MicroBlaze/m-p/881943
-# Kernel start address moved to 0xA0000000 from 0xC0000000
-
-CONFIG_ADVANCED_OPTIONS=y
-CONFIG_KERNEL_START_BOOL=y
-CONFIG_KERNEL_START=0xA0000000
 ```
 
 ### Mods for all Zynq-7000 designs
@@ -237,63 +206,6 @@ CONFIG_PCIE_XDMA_PL=y
 CONFIG_NVME_CORE=y
 CONFIG_BLK_DEV_NVME=y
 CONFIG_NVME_TARGET=y
-```
-
-### Mods for KC705
-
-These modifications are specific to the KC705 BSP.
-
-1. Append the following lines to `project-spec/configs/config`:
-
-```
-# KC705 configs
-
-CONFIG_SUBSYSTEM_MACHINE_NAME="kc705-lite"
-
-# Increase kernel partition size
-CONFIG_SUBSYSTEM_FLASH_AXI_EMC_0_BANK0_PART3_SIZE=0xF00000
-```
-
-### Mods for KCU105
-
-These modifications are specific to the KCU105 BSP.
-
-1. Append the following lines to `project-spec/configs/config`:
-
-```
-# KCU105 configs
-
-CONFIG_SUBSYSTEM_MACHINE_NAME="template"
-
-# Reduce fpga (bitstream) partition size, increase kernel partition size
-CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART0_SIZE=0xF00000
-CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART3_SIZE=0xE00000
-CONFIG_SUBSYSTEM_UBOOT_QSPI_FIT_IMAGE_OFFSET=0x10C0000
-CONFIG_SUBSYSTEM_UBOOT_QSPI_FIT_IMAGE_SIZE=0xE00000
-```
-
-2. Append the following lines to file `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`:
-
-```
-&iic_main {
-	#address-cells = <1>;
-	#size-cells = <0>;
-	i2c-mux@75 {
-		compatible = "nxp,pca9544";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0x75>;
-		i2c@3 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <3>;
-			eeprom@54 {
-				compatible = "atmel,24c08";
-				reg = <0x54>;
-			};
-		};
-	};
-};
 ```
 
 ### Mods for PicoZed FMC Carrier
@@ -404,70 +316,6 @@ IMAGE_BOOT_FILES:zynqmp = "BOOT.BIN boot.scr Image system.dtb"
 3. Overwrite the device tree file 
    `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi` with the one that is in the
    repository.
-
-### Mods for VCU118
-
-These modifications are specific to the VCU118 BSP.
-
-1. Append the following lines to `project-spec/configs/config`.
-
-```
-# Modifications to VCU118 BSP
-
-# Use general template
-# We use the template because the board dtsi expects axi_ethernet_0 to be
-# the on-board Ethernet, and axi_iic_0 to be the I2C. We define the I2C
-# device tree for iic_main in the system-user.dtsi in this BSP.
-CONFIG_SUBSYSTEM_MACHINE_NAME="template"
-
-# Flash Settings - QSPI (increase fpga and kernel partition sizes)
-CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART0_SIZE=0x2400000
-CONFIG_SUBSYSTEM_FLASH_AXI_QUAD_SPI_0_BANKLESS_PART3_SIZE=0xE00000
-CONFIG_SUBSYSTEM_UBOOT_QSPI_FIT_IMAGE_OFFSET=0x25A0000
-```
-
-2. Append the following lines to file `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`:
-
-```
-&iic_main {
-	#address-cells = <1>;
-	#size-cells = <0>;
-	i2c-mux@75 {
-		compatible = "nxp,pca9548";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0x75>;
-		i2c@3 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <3>;
-			eeprom@54 {
-				compatible = "atmel,24c08";
-				reg = <0x54>;
-			};
-		};
-	};
-	i2c-mux@74 {
-		compatible = "nxp,pca9548";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0x74>;
-		i2c@0 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <0>;
-			si570: clock-generator@5d {
-				#clock-cells = <0>;
-				compatible = "silabs,si570";
-				temperature-stability = <50>;
-				reg = <0x5d>;
-				factory-fout = <156250000>;
-				clock-frequency = <148500000>;
-			};
-		};
-	};
-};
-```
 
 
 [Xilinx downloads]: https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html

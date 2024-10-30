@@ -122,7 +122,6 @@ if {$is_vpk120 || $is_vek280 || $is_vpk180} {
 #   nvme nvme0: Identify Controller failed (-4)
 #   nvme nvme0: Removing after probe failure status: -5
 # Removing the region is the only available workaround at this time.
-if {$is_vck190 || $is_vmk180} {
 set_property CONFIG.MC_CHAN_REGION1 {NONE} [get_bd_cells axi_noc_0]
 set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S00_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S01_AXI]
@@ -130,7 +129,6 @@ set_property -dict [list CONFIG.CONNECTIONS {MC_0 {read_bw {100} write_bw {100} 
 set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S03_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S04_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
-}
 
 # Extra config for this design:
 # PL CLK0 output clock enabled 350MHz
@@ -458,6 +456,13 @@ proc create_qdma_support { index } {
    CONFIG.C_BUF_TYPE {BUFG_GT} \
  ] $bufg_gt_sysclk
 
+  # Create instance: const_1b0, and set properties
+  set const_1b0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_1b0 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {1} \
+   CONFIG.CONST_WIDTH {1} \
+ ] $const_1b0
+
   # Create instance: const_1b1, and set properties
   set const_1b1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_1b1 ]
   set_property -dict [ list \
@@ -477,8 +482,10 @@ proc create_qdma_support { index } {
        BOARD_PARAMETER {}\
      } \
      CONFIG.REFCLK_STRING {\
-HSCLK0_LCPLLGTREFCLK0 refclk_PROT0_R0_156.25_MHz_unique1 HSCLK1_LCPLLGTREFCLK0\
-refclk_PROT0_R0_156.25_MHz_unique1} \
+HSCLK0_LCPLLGTREFCLK0 refclk_PROT0_R0_100_MHz_unique1 HSCLK0_RPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1 HSCLK1_LCPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1 HSCLK1_RPLLGTREFCLK0\
+ refclk_PROT0_R0_100_MHz_unique1} \
    ] $gt_quad_0
   } else {
     set_property -dict [ list \
@@ -502,64 +509,42 @@ refclk_PROT0_R0_100_MHz_unique1} \
   set_property -dict [ list \
    CONFIG.AXISTEN_IF_CQ_ALIGNMENT_MODE {Address_Aligned} \
    CONFIG.AXISTEN_IF_RQ_ALIGNMENT_MODE {DWORD_Aligned} \
-   CONFIG.MSI_X_OPTIONS {None} \
+   CONFIG.PF0_AER_CAP_ECRC_GEN_AND_CHECK_CAPABLE {false} \
    CONFIG.PF0_DEVICE_ID {B0B4} \
    CONFIG.PF0_INTERRUPT_PIN {INTA} \
    CONFIG.PF0_LINK_STATUS_SLOT_CLOCK_CONFIG {true} \
-   CONFIG.PF0_MSIX_CAP_PBA_BIR {BAR_1:0} \
-   CONFIG.PF0_MSIX_CAP_PBA_OFFSET {00000000} \
-   CONFIG.PF0_MSIX_CAP_TABLE_BIR {BAR_1:0} \
-   CONFIG.PF0_MSIX_CAP_TABLE_OFFSET {00000000} \
-   CONFIG.PF0_MSIX_CAP_TABLE_SIZE {000} \
-   CONFIG.PF0_MSI_CAP_MULTIMSGCAP {1_vector} \
    CONFIG.PF0_REVISION_ID {00} \
    CONFIG.PF0_SRIOV_VF_DEVICE_ID {C034} \
    CONFIG.PF0_SUBSYSTEM_ID {0007} \
-   CONFIG.PF0_SUBSYSTEM_VENDOR_ID {10EE} \
    CONFIG.PF1_DEVICE_ID {913F} \
-   CONFIG.PF1_INTERRUPT_PIN {NONE} \
-   CONFIG.PF1_MSIX_CAP_PBA_BIR {BAR_1:0} \
-   CONFIG.PF1_MSIX_CAP_PBA_OFFSET {00000000} \
-   CONFIG.PF1_MSIX_CAP_TABLE_BIR {BAR_1:0} \
-   CONFIG.PF1_MSIX_CAP_TABLE_OFFSET {00000000} \
-   CONFIG.PF1_MSIX_CAP_TABLE_SIZE {000} \
    CONFIG.PF1_MSI_CAP_MULTIMSGCAP {1_vector} \
    CONFIG.PF1_REVISION_ID {00} \
-   CONFIG.PF1_SRIOV_VF_DEVICE_ID {C134} \
    CONFIG.PF1_SUBSYSTEM_ID {0007} \
    CONFIG.PF1_SUBSYSTEM_VENDOR_ID {10EE} \
    CONFIG.PF2_DEVICE_ID {B2B4} \
-   CONFIG.PF2_INTERRUPT_PIN {NONE} \
-   CONFIG.PF2_MSIX_CAP_PBA_BIR {BAR_1:0} \
-   CONFIG.PF2_MSIX_CAP_PBA_OFFSET {00000000} \
-   CONFIG.PF2_MSIX_CAP_TABLE_BIR {BAR_1:0} \
-   CONFIG.PF2_MSIX_CAP_TABLE_OFFSET {00000000} \
-   CONFIG.PF2_MSIX_CAP_TABLE_SIZE {000} \
    CONFIG.PF2_MSI_CAP_MULTIMSGCAP {1_vector} \
    CONFIG.PF2_REVISION_ID {00} \
-   CONFIG.PF2_SRIOV_VF_DEVICE_ID {C234} \
    CONFIG.PF2_SUBSYSTEM_ID {0007} \
    CONFIG.PF2_SUBSYSTEM_VENDOR_ID {10EE} \
    CONFIG.PF3_DEVICE_ID {B3B4} \
-   CONFIG.PF3_INTERRUPT_PIN {NONE} \
-   CONFIG.PF3_MSIX_CAP_PBA_BIR {BAR_1:0} \
-   CONFIG.PF3_MSIX_CAP_PBA_OFFSET {00000000} \
-   CONFIG.PF3_MSIX_CAP_TABLE_BIR {BAR_1:0} \
-   CONFIG.PF3_MSIX_CAP_TABLE_OFFSET {00000000} \
-   CONFIG.PF3_MSIX_CAP_TABLE_SIZE {000} \
    CONFIG.PF3_MSI_CAP_MULTIMSGCAP {1_vector} \
    CONFIG.PF3_REVISION_ID {00} \
-   CONFIG.PF3_SRIOV_VF_DEVICE_ID {C334} \
    CONFIG.PF3_SUBSYSTEM_ID {0007} \
    CONFIG.PF3_SUBSYSTEM_VENDOR_ID {10EE} \
+   CONFIG.PL_DISABLE_LANE_REVERSAL {TRUE} \
    CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {16.0_GT/s} \
    CONFIG.PL_LINK_CAP_MAX_LINK_WIDTH {X4} \
    CONFIG.REF_CLK_FREQ {100_MHz} \
-   CONFIG.TL_PF_ENABLE_REG {1} \
+   CONFIG.VFG0_MSIX_CAP_TABLE_OFFSET {4000} \
+   CONFIG.VFG1_MSIX_CAP_TABLE_OFFSET {4000} \
+   CONFIG.VFG2_MSIX_CAP_TABLE_OFFSET {4000} \
+   CONFIG.VFG3_MSIX_CAP_TABLE_OFFSET {4000} \
    CONFIG.acs_ext_cap_enable {false} \
+   CONFIG.all_speeds_all_sides {NO} \
    CONFIG.axisten_freq {250} \
    CONFIG.axisten_if_enable_client_tag {true} \
-   CONFIG.axisten_if_enable_msg_route_override {TRUE} \
+   CONFIG.axisten_if_enable_msg_route {1EFFF} \
+   CONFIG.axisten_if_enable_msg_route_override {true} \
    CONFIG.axisten_if_width {256_bit} \
    CONFIG.cfg_ext_if {false} \
    CONFIG.cfg_mgmt_if {true} \
@@ -574,169 +559,71 @@ refclk_PROT0_R0_100_MHz_unique1} \
    CONFIG.en_transceiver_status_ports {false} \
    CONFIG.enable_auto_rxeq {False} \
    CONFIG.enable_ccix {FALSE} \
-   CONFIG.enable_code {0000} \
    CONFIG.enable_dvsec {FALSE} \
    CONFIG.enable_gen4 {true} \
    CONFIG.enable_ibert {false} \
    CONFIG.enable_jtag_dbg {false} \
    CONFIG.enable_more_clk {false} \
    CONFIG.ext_pcie_cfg_space_enabled {false} \
-   CONFIG.ext_xvc_vsec_enable {false} \
    CONFIG.extended_tag_field {true} \
    CONFIG.insert_cips {false} \
    CONFIG.lane_order {Bottom} \
    CONFIG.legacy_ext_pcie_cfg_space_enabled {false} \
-   CONFIG.mcap_enablement {None} \
    CONFIG.mode_selection {Advanced} \
    CONFIG.pcie_blk_locn [lindex $pcie_blk_locn $index] \
+   CONFIG.pcie_link_debug {false} \
+   CONFIG.pcie_link_debug_axi4_st {false} \
    CONFIG.pf0_ari_enabled {false} \
    CONFIG.pf0_bar0_64bit {true} \
    CONFIG.pf0_bar0_enabled {true} \
    CONFIG.pf0_bar0_prefetchable {true} \
    CONFIG.pf0_bar0_scale {Gigabytes} \
-   CONFIG.pf0_bar0_size {4} \
-   CONFIG.pf0_bar1_64bit {false} \
-   CONFIG.pf0_bar1_enabled {false} \
-   CONFIG.pf0_bar1_prefetchable {false} \
-   CONFIG.pf0_bar1_scale {Kilobytes} \
-   CONFIG.pf0_bar1_size {128} \
-   CONFIG.pf0_bar2_64bit {false} \
+   CONFIG.pf0_bar0_size {2} \
    CONFIG.pf0_bar2_enabled {false} \
-   CONFIG.pf0_bar2_prefetchable {false} \
-   CONFIG.pf0_bar2_scale {Kilobytes} \
-   CONFIG.pf0_bar2_size {128} \
-   CONFIG.pf0_bar3_64bit {false} \
-   CONFIG.pf0_bar3_enabled {false} \
-   CONFIG.pf0_bar3_prefetchable {false} \
-   CONFIG.pf0_bar3_scale {Kilobytes} \
-   CONFIG.pf0_bar3_size {128} \
-   CONFIG.pf0_bar4_64bit {false} \
    CONFIG.pf0_bar4_enabled {false} \
-   CONFIG.pf0_bar4_prefetchable {false} \
-   CONFIG.pf0_bar4_scale {Kilobytes} \
-   CONFIG.pf0_bar4_size {128} \
-   CONFIG.pf0_bar5_enabled {false} \
-   CONFIG.pf0_bar5_prefetchable {false} \
-   CONFIG.pf0_bar5_scale {Kilobytes} \
-   CONFIG.pf0_bar5_size {128} \
    CONFIG.pf0_class_code_base {06} \
    CONFIG.pf0_class_code_interface {00} \
    CONFIG.pf0_class_code_sub {04} \
    CONFIG.pf0_expansion_rom_enabled {false} \
    CONFIG.pf0_msi_enabled {false} \
    CONFIG.pf0_msix_enabled {false} \
-   CONFIG.pf1_bar0_64bit {true} \
-   CONFIG.pf1_bar0_enabled {true} \
-   CONFIG.pf1_bar0_prefetchable {true} \
-   CONFIG.pf1_bar0_scale {Gigabytes} \
-   CONFIG.pf1_bar0_size {4} \
-   CONFIG.pf1_bar1_64bit {false} \
-   CONFIG.pf1_bar1_enabled {false} \
-   CONFIG.pf1_bar1_prefetchable {false} \
-   CONFIG.pf1_bar1_scale {Kilobytes} \
-   CONFIG.pf1_bar1_size {128} \
-   CONFIG.pf1_bar2_64bit {false} \
-   CONFIG.pf1_bar2_enabled {false} \
-   CONFIG.pf1_bar2_prefetchable {false} \
-   CONFIG.pf1_bar2_scale {Kilobytes} \
-   CONFIG.pf1_bar2_size {128} \
-   CONFIG.pf1_bar3_64bit {false} \
-   CONFIG.pf1_bar3_enabled {false} \
-   CONFIG.pf1_bar3_prefetchable {false} \
-   CONFIG.pf1_bar3_scale {Kilobytes} \
-   CONFIG.pf1_bar3_size {128} \
-   CONFIG.pf1_bar4_64bit {false} \
-   CONFIG.pf1_bar4_enabled {false} \
-   CONFIG.pf1_bar4_prefetchable {false} \
-   CONFIG.pf1_bar4_scale {Kilobytes} \
-   CONFIG.pf1_bar4_size {128} \
-   CONFIG.pf1_bar5_enabled {false} \
-   CONFIG.pf1_bar5_prefetchable {false} \
-   CONFIG.pf1_bar5_scale {Kilobytes} \
-   CONFIG.pf1_bar5_size {128} \
+   CONFIG.pf0_sriov_bar0_64bit {true} \
+   CONFIG.pf0_sriov_bar0_enabled {true} \
+   CONFIG.pf0_sriov_bar0_prefetchable {true} \
+   CONFIG.pf0_sriov_bar0_scale {Kilobytes} \
+   CONFIG.pf0_sriov_bar0_size {4} \
+   CONFIG.pf0_sriov_bar2_64bit {true} \
+   CONFIG.pf0_sriov_bar2_enabled {true} \
+   CONFIG.pf0_sriov_bar2_prefetchable {true} \
+   CONFIG.pf0_sriov_bar2_scale {Kilobytes} \
+   CONFIG.pf0_sriov_bar2_size {4} \
+   CONFIG.pf0_sriov_bar4_enabled {false} \
+   CONFIG.pf0_sriov_bar5_prefetchable {false} \
+   CONFIG.pf0_vc_cap_enabled {true} \
    CONFIG.pf1_class_code_base {06} \
    CONFIG.pf1_class_code_interface {00} \
    CONFIG.pf1_class_code_sub {0A} \
-   CONFIG.pf1_expansion_rom_enabled {false} \
-   CONFIG.pf1_msi_enabled {false} \
    CONFIG.pf1_msix_enabled {false} \
+   CONFIG.pf1_sriov_bar5_prefetchable {false} \
    CONFIG.pf1_vendor_id {10EE} \
-   CONFIG.pf2_bar0_64bit {true} \
-   CONFIG.pf2_bar0_enabled {true} \
-   CONFIG.pf2_bar0_prefetchable {true} \
-   CONFIG.pf2_bar0_scale {Gigabytes} \
-   CONFIG.pf2_bar0_size {4} \
-   CONFIG.pf2_bar1_64bit {false} \
-   CONFIG.pf2_bar1_enabled {false} \
-   CONFIG.pf2_bar1_prefetchable {false} \
-   CONFIG.pf2_bar1_scale {Kilobytes} \
-   CONFIG.pf2_bar1_size {128} \
-   CONFIG.pf2_bar2_64bit {false} \
-   CONFIG.pf2_bar2_enabled {false} \
-   CONFIG.pf2_bar2_prefetchable {false} \
-   CONFIG.pf2_bar2_scale {Kilobytes} \
-   CONFIG.pf2_bar2_size {128} \
-   CONFIG.pf2_bar3_64bit {false} \
-   CONFIG.pf2_bar3_enabled {false} \
-   CONFIG.pf2_bar3_prefetchable {false} \
-   CONFIG.pf2_bar3_scale {Kilobytes} \
-   CONFIG.pf2_bar3_size {128} \
-   CONFIG.pf2_bar4_64bit {false} \
-   CONFIG.pf2_bar4_enabled {false} \
-   CONFIG.pf2_bar4_prefetchable {false} \
-   CONFIG.pf2_bar4_scale {Kilobytes} \
-   CONFIG.pf2_bar4_size {128} \
-   CONFIG.pf2_bar5_enabled {false} \
-   CONFIG.pf2_bar5_prefetchable {false} \
-   CONFIG.pf2_bar5_scale {Kilobytes} \
-   CONFIG.pf2_bar5_size {128} \
    CONFIG.pf2_class_code_base {06} \
    CONFIG.pf2_class_code_interface {00} \
    CONFIG.pf2_class_code_sub {0A} \
-   CONFIG.pf2_expansion_rom_enabled {false} \
-   CONFIG.pf2_msi_enabled {false} \
    CONFIG.pf2_msix_enabled {false} \
+   CONFIG.pf2_sriov_bar5_prefetchable {false} \
    CONFIG.pf2_vendor_id {10EE} \
-   CONFIG.pf3_bar0_64bit {true} \
-   CONFIG.pf3_bar0_enabled {true} \
-   CONFIG.pf3_bar0_prefetchable {true} \
-   CONFIG.pf3_bar0_scale {Gigabytes} \
-   CONFIG.pf3_bar0_size {4} \
-   CONFIG.pf3_bar1_64bit {false} \
-   CONFIG.pf3_bar1_enabled {false} \
-   CONFIG.pf3_bar1_prefetchable {false} \
-   CONFIG.pf3_bar1_scale {Kilobytes} \
-   CONFIG.pf3_bar1_size {128} \
-   CONFIG.pf3_bar2_64bit {false} \
-   CONFIG.pf3_bar2_enabled {false} \
-   CONFIG.pf3_bar2_prefetchable {false} \
-   CONFIG.pf3_bar2_scale {Kilobytes} \
-   CONFIG.pf3_bar2_size {128} \
-   CONFIG.pf3_bar3_64bit {false} \
-   CONFIG.pf3_bar3_enabled {false} \
-   CONFIG.pf3_bar3_prefetchable {false} \
-   CONFIG.pf3_bar3_scale {Kilobytes} \
-   CONFIG.pf3_bar3_size {128} \
-   CONFIG.pf3_bar4_64bit {false} \
-   CONFIG.pf3_bar4_enabled {false} \
-   CONFIG.pf3_bar4_prefetchable {false} \
-   CONFIG.pf3_bar4_scale {Kilobytes} \
-   CONFIG.pf3_bar4_size {128} \
-   CONFIG.pf3_bar5_enabled {false} \
-   CONFIG.pf3_bar5_prefetchable {false} \
-   CONFIG.pf3_bar5_scale {Kilobytes} \
-   CONFIG.pf3_bar5_size {128} \
    CONFIG.pf3_class_code_base {06} \
    CONFIG.pf3_class_code_interface {00} \
    CONFIG.pf3_class_code_sub {0A} \
-   CONFIG.pf3_expansion_rom_enabled {false} \
-   CONFIG.pf3_msi_enabled {false} \
    CONFIG.pf3_msix_enabled {false} \
+   CONFIG.pf3_sriov_bar5_prefetchable {false} \
    CONFIG.pf3_vendor_id {10EE} \
    CONFIG.pipe_line_stage {2} \
    CONFIG.pipe_sim {false} \
+   CONFIG.replace_uram_with_bram {false} \
    CONFIG.sys_reset_polarity {ACTIVE_LOW} \
    CONFIG.vendor_id {10EE} \
+   CONFIG.warm_reboot_sbr_fix {false} \
    CONFIG.xlnx_ref_board $ref_board \
  ] $pcie
 
@@ -802,7 +689,8 @@ refclk_PROT0_R0_100_MHz_unique1} \
   connect_bd_intf_net -intf_net pcie_phy_phy_mac_tx_eq [get_bd_intf_pins pcie/phy_mac_tx_eq] [get_bd_intf_pins pcie_phy/phy_mac_tx_eq]
 
   # Create port connections
-  connect_bd_net -net bufg_gt_sysclk_BUFG_GT_O [get_bd_pins bufg_gt_sysclk/BUFG_GT_O] [get_bd_pins gt_quad_0/apb3clk] [get_bd_pins pcie/sys_clk] [get_bd_pins pcie_phy/phy_refclk]
+  connect_bd_net -net const_1b0_dout [get_bd_pins const_1b0/dout] [get_bd_pins gt_quad_0/apb3clk] 
+  connect_bd_net -net bufg_gt_sysclk_BUFG_GT_O [get_bd_pins bufg_gt_sysclk/BUFG_GT_O] [get_bd_pins pcie/sys_clk] [get_bd_pins pcie_phy/phy_refclk]
   connect_bd_net -net const_1b1_dout [get_bd_pins bufg_gt_sysclk/BUFG_GT_CE] [get_bd_pins const_1b1/dout]
   connect_bd_net -net gt_quad_0_ch0_phyready [get_bd_pins gt_quad_0/ch0_phyready] [get_bd_pins pcie_phy/ch0_phyready]
   connect_bd_net -net gt_quad_0_ch0_phystatus [get_bd_pins gt_quad_0/ch0_phystatus] [get_bd_pins pcie_phy/ch0_phystatus]
@@ -837,113 +725,371 @@ refclk_PROT0_R0_100_MHz_unique1} \
 
 proc create_qdma { index } {
   global pcie_blk_locn
+  global ref_board
   set qdma [ create_bd_cell -type ip -vlnv xilinx.com:ip:qdma qdma_$index ]
   set_property -dict [ list \
-    CONFIG.BASEADDR {0x00000000} \
-    CONFIG.HIGHADDR {0x001FFFFF} \
+    CONFIG.EGW_IS_PARENT_IP {1} \
+    CONFIG.INS_LOSS_NYQ {15} \
+    CONFIG.MAILBOX_ENABLE {false} \
     CONFIG.MSI_X_OPTIONS {None} \
-    CONFIG.PF0_MSIX_CAP_TABLE_SIZE_qdma {000} \
+    CONFIG.PCIE_BOARD_INTERFACE {Custom} \
+    CONFIG.PF0_SRIOV_FUNC_DEP_LINK {0000} \
     CONFIG.PF0_SRIOV_VF_DEVICE_ID {C034} \
-    CONFIG.PF1_MSIX_CAP_TABLE_SIZE_qdma {000} \
-    CONFIG.PF1_SRIOV_VF_DEVICE_ID {C134} \
-    CONFIG.PF2_MSIX_CAP_TABLE_SIZE_qdma {000} \
-    CONFIG.PF2_SRIOV_VF_DEVICE_ID {C234} \
-    CONFIG.PF3_MSIX_CAP_TABLE_SIZE_qdma {000} \
-    CONFIG.PF3_SRIOV_VF_DEVICE_ID {C334} \
+    CONFIG.PF1_MSI_CAP_MULTIMSGCAP {1_vector} \
+    CONFIG.PF2_MSI_CAP_MULTIMSGCAP {1_vector} \
+    CONFIG.PF3_MSI_CAP_MULTIMSGCAP {1_vector} \
+    CONFIG.PL_DISABLE_LANE_REVERSAL {TRUE} \
+    CONFIG.PL_DISABLE_LANE_REVERSAL_NV {false} \
+    CONFIG.RX_PPM_OFFSET {0} \
+    CONFIG.RX_SSC_PPM {0} \
+    CONFIG.SRIOV_CAP_ENABLE {false} \
+    CONFIG.SRIOV_FIRST_VF_OFFSET {16} \
+    CONFIG.SYS_RST_N_BOARD_INTERFACE {Custom} \
+    CONFIG.Shared_Logic_Both {false} \
+    CONFIG.Shared_Logic_Clk {false} \
+    CONFIG.Shared_Logic_Gtc {false} \
+    CONFIG.adv_int_usr {false} \
+    CONFIG.alf_cap_enable {false} \
+    CONFIG.all_speeds_all_sides {NO} \
+    CONFIG.async_clk_enable {false} \
+    CONFIG.axi_aclk_loopback {false} \
+    CONFIG.axi_addr_width {64} \
     CONFIG.axi_data_width {256_bit} \
-    CONFIG.axil_master_64bit_en {false} \
+    CONFIG.axi_id_width {4} \
+    CONFIG.axi_vip_in_exdes {false} \
+    CONFIG.axibar2pciebar_0 {0x0000000000000000} \
+    CONFIG.axibar_notranslate {false} \
     CONFIG.axilite_master_en {false} \
+    CONFIG.axist_bypass_en {false} \
     CONFIG.axisten_freq {250} \
+    CONFIG.axisten_if_enable_msg_route {1EFFF} \
+    CONFIG.axisten_if_enable_msg_route_override {true} \
+    CONFIG.bar0_indicator {1} \
+    CONFIG.bar1_indicator {0} \
+    CONFIG.bar2_indicator {0} \
+    CONFIG.bar3_indicator {0} \
+    CONFIG.bar4_indicator {0} \
+    CONFIG.bar5_indicator {0} \
+    CONFIG.bar_indicator {BAR_0} \
+    CONFIG.barlite2 {7} \
+    CONFIG.barlite_mb_pf0 {0} \
+    CONFIG.barlite_mb_pf1 {0} \
+    CONFIG.barlite_mb_pf2 {0} \
+    CONFIG.barlite_mb_pf3 {0} \
     CONFIG.bridge_burst {TRUE} \
+    CONFIG.bridge_register_access {false} \
+    CONFIG.bridge_registers_offset_enable {false} \
+    CONFIG.c2h_stream_cpl_col_bit_pos0 {1} \
+    CONFIG.c2h_stream_cpl_col_bit_pos1 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos2 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos3 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos4 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos5 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos6 {0} \
+    CONFIG.c2h_stream_cpl_col_bit_pos7 {0} \
+    CONFIG.c2h_stream_cpl_data_size {8_Bytes} \
+    CONFIG.c2h_stream_cpl_err_bit_pos0 {2} \
+    CONFIG.c2h_stream_cpl_err_bit_pos1 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos2 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos3 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos4 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos5 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos6 {0} \
+    CONFIG.c2h_stream_cpl_err_bit_pos7 {0} \
+    CONFIG.c_ats_enable {false} \
+    CONFIG.c_m_axi_num_write {32} \
+    CONFIG.c_pri_enable {false} \
+    CONFIG.cfg_ext_if {false} \
+    CONFIG.cfg_mgmt_if {true} \
+    CONFIG.cfg_space_enable {false} \
+    CONFIG.comp_timeout {50ms} \
+    CONFIG.copy_pf0 {true} \
+    CONFIG.copy_sriov_pf0 {true} \
     CONFIG.coreclk_freq {500} \
     CONFIG.csr_axilite_slave {true} \
+    CONFIG.csr_module {1} \
+    CONFIG.data_mover {false} \
+    CONFIG.debug_mode {DEBUG_NONE} \
+    CONFIG.descriptor_bypass_exdes {false} \
     CONFIG.device_port_type {Root_Port_of_PCI_Express_Root_Complex} \
+    CONFIG.disable_bram_pipeline {false} \
+    CONFIG.disable_eq_synchronizer {false} \
+    CONFIG.disable_gt_loc {false} \
+    CONFIG.disable_speed_width_drc {false} \
+    CONFIG.disable_user_clock_root {true} \
+    CONFIG.dma_2rp {false} \
+    CONFIG.dma_intf_sel_qdma {AXI_MM_and_AXI_Stream_with_Completion} \
+    CONFIG.dma_mode_en {false} \
+    CONFIG.dma_reset_source_sel {PCIe_User_Reset} \
+    CONFIG.double_quad {false} \
+    CONFIG.dsc_byp_mode {None} \
+    CONFIG.dsc_bypass_rd_out {false} \
+    CONFIG.dsc_bypass_wr_out {false} \
     CONFIG.en_axi_master_if {true} \
-    CONFIG.en_bridge_slv {true} \
+    CONFIG.en_axi_mm_qdma {true} \
+    CONFIG.en_axi_slave_if {true} \
+    CONFIG.en_axi_st_qdma {true} \
+    CONFIG.en_bridge {true} \
+    CONFIG.en_coreclk_es1 {false} \
+    CONFIG.en_dbg_descramble {false} \
+    CONFIG.en_debug_ports {false} \
+    CONFIG.en_dma_and_bridge {false} \
+    CONFIG.en_dma_completion {false} \
+    CONFIG.en_ext_ch_gt_drp {false} \
+    CONFIG.en_gt_selection {false} \
+    CONFIG.en_l23_entry {false} \
+    CONFIG.en_pcie_drp {false} \
+    CONFIG.en_qdma {true} \
+    CONFIG.en_transceiver_status_ports {false} \
+    CONFIG.enable_64bit {true} \
+    CONFIG.enable_at_ports {false} \
+    CONFIG.enable_ats_switch {FALSE} \
+    CONFIG.enable_auto_rxeq {False} \
+    CONFIG.enable_ccix {FALSE} \
+    CONFIG.enable_clock_delay_grp {true} \
+    CONFIG.enable_dvsec {FALSE} \
+    CONFIG.enable_error_injection {false} \
+    CONFIG.enable_gen4 {true} \
+    CONFIG.enable_ibert {false} \
+    CONFIG.enable_jtag_dbg {false} \
+    CONFIG.enable_mark_debug {false} \
+    CONFIG.enable_more_clk {false} \
+    CONFIG.enable_multi_pcie {false} \
+    CONFIG.enable_pcie_debug {False} \
+    CONFIG.enable_pcie_debug_ports {False} \
+    CONFIG.enable_resource_reduction {false} \
+    CONFIG.enable_x16 {false} \
+    CONFIG.example_design_type {RTL} \
+    CONFIG.ext_sys_clk_bufg {false} \
+    CONFIG.flr_enable {false} \
+    CONFIG.free_run_freq {100_MHz} \
     CONFIG.functional_mode {AXI_Bridge} \
+    CONFIG.gen4_eieos_0s7 {true} \
+    CONFIG.gt_loc_num {X99Y99} \
+    CONFIG.gt_quad_sharing {false} \
+    CONFIG.gtcom_in_core_usp {2} \
+    CONFIG.gtwiz_in_core_us {1} \
+    CONFIG.gtwiz_in_core_usp {1} \
+    CONFIG.iep_enable {false} \
+    CONFIG.ins_loss_profile {Add-in_Card} \
+    CONFIG.insert_cips {false} \
+    CONFIG.lane_order {Bottom} \
+    CONFIG.lane_reversal {false} \
     CONFIG.last_core_cap_addr {0x1F0} \
+    CONFIG.local_test {false} \
+    CONFIG.master_cal_only {true} \
+    CONFIG.mhost_en {false} \
+    CONFIG.minimal_dma_en {false} \
     CONFIG.mode_selection {Advanced} \
+    CONFIG.msix_pcie_internal {false} \
+    CONFIG.msix_preset {0} \
+    CONFIG.mult_pf_des {false} \
+    CONFIG.num_queues {512} \
+    CONFIG.old_bridge_timeout {false} \
+    CONFIG.parity_settings {None} \
+    CONFIG.pcie_blk_locn [lindex $pcie_blk_locn $index] \
+    CONFIG.pcie_extended_tag {true} \
+    CONFIG.pcie_id_if {true} \
+    CONFIG.performance {false} \
+    CONFIG.performance_exdes {false} \
+    CONFIG.pf0_Use_Class_Code_Lookup_Assistant_qdma {false} \
+    CONFIG.pf0_aer_cap_ecrc_gen_and_check_capable {false} \
+    CONFIG.pf0_ari_enabled {false} \
+    CONFIG.pf0_ats_enabled {false} \
+    CONFIG.pf0_bar0_64bit_qdma {true} \
+    CONFIG.pf0_bar0_index {0} \
     CONFIG.pf0_bar0_prefetchable_qdma {true} \
     CONFIG.pf0_bar0_scale_qdma {Gigabytes} \
     CONFIG.pf0_bar0_size_qdma {2} \
     CONFIG.pf0_bar0_type_qdma {AXI_Bridge_Master} \
-    CONFIG.pf0_bar2_64bit_qdma {false} \
-    CONFIG.pf0_bar2_enabled_qdma {false} \
-    CONFIG.pf0_bar2_size_qdma {4} \
-    CONFIG.pf0_bar2_type_qdma {AXI_Lite_Master} \
+    CONFIG.pf0_bar1_index {7} \
+    CONFIG.pf0_bar2_index {7} \
+    CONFIG.pf0_bar3_index {7} \
+    CONFIG.pf0_bar4_index {7} \
+    CONFIG.pf0_bar5_index {7} \
+    CONFIG.pf0_bar5_prefetchable_qdma {false} \
     CONFIG.pf0_base_class_menu_qdma {Bridge_device} \
     CONFIG.pf0_class_code_base_qdma {06} \
-    CONFIG.pf0_class_code_qdma {060400} \
+    CONFIG.pf0_class_code_interface_qdma {00} \
     CONFIG.pf0_class_code_sub_qdma {04} \
     CONFIG.pf0_device_id {B0B4} \
-    CONFIG.pf0_msix_cap_pba_offset {00000000} \
-    CONFIG.pf0_msix_cap_table_offset {00000000} \
-    CONFIG.pf0_msix_cap_table_size {000} \
-    CONFIG.pf0_msix_enabled {false} \
-    CONFIG.pf0_msix_enabled_qdma {false} \
+    CONFIG.pf0_interrupt_pin {INTA} \
+    CONFIG.pf0_link_status_slot_clock_config {true} \
+    CONFIG.pf0_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf0_pri_enabled {false} \
+    CONFIG.pf0_rbar_cap_bar0 {0x00000000fff0} \
+    CONFIG.pf0_rbar_cap_bar1 {0x000000000000} \
+    CONFIG.pf0_rbar_cap_bar2 {0x000000000000} \
+    CONFIG.pf0_rbar_cap_bar3 {0x000000000000} \
+    CONFIG.pf0_rbar_cap_bar4 {0x000000000000} \
+    CONFIG.pf0_rbar_cap_bar5 {0x000000000000} \
+    CONFIG.pf0_rbar_num {1} \
+    CONFIG.pf0_revision_id {00} \
+    CONFIG.pf0_sriov_bar0_64bit {true} \
+    CONFIG.pf0_sriov_bar0_prefetchable {true} \
+    CONFIG.pf0_sriov_bar0_scale {Kilobytes} \
     CONFIG.pf0_sriov_bar0_size {4} \
     CONFIG.pf0_sriov_bar0_type {AXI_Bridge_Master} \
+    CONFIG.pf0_sriov_bar2_64bit {true} \
+    CONFIG.pf0_sriov_bar2_enabled {true} \
+    CONFIG.pf0_sriov_bar2_prefetchable {true} \
+    CONFIG.pf0_sriov_bar2_scale {Kilobytes} \
+    CONFIG.pf0_sriov_bar2_size {4} \
     CONFIG.pf0_sriov_bar2_type {AXI_Lite_Master} \
+    CONFIG.pf0_sriov_bar4_enabled {false} \
+    CONFIG.pf0_sriov_bar5_64bit {false} \
+    CONFIG.pf0_sriov_bar5_prefetchable {false} \
+    CONFIG.pf0_sriov_cap_ver {1} \
     CONFIG.pf0_sub_class_interface_menu_qdma {PCI_to_PCI_bridge} \
-    CONFIG.pf1_bar0_prefetchable_qdma {true} \
-    CONFIG.pf1_bar0_scale_qdma {Gigabytes} \
-    CONFIG.pf1_bar0_size_qdma {4} \
-    CONFIG.pf1_bar0_type_qdma {AXI_Bridge_Master} \
-    CONFIG.pf1_bar2_64bit_qdma {false} \
-    CONFIG.pf1_bar2_enabled_qdma {false} \
-    CONFIG.pf1_bar2_size_qdma {4} \
-    CONFIG.pf1_bar2_type_qdma {AXI_Lite_Master} \
+    CONFIG.pf0_subsystem_id {0007} \
+    CONFIG.pf0_subsystem_vendor_id {10EE} \
+    CONFIG.pf0_vc_cap_enabled {true} \
+    CONFIG.pf0_vf_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf0_vf_pciebar2axibar_2 {0x0000000040000000} \
+    CONFIG.pf1_Use_Class_Code_Lookup_Assistant_qdma {false} \
+    CONFIG.pf1_bar0_index {0} \
+    CONFIG.pf1_bar1_index {7} \
+    CONFIG.pf1_bar2_index {7} \
+    CONFIG.pf1_bar3_index {7} \
+    CONFIG.pf1_bar4_index {7} \
+    CONFIG.pf1_bar5_index {7} \
+    CONFIG.pf1_bar5_prefetchable_qdma {false} \
     CONFIG.pf1_base_class_menu_qdma {Bridge_device} \
     CONFIG.pf1_class_code_base_qdma {06} \
-    CONFIG.pf1_class_code_qdma {060A00} \
+    CONFIG.pf1_class_code_interface_qdma {00} \
     CONFIG.pf1_class_code_sub_qdma {0A} \
-    CONFIG.pf1_msix_enabled_qdma {false} \
-    CONFIG.pf1_sriov_bar0_size {4} \
-    CONFIG.pf1_sriov_bar0_type {AXI_Bridge_Master} \
-    CONFIG.pf1_sriov_bar2_type {AXI_Lite_Master} \
+    CONFIG.pf1_device_id {913F} \
+    CONFIG.pf1_msi_enabled {false} \
+    CONFIG.pf1_msix_enabled {true} \
+    CONFIG.pf1_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf1_rbar_cap_bar0 {0x00000000fff0} \
+    CONFIG.pf1_rbar_cap_bar1 {0x000000000000} \
+    CONFIG.pf1_rbar_cap_bar2 {0x000000000000} \
+    CONFIG.pf1_rbar_cap_bar3 {0x000000000000} \
+    CONFIG.pf1_rbar_cap_bar4 {0x000000000000} \
+    CONFIG.pf1_rbar_cap_bar5 {0x000000000000} \
+    CONFIG.pf1_rbar_num {1} \
+    CONFIG.pf1_revision_id {00} \
+    CONFIG.pf1_sriov_bar5_64bit {false} \
+    CONFIG.pf1_sriov_bar5_prefetchable {false} \
     CONFIG.pf1_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf2_bar0_prefetchable_qdma {true} \
-    CONFIG.pf2_bar0_scale_qdma {Gigabytes} \
-    CONFIG.pf2_bar0_size_qdma {4} \
-    CONFIG.pf2_bar0_type_qdma {AXI_Bridge_Master} \
-    CONFIG.pf2_bar2_64bit_qdma {false} \
-    CONFIG.pf2_bar2_enabled_qdma {false} \
-    CONFIG.pf2_bar2_size_qdma {4} \
-    CONFIG.pf2_bar2_type_qdma {AXI_Lite_Master} \
+    CONFIG.pf1_subsystem_id {0007} \
+    CONFIG.pf1_vf_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf1_vf_pciebar2axibar_2 {0x0000000050000000} \
+    CONFIG.pf2_Use_Class_Code_Lookup_Assistant_qdma {false} \
+    CONFIG.pf2_bar0_index {0} \
+    CONFIG.pf2_bar1_index {7} \
+    CONFIG.pf2_bar2_index {7} \
+    CONFIG.pf2_bar3_index {7} \
+    CONFIG.pf2_bar4_index {7} \
+    CONFIG.pf2_bar5_index {7} \
+    CONFIG.pf2_bar5_prefetchable_qdma {false} \
     CONFIG.pf2_base_class_menu_qdma {Bridge_device} \
     CONFIG.pf2_class_code_base_qdma {06} \
-    CONFIG.pf2_class_code_qdma {060A00} \
+    CONFIG.pf2_class_code_interface_qdma {00} \
     CONFIG.pf2_class_code_sub_qdma {0A} \
     CONFIG.pf2_device_id {B2B4} \
-    CONFIG.pf2_msix_enabled_qdma {false} \
-    CONFIG.pf2_sriov_bar0_size {4} \
-    CONFIG.pf2_sriov_bar0_type {AXI_Bridge_Master} \
-    CONFIG.pf2_sriov_bar2_type {AXI_Lite_Master} \
+    CONFIG.pf2_msi_enabled {false} \
+    CONFIG.pf2_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf2_rbar_cap_bar0 {0x00000000fff0} \
+    CONFIG.pf2_rbar_cap_bar1 {0x000000000000} \
+    CONFIG.pf2_rbar_cap_bar2 {0x000000000000} \
+    CONFIG.pf2_rbar_cap_bar3 {0x000000000000} \
+    CONFIG.pf2_rbar_cap_bar4 {0x000000000000} \
+    CONFIG.pf2_rbar_cap_bar5 {0x000000000000} \
+    CONFIG.pf2_rbar_num {1} \
+    CONFIG.pf2_revision_id {00} \
+    CONFIG.pf2_sriov_bar5_64bit {false} \
+    CONFIG.pf2_sriov_bar5_prefetchable {false} \
     CONFIG.pf2_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
-    CONFIG.pf3_bar0_prefetchable_qdma {true} \
-    CONFIG.pf3_bar0_scale_qdma {Gigabytes} \
-    CONFIG.pf3_bar0_size_qdma {4} \
-    CONFIG.pf3_bar0_type_qdma {AXI_Bridge_Master} \
-    CONFIG.pf3_bar2_64bit_qdma {false} \
-    CONFIG.pf3_bar2_enabled_qdma {false} \
-    CONFIG.pf3_bar2_size_qdma {4} \
-    CONFIG.pf3_bar2_type_qdma {AXI_Lite_Master} \
+    CONFIG.pf2_subsystem_id {0007} \
+    CONFIG.pf2_vf_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf2_vf_pciebar2axibar_2 {0x0000000060000000} \
+    CONFIG.pf3_Use_Class_Code_Lookup_Assistant_qdma {false} \
+    CONFIG.pf3_bar0_index {0} \
+    CONFIG.pf3_bar1_index {7} \
+    CONFIG.pf3_bar2_index {7} \
+    CONFIG.pf3_bar3_index {7} \
+    CONFIG.pf3_bar4_index {7} \
+    CONFIG.pf3_bar5_index {7} \
+    CONFIG.pf3_bar5_prefetchable_qdma {false} \
     CONFIG.pf3_base_class_menu_qdma {Bridge_device} \
     CONFIG.pf3_class_code_base_qdma {06} \
-    CONFIG.pf3_class_code_qdma {060A00} \
+    CONFIG.pf3_class_code_interface_qdma {00} \
     CONFIG.pf3_class_code_sub_qdma {0A} \
     CONFIG.pf3_device_id {B3B4} \
-    CONFIG.pf3_msix_enabled_qdma {false} \
-    CONFIG.pf3_sriov_bar0_size {4} \
-    CONFIG.pf3_sriov_bar0_type {AXI_Bridge_Master} \
-    CONFIG.pf3_sriov_bar2_type {AXI_Lite_Master} \
+    CONFIG.pf3_msi_enabled {false} \
+    CONFIG.pf3_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf3_rbar_cap_bar0 {0x00000000fff0} \
+    CONFIG.pf3_rbar_cap_bar1 {0x000000000000} \
+    CONFIG.pf3_rbar_cap_bar2 {0x000000000000} \
+    CONFIG.pf3_rbar_cap_bar3 {0x000000000000} \
+    CONFIG.pf3_rbar_cap_bar4 {0x000000000000} \
+    CONFIG.pf3_rbar_cap_bar5 {0x000000000000} \
+    CONFIG.pf3_rbar_num {1} \
+    CONFIG.pf3_revision_id {00} \
+    CONFIG.pf3_sriov_bar5_64bit {false} \
+    CONFIG.pf3_sriov_bar5_prefetchable {false} \
     CONFIG.pf3_sub_class_interface_menu_qdma {InfiniBand_to_PCI_host_bridge} \
+    CONFIG.pf3_subsystem_id {0007} \
+    CONFIG.pf3_vf_pciebar2axibar_0 {0x0000000000000000} \
+    CONFIG.pf3_vf_pciebar2axibar_2 {0x0000000070000000} \
+    CONFIG.pfch_cache_depth {16} \
+    CONFIG.pipe_line_stage {2} \
+    CONFIG.pipe_sim {false} \
     CONFIG.pl_link_cap_max_link_speed {16.0_GT/s} \
     CONFIG.pl_link_cap_max_link_width {X4} \
-    CONFIG.plltype {QPLL1} \
-    CONFIG.vdm_en {true} \
-    CONFIG.xdma_axilite_slave {true} \
-    CONFIG.pcie_blk_locn [lindex $pcie_blk_locn $index] \
+    CONFIG.rbar_enable {false} \
+    CONFIG.ref_clk_freq {100_MHz} \
+    CONFIG.replace_uram_with_bram {false} \
+    CONFIG.rq_rcfg_en {TRUE} \
+    CONFIG.rx_detect {Default} \
+    CONFIG.set_finite_credit {false} \
+    CONFIG.silicon_rev {Pre-Production} \
+    CONFIG.sim_model {NO} \
+    CONFIG.soft_nic {false} \
+    CONFIG.soft_nic_bridge {false} \
+    CONFIG.split_dma {true} \
+    CONFIG.tandem_enable_rfsoc {false} \
+    CONFIG.testname {mm_st} \
+    CONFIG.three_port_switch {false} \
+    CONFIG.timeout0_sel {14} \
+    CONFIG.timeout1_sel {15} \
+    CONFIG.timeout_mult {3} \
+    CONFIG.tl_credits_cd {15} \
+    CONFIG.tl_credits_ch {15} \
+    CONFIG.tl_pf_enable_reg {1} \
+    CONFIG.tl_tx_mux_strict_priority {false} \
+    CONFIG.two_port_switch {false} \
+    CONFIG.usplus_es1_seqnum_bypass {false} \
+    CONFIG.usr_irq_exdes {false} \
+    CONFIG.usr_irq_xdma_type_interface {false} \
+    CONFIG.vcu118_board {false} \
+    CONFIG.vcu118_ddr_ex {false} \
+    CONFIG.vdpa_exdes {false} \
+    CONFIG.vendor_id {10EE} \
+    CONFIG.virtio_en {false} \
+    CONFIG.virtio_exdes {false} \
+    CONFIG.virtio_perf_exdes {false} \
+    CONFIG.vsec_cap_addr {0xE00} \
+    CONFIG.vu9p_board {false} \
+    CONFIG.vu9p_tul_ex {false} \
+    CONFIG.warm_reboot_sbr_fix {false} \
+    CONFIG.wrb_coal_loop_fix_disable {false} \
+    CONFIG.wrb_coal_max_buf {16} \
+    CONFIG.xdma_axi_intf_mm {AXI_Memory_Mapped} \
+    CONFIG.xdma_dsc_bypass {false} \
+    CONFIG.xdma_non_incremental_exdes {false} \
+    CONFIG.xdma_num_usr_irq {16} \
+    CONFIG.xdma_pcie_64bit_en {false} \
+    CONFIG.xdma_rnum_chnl {4} \
+    CONFIG.xdma_rnum_rids {32} \
+    CONFIG.xdma_st_infinite_desc_exdes {false} \
+    CONFIG.xdma_sts_ports {false} \
+    CONFIG.xdma_wnum_chnl {4} \
+    CONFIG.xdma_wnum_rids {32} \
+    CONFIG.xlnx_ddr_ex {false} \
+    CONFIG.xlnx_ref_board $ref_board \
   ] $qdma
 
 }
