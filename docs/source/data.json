@@ -48,7 +48,7 @@
       "ports": "SSD1",
       "connector": "HPC",
       "group": "fpga",
-      "petalinux": "YES",
+      "petalinux": "NO",
       "baremetal": "YES",
       "license": "NO",
       "flashsize": "64",

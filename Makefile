@@ -13,7 +13,7 @@ JOBS ?= 8
 
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
 # UPDATER START
-auboard_target := microblaze both
+auboard_target := microblaze baremetal_only
 kc705_hpc_target := microblaze baremetal_only
 kc705_lpc_target := microblaze baremetal_only
 kcu105_hpc_target := microblaze baremetal_only

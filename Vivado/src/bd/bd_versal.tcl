@@ -113,23 +113,6 @@ if {$is_vpk120 || $is_vek280 || $is_vpk180} {
   }  [get_bd_cells versal_cips_0]
 }
 
-# -----------------------------------------------------------------------------
-# Remove DDR address region 1 from the design
-# -----------------------------------------------------------------------------
-# Having this address region in the design leads to the following errors on PetaLinux boot:
-#   nvme nvme0: I/O 4 QID 0 timeout, disable controller
-#   nvme nvme0: Device shutdown incomplete; abort shutdown
-#   nvme nvme0: Identify Controller failed (-4)
-#   nvme nvme0: Removing after probe failure status: -5
-# Removing the region is the only available workaround at this time.
-set_property CONFIG.MC_CHAN_REGION1 {NONE} [get_bd_cells axi_noc_0]
-set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S00_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S01_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {MC_0 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S02_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S03_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S04_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
-
 # Extra config for this design:
 # PL CLK0 output clock enabled 350MHz
 # Number of PL Resets 1

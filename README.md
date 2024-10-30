@@ -91,26 +91,26 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 | [VPK120]              | `vpk120`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
 | [VPK180]              | `vpk180`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | YES   |
 
-[KC705]: https://www.xilinx.com/kc705
+[VPK120]: https://www.xilinx.com/vpk120
+[VHK158]: https://www.xilinx.com/vhk158
+[UltraZed-EV Carrier]: https://www.xilinx.com/products/boards-and-kits/1-1s78dxb.html
+[VCU118]: https://www.xilinx.com/vcu118
+[ZCU216]: https://www.xilinx.com/zcu216
+[VPK180]: https://www.xilinx.com/vpk180
+[ZCU208]: https://www.xilinx.com/zcu208
 [KCU105]: https://www.xilinx.com/kcu105
+[PicoZed 7030]: https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html
+[VEK280]: https://www.xilinx.com/vek280
+[PicoZed 7015]: https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html
+[VCK190]: https://www.xilinx.com/vck190
+[VMK180]: https://www.xilinx.com/vmk180
+[ZC706]: https://www.xilinx.com/zc706
 [VC707]: https://www.xilinx.com/vc707
 [VC709]: https://www.xilinx.com/vc709
-[VCU118]: https://www.xilinx.com/vcu118
-[PicoZed 7015]: https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html
-[PicoZed 7030]: https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html
-[ZC706]: https://www.xilinx.com/zc706
-[UltraZed-EV Carrier]: https://www.xilinx.com/products/boards-and-kits/1-1s78dxb.html
+[KC705]: https://www.xilinx.com/kc705
+[ZCU111]: https://www.xilinx.com/zcu111
 [ZCU104]: https://www.xilinx.com/zcu104
 [ZCU106]: https://www.xilinx.com/zcu106
-[ZCU111]: https://www.xilinx.com/zcu111
-[ZCU208]: https://www.xilinx.com/zcu208
-[ZCU216]: https://www.xilinx.com/zcu216
-[VCK190]: https://www.xilinx.com/vck190
-[VHK158]: https://www.xilinx.com/vhk158
-[VMK180]: https://www.xilinx.com/vmk180
-[VEK280]: https://www.xilinx.com/vek280
-[VPK120]: https://www.xilinx.com/vpk120
-[VPK180]: https://www.xilinx.com/vpk180
 <!-- updater end -->
 
 Notes:

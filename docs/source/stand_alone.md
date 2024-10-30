@@ -28,14 +28,14 @@ operating system:
 
 Before running the application, you will need to setup the hardware.
 
-1. Connect one or more SSDs to the [FPGA Drive FMC Gen4] and then plug it into the target board.
+1. Connect one or more SSDs to the mezzanine card and then plug it into the target board.
    Instructions for doing this can be found in the 
    [Getting started](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/getting-started/) guide.
 2. To receive the UART output of this standalone application, you will need to connect the
    USB-UART of the development board to your PC and run a console program such as 
    [Putty].
    * **For Microblaze designs:** The UART speed must be set to 9600.
-   * **For Zynq and Zynq MPSoC/RFSoC designs:** The UART speed must be set to 115200.
+   * **For Zynq-7000, Zynq UltraScale+ and Versal designs:** The UART speed must be set to 115200.
 
 
 ## Run the application

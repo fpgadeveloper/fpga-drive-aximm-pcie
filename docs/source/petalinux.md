@@ -233,60 +233,77 @@ The SSD will be mounted to the directory `/media/nvme`. You should be able to co
 that directory, create new files, delete files and use all the disk tools that are available in
 the PetaLinux build.
 
+## Patches and Known Issues
 
-## Kernel Start Address for AXI PCIe Gen3 Subsystem
+### QDMA Root Port Linux Driver Patch
 
-The AXI PCIe Gen3 Subsystem requires it's CTL0 interface to be allocated 256MB on the address map.
-During Linux boot, vmalloc is used to allocate virtual memory for this interface. This repo configures
-the Kernel start address to 0xB0000000 from the default 0xC0000000, in order to create sufficient
-virtual memory for the CTL0 interface. Without this modification, vmalloc fails during boot.
+* Patch file: `Opsero_QDMA_Bridge_Support_Fixes_for_RC_Linux_Driver_2024_1_32_n_64.patch`
+* Location: `PetaLinux/bsp/<target board>/project-spec/meta-user/recipes-kernel/linux/linux-xlnx/`
 
-Find the modification here:
+The Versal projects in this repository contain a patch to the QDMA/XDMA Linux driver. The patch incorporates
+the fixes from the patch on [Answer record AR76647](https://adaptivesupport.amd.com/s/article/76647?language=en_US) and
+it contains two additional changes to the driver:
 
-`PetaLinux/src/axi_pcie3/project-spec/meta-user/recipes-kernel/linux/linux-xlnx/kernel-options.cfg`
+1. The "cfg" resource (S_AXI_LITE) is referenced by name, rather than index in the device tree probe function. It
+   is necessary to reference this resource by name rather than by index, because the "reg" property of the device
+   tree contains two resources "cfg" and "bref", and the order in which they are listed depends on the addresses
+   assigned to them in the Vivado design. The device tree generator lists the one with the lower address first.
+2. Added code to configure the [BDF table](https://docs.amd.com/r/en-US/pg302-qdma/BDF-Table) of the QDMA.
+   Without configuring the BDF table, all transactions on the AXI BAR (S_AXI_BRIDGE) return DECERR 
+   (decode error) since the address translation is not being done correctly.
 
-## Known Issues
+### Slave Illegal Burst Errors
 
-### KCU105 HPC design fails to boot when one or both SSDs are not connected
-
-In the case where only one or neither SSD is connected, the PetaLinux boot freezes during the PCIe
-enumeration. For example, if we connect SSD1 but not SSD2, PetaLinux boot stops after the following
-lines:
+The Versal projects in this repository will function correctly however they will produce 
+["Slave Illegal Burst" errors](https://adaptivesupport.amd.com/s/question/0D54U000088bqe3SAA/slave-illegal-burst-qdma-axi-bridge?language=en_US). Below is a snippet of a boot log showing these errors:
 
 ```
-xilinx-pcie 10000000.axi-pcie: PCIe Link is UP
-xilinx-pcie 10000000.axi-pcie: host bridge /amba_pl/axi-pcie@10000000 ranges:
-xilinx-pcie 10000000.axi-pcie:   MEM 0x60000000..0x6fffffff -> 0x60000000
-xilinx-pcie 10000000.axi-pcie: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff]
-pci 0000:00:00.0: [10ee:8134] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x000007ff pref]
-pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:01:00.0: [144d:a808] type 00 class 0x010802
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0x60100000-0x601007ff pref]
-pci 0000:01:00.0: BAR 0: assigned [mem 0x60000000-0x60003fff 64bit]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-xilinx-pcie 20000000.axi-pcie: PCIe Link is DOWN
-xilinx-pcie 20000000.axi-pcie: host bridge /amba_pl/axi-pcie@20000000 ranges:
-xilinx-pcie 20000000.axi-pcie:   MEM 0x70000000..0x7fffffff -> 0x70000000
-xilinx-pcie 20000000.axi-pcie: PCI host bridge to bus 0001:00
-pci_bus 0001:00: root bus resource [bus 00-ff]
-pci_bus 0001:00: root bus resource [mem 0x70000000-0x7fffffff]
-pci 0001:00:00.0: [10ee:8134] type 01 class 0x060400
+[    4.027049] nvme nvme0: pci function 0000:01:00.0
+[    4.031809] pci 0000:00:00.0: enabling device (0000 -> 0002)
+[    4.037523] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[    4.038983] nvme nvme1: pci function 0001:01:00.0
+[    4.045785] tun: Universal TUN/TAP device driver, 1.6
+[    4.048058] xilinx-xdma-pcie 80000000.axi-pcie: Slave Illegal Burst
+[    4.048077] pci 0001:00:00.0: enabling device (0000 -> 0002)
+[    4.059465] xilinx-xdma-pcie 80000000.axi-pcie: Slave Illegal Burst
+[    4.059606] CAN device driver interface
+[    4.065198] nvme 0001:01:00.0: enabling device (0000 -> 0002)
+[    4.071816] usbcore: registered new interface driver asix
+[    4.075383] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.081180] usbcore: registered new interface driver ax88179_178a
+[    4.086675] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.092927] usbcore: registered new interface driver cdc_ether
+[    4.099059] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.105377] usbcore: registered new interface driver net1080
+[    4.111246] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.117568] usbcore: registered new interface driver cdc_subset
+[    4.123334] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.129576] usbcore: registered new interface driver zaurus
+[    4.135528] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.141856] usbcore: registered new interface driver cdc_ncm
+[    4.147449] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.153774] usbcore: registered new interface driver r8153_ecm
+[    4.159478] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.165909] VFIO - User Level meta-driver version: 0.3
+[    4.171651] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.189462] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.191018] usbcore: registered new interface driver uas
+[    4.195783] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.195790] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.201149] usbcore: registered new interface driver usb-storage
+[    4.207444] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.213889] i2c_dev: i2c /dev entries driver
+[    4.219824] nvme nvme0: Shutdown timeout set to 10 seconds
+[    4.227018] usbcore: registered new interface driver uvcvideo
+[    4.230468] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
+[    4.236251] Bluetooth: HCI UART driver ver 2.3
+[    4.241846] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
 ```
 
-We suspect that this is caused by a mishandling of the "PCIe Link is DOWN" case by the AXI PCIe
-driver. The correct behavior should be that the enumeration is skipped and boot continues when the
-down link is detected.
+This is a known issue of Vivado 2024.1 and will be fixed in a future release. AMD has a tactical patch for this issue that requires
+copying patch files to your Vivado installation and it is **not included** in this project repository. As a tactical patch, we are not allowed to share it; you must request a copy from your FAE. You can refer to the tactical patch by this name: 
+`AR000036860_Vivado_2024_1_preliminary_rev1`. We have tested the patch and can confirm that it corrects the issue.
 
-It is worth noting that our ZCU106 Dual design does NOT fail to boot under these conditions,
-suggesting that the XDMA driver IS designed to properly handle the "PCIe Link is DOWN" case.
-We are still looking for a solution to this issue.
 
 [FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
 [supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment

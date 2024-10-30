@@ -13,7 +13,6 @@ JOBS ?= 8
 
 # valid targets (template name, flash size, flash interface)
 # UPDATER START
-auboard_target := microblaze 64 SPIx4
 pz_7015_target := zynq 0 0
 pz_7030_target := zynq 0 0
 uzev_target := zynqMP 0 0
