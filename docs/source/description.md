@@ -53,7 +53,7 @@ Some of the designs have only one active M.2 slot due to limitations of the targ
 The table below illustrates how to load the M.2 slots for designs that can support only
 one M.2 module vs those that can support two.
 
-| One Active Slots | Two Active Slots |
+| One Active Slot | Two Active Slots |
 |---|---|
 | ![FPGA Drive FMC with single SSD loaded](images/fpga-drive-fmc-single-load.jpg) | ![FPGA Drive FMC with two SSDs loaded](images/fpga-drive-fmc-dual-load.jpg) |
 

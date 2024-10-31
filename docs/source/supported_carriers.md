@@ -4,10 +4,12 @@
 
 {% set unique_boards = {} %}
 {% for design in data.designs %}
-    {% if design.board not in unique_boards %}
-        {% set _ = unique_boards.update({design.board: {"group": design.group, "link": design.link, "connectors": []}}) %}
+    {% if design.publish == "YES" %}
+        {% if design.board not in unique_boards %}
+            {% set _ = unique_boards.update({design.board: {"group": design.group, "link": design.link, "connectors": []}}) %}
+        {% endif %}
+        {% set _ = unique_boards[design.board]["connectors"].append(design.connector) %}
     {% endif %}
-    {% set _ = unique_boards[design.board]["connectors"].append(design.connector) %}
 {% endfor %}
 
 {% for group in data.groups %}
@@ -23,8 +25,8 @@ For list of the target designs showing the number of SSDs supported, refer to th
 
 ## Unlisted boards
 
-If you need more information on whether the [FPGA Drive FMC] is compatible with a carrier that is not listed above, please first check the
-[compatibility list]. If the carrier is not listed there, please [contact Opsero],
+If you need more information on whether the [FPGA Drive FMC Gen4] or [M.2 M-key Stack FMC] is compatible with a carrier that is 
+not listed above, please first check the [compatibility list]. If the carrier is not listed there, please [contact Opsero],
 provide us with the pinout of your carrier and we'll be happy to check compatibility and generate a Vivado constraints file for you.
 
 ## Board specific notes
@@ -84,21 +86,8 @@ We recommend that you apply the fix if you intend to use this version of the BEA
 
 [contact Opsero]: https://opsero.com/contact-us
 [compatibility list]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/compatibility/
-[FPGA Drive FMC]: https://fpgadrive.com
-[PicoZed FMC Carrier Card V2]: http://zedboard.org/product/picozed-fmc-carrier-card-v2
-[PicoZed 7030]: http://picozed.org
-[UltraZed EV Carrier Card]: https://www.xilinx.com/products/boards-and-kits/1-y3n9v1.html
-[ZC706 Evaluation board]: https://www.xilinx.com/zc706
-[ZCU104 Evaluation board]: https://www.xilinx.com/zcu104
-[ZCU106 Evaluation board]: https://www.xilinx.com/zcu106
-[ZCU111 Evaluation board]: https://www.xilinx.com/zcu111
-[ZCU208 Evaluation board]: https://www.xilinx.com/zcu208
-[KC705 Evaluation board]: https://www.xilinx.com/kc705
-[KCU105 Evaluation board]: https://www.xilinx.com/kcu105
-[VC707 Evaluation board]: https://www.xilinx.com/vc707
-[VC709 Evaluation board]: https://www.xilinx.com/vc709
-[PicoZed Hardware User Guide]: https://www.element14.com/community/servlet/JiveServlet/downloadBody/90974-102-2-394635/5279-UG-PicoZed-7015-7030-V2_1.pdf
-[VCK190 Evaluation board]: https://www.xilinx.com/vck190
-[VMK180 Evaluation board]: https://www.xilinx.com/vmk180
-[VCU118 Evaluation board]: https://www.xilinx.com/vcu118
+[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+[PicoZed Hardware User Guide]: https://www.avnet.com/opasdata/d120001/medias/docus/126/$v2/5279-UG-PicoZed-7015-7030-V2_0.pdf
+[PicoZed FMC Carrier Card V2]: https://www.xilinx.com/products/boards-and-kits/1-hypn9d.html
 

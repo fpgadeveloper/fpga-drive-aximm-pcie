@@ -2,9 +2,9 @@
 
 ## Selecting SSDs
 
-The [FPGA Drive FMC Gen4] is an adapter that has been designed to support PCIe Gen1 to Gen4. If you are using an
-M2 SSD that supports PCIe Gen1,2,3 or 4, then it terms of the physical hardware, it is fully compatible with the 
-FPGA Drive FMC. In reality there are other layers involved that can cause incompatibility or usage issues (eg. 
+The [FPGA Drive FMC Gen4] and [M.2 M-key Stack FMC] adapters have been designed to support PCIe Gen1 to Gen4. If you are using an
+M.2 SSD that supports PCIe Gen1,2,3 or 4, then it terms of the physical hardware, it is fully compatible with our
+mezzanine cards. In reality there are other layers involved that can cause incompatibility or usage issues (eg. 
 the version of PetaLinux used, the version of NVMe built into the SSD, the transceiver settings in the Vivado 
 design, etc).
 
@@ -25,8 +25,10 @@ to keep this list as up-to-date and as useful as possible.
 | Delkin Industrial M2 SSD (PN: MB1HFRCFD-80000-2)                      | B+M     |
 | Intel Optane Memory                                                   | B+M     |
 | Kingston KC2500                                                       | M       |
+| Sabrent Rocket NVMe PCIe M.2 2230 SSD                                 | M       |
 | Samsung 950 PRO                                                       | M       |
 | Samsung 970 EVO                                                       | M       |
+| Samsung 980 PRO                                                       | M       |
 | Western Digital Black SN750                                           | M       |
 
 You can help us maintain this list by communicating [your experiences] to us or by simply
@@ -34,5 +36,6 @@ contributing to the documentation on our [Github repo].
 
 [your experiences]: https://opsero.com/contact-us
 [FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
 [Github repo]: https://github.com/fpgadeveloper/fpga-drive-aximm-pcie
 

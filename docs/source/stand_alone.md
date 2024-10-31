@@ -6,12 +6,12 @@ Vitis subdirectory of this repo. The build script creates a Vitis workspace cont
 Xilinx which is located in the Vitis installation files.
 The program demonstrates basic usage of the stand-alone driver including how to check link-up, link speed, 
 the number of lanes used, as well as how to perform PCIe enumeration. The original example applications can 
-be found here:
+be viewed on the [embeddedsw Github repo](https://github.com/Xilinx/embeddedsw/tree/xilinx_v2024.1):
 
 * For the AXI PCIe designs:
-  `<Xilinx-path>/Vitis/2022.1/data/embeddedsw/XilinxProcessorIPLib/drivers/axipcie_v3_3/examples/xaxipcie_rc_enumerate_example.c`
+  [xaxipcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/b173d246826f662b9a98215d8f39e93d39d699b4/XilinxProcessorIPLib/drivers/axipcie/examples/xaxipcie_rc_enumerate_example.c)
 * For the XDMA designs:
-  `<Xilinx-path>/Vitis/2022.1/data/embeddedsw/XilinxProcessorIPLib/drivers/xdmapcie_v1_5/examples/xdmapcie_rc_enumerate_example.c`
+  [xdmapcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/b173d246826f662b9a98215d8f39e93d39d699b4/XilinxProcessorIPLib/drivers/xdmapcie/examples/xdmapcie_rc_enumerate_example.c)
 
 ## Building the Vitis workspace
 
@@ -57,7 +57,7 @@ The run configuration will first program the FPGA with the bitstream, then load 
 application. You can view the UART output of the application in a console window and it should
 appear as follows:
 
-### Output of xdma designs
+### Output of XDMA designs
 
 ```none
 Xilinx Zynq MP First Stage Boot Loader
@@ -100,7 +100,7 @@ xdma_pcie: End Point has been enabled
 Successfully ran XdmaPcie rc enumerate Example
 ```
 
-### Output of axipcie designs
+### Output of AXI PCIe designs
 
 ```none
 =============================
@@ -137,6 +137,57 @@ PCIeBus 01:
 End of Enumeration
 ```
 
+### Output of the QDMA designs
+
+```none
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Link is up
+Bus Number is 00
+Device Number is 00
+Function Number is 00
+Port Number is 00
+PCIe Local Config Space is        0 at register CommandStatus
+PCIe Local Config Space is        0 at register Prim Sec. Bus
+Root Complex IP Instance has been successfully initialized
+xdma_pcie: 
+PCIeBus is 00
+PCIeDev is 00
+PCIeFunc is 00
+xdma_pcie: Vendor ID is 10EE 
+Device ID is B0B4
+xdma_pcie: This is a Bridge
+xdma_pcie: Requested BAR size of 4292870144K for bus: 0, dev: 0, function: 0 is out of range 
+             xdma_pcie: 
+PCIeBus is 01
+PCIeDev is 00
+PCIeFunc is 00
+xdma_pcie: Vendor ID is 144D 
+Device ID is A80A
+xdma_pcie: This is an End Point
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 0, ADDR: 0xA8000000 size : 16K
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 2 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 3 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 4 is not implemented
+xdma_pcie: bus: 1, device: 0, function: 0: BAR 5 is not implemented
+xdma_pcie: End Point has been enabled
+Successfully ran XdmaPcie rc enumerate Example
+```
+
+## Changing Target Slot
+
+In designs that support two M.2 slots, you can change the target slot by modifying a define value in the 
+example application. The tables below show the lines to modify and their potential values.
+
+|  | AXI PCIe designs | XDMA and QDMA designs |
+|--|------------------|-----------------------|
+| **File to modify** | `xaxipcie_rc_enumerate_example.c` | `xdmapcie_rc_enumerate_example.c` |
+| **Define** | AXIPCIE_DEVICE_ID | XDMAPCIE_DEVICE_ID |
+| **M.2 Slot 1** | XPAR_AXIPCIE_0_DEVICE_ID | XPAR_XDMAPCIE_0_DEVICE_ID |
+| **M.2 Slot 2** | XPAR_AXIPCIE_1_DEVICE_ID | XPAR_XDMAPCIE_1_DEVICE_ID |
+
 ## Advanced Design Details
 
 ### Linker script modifications for Zynq designs
@@ -155,17 +206,28 @@ to DDR memory.
 
 This project uses a modified version of the axipcie driver.
 
-The `axipcie_v3_3` driver is attached to designs that use the AXI Memory Mapped to PCIe IP (axi_pcie) and 
+The `axipcie_v3_4` driver is attached to designs that use the AXI Memory Mapped to PCIe IP (axi_pcie) and 
 designs that use the AXI PCIe Gen3 IP (axi_pcie3). However, the driver contains a bug that affects designs
 that use the AXI PCIe Gen3 IP.
 
-The script `axipcie_v3_3/data/acipcie.tcl` generates the `xparameters.h` and `xaxipcie_g.c` BSP sources that
+The script `axipcie_v3_4/data/acipcie.tcl` generates the `xparameters.h` and `xaxipcie_g.c` BSP sources that
 both contain a define called `INCLUDE_RC`. To determine the value of this define, the script reads a parameter of 
 the PCIe IP called `CONFIG.INCLUDE_RC`, however this parameter only exists in the AXI Memory Mapped to PCIe IP.
 Our modified version of the script uses the correct parameter to determine the value of `INCLUDE_RC`.
 Specifically, it reads the `CONFIG.device_port_type` parameter and compares it to the value that is expected
 for root complex designs: `Root_Port_of_PCI_Express_Root_Complex`.
 
+### xdmapcie driver
+
+This project uses a modified version of the xdmapcie driver.
+
+The `xdmapcie_v1_7` driver is attached to designs that use the XDMA or QDMA IP. The driver has a known issue
+that requires patching when used with QDMA. There exists an AMD prescribed patch that is described in 
+[Answer Record AR76665](https://adaptivesupport.amd.com/s/article/76665?language=en_US). The patch from the
+answer record requires hard coding of an interface address into the driver itself. This is not a satisfactory
+solution for the designs of this project for which some designs contain two QDMA instances and we would like
+to target each of them. For this reason, we have made our own modifications to the driver, specifically to the
+file `xdmapcie.c`.
 
 [Putty]: https://www.putty.org/
 [FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
