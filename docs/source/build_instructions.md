@@ -28,20 +28,26 @@ the FMC connector on which to connect the mezzanine card.
 {% for group in data.groups %}
     {% set designs_in_group = [] %}
     {% for design in data.designs %}
-        {% if design.group == group.label and design.publish != "NO" %}
+        {% if design.group == group.label and design.publish %}
             {% set _ = designs_in_group.append(design.label) %}
         {% endif %}
     {% endfor %}
     {% if designs_in_group | length > 0 %}
 ### {{ group.name }} designs
 
-| Target board        | Target design     | M.2 Slot 1<br>PCIe Lanes  | M.2 Slot 2<br>PCIe Lanes  | FMC Slot    | License<br> required |
+| Target board        | Target design     | M.2 Slot 1<br>PCIe Lanes  | M.2 Slot 2<br>PCIe Lanes  | FMC Slot    | Vivado<br> Edition |
 |---------------------|-------------------|---------------------------|---------------------------|-------------|-----|
-{% for design in data.designs %}{% if design.group == group.label and design.publish != "NO" %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.lanes[0] }} | {{ design.lanes[1] | default("-") }} | {{ design.connector }} | {{ design.license }} |
+{% for design in data.designs %}{% if design.group == group.label and design.publish %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.lanes[0] }} | {{ design.lanes[1] | default("-") }} | {{ design.connector }} | {{ "Enterprise" if design.license else "Standard 🆓" }} |
 {% endif %}{% endfor %}
 {% endif %}
 {% endfor %}
 
+Notes:
+
+1. The Vivado Edition column indicates which designs are supported by the Vivado *Standard* Edition, the
+   FREE edition which can be used without a license. Vivado *Enterprise* Edition requires
+   a license however a 30-day evaluation license is available from the AMD Xilinx Licensing site.
+   
 ## Windows users
 
 Windows users will be able to build the Vivado projects and compile the standalone applications,
@@ -131,7 +137,7 @@ design if it has not already been done.
    make workspace TARGET=<target>
    ```
    Valid target labels for the workspaces are:
-   {% for design in data.designs %}{% if design.baremetal == "YES" %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
+   {% for design in data.designs %}{% if design.baremetal %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
    You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ### Build PetaLinux project in Linux
@@ -155,7 +161,7 @@ design if it has not already been done.
    make petalinux TARGET=<target>
    ```
    Valid target labels for PetaLinux projects are:
-   {% for design in data.designs %}{% if design.petalinux == "YES" %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
+   {% for design in data.designs %}{% if design.petalinux %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
    Note that if you skipped the Vivado build steps above, the Makefile will first generate and
    build the Vivado project, and then build the PetaLinux project.
 

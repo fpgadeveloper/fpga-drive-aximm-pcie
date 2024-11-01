@@ -23,12 +23,14 @@ def load_json():
 # This function determines the formatting of the design tables
 def create_tables(data):
     # Emoji dict
-    to_emoji = {"YES": ":white_check_mark:", "NO": ":x:"}
+    to_emoji = {True: ":white_check_mark:", False: ":x:"}
+    # License dict
+    to_edition = {True: "Enterprise", False: "Standard :free:"}
     # Determine which groups actually have designs
     used_groups = []
     for group in data['groups']:
         for design in data['designs']:
-            if design['publish'] == 'NO':
+            if not design['publish']:
                 continue
             if design['group'] == group['label']:
                 used_groups.append(group)
@@ -39,10 +41,10 @@ def create_tables(data):
     for group in used_groups:
         tables.append('### {} designs'.format(group['name']))
         tables.append('')
-        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | License<br> required |')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Vivado<br> Edition |')
         tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|')
         for design in data['designs']:
-            if design['publish'] == 'NO':
+            if not design['publish']:
                 continue
             if design['group'] == group['label']:
                 cols = []
@@ -56,7 +58,7 @@ def create_tables(data):
                 cols.append('{0}'.format(design['connector']).ljust(11))
                 cols.append('{0}'.format(to_emoji[design['baremetal']]).ljust(11))
                 cols.append('{0}'.format(to_emoji[design['petalinux']]).ljust(11))
-                cols.append('{0}'.format(design['license']).ljust(5))
+                cols.append('{0}'.format(to_edition[design['license']]).ljust(5))
                 tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']
         tables.append('')
@@ -67,6 +69,8 @@ def create_tables(data):
 
 # Update the README.md file target design tables
 def update_readme(file_path,data):
+    # Create the tables from the data
+    tables = create_tables(data)
     # Read the content of the file
     with open(file_path, 'r') as infile:
         lines = infile.readlines()
@@ -80,7 +84,6 @@ def update_readme(file_path,data):
                 # Write the start tag to the file
                 outfile.write(line)
                 # Write the tables
-                tables = create_tables(data)
                 for l in tables:
                     outfile.write("{}\n".format(l))
                 inside_updater = True
@@ -97,7 +100,7 @@ def get_root_targets(data):
     targets = []
     for design in data['designs']:
         template = templates[design['group']]
-        if design['petalinux'] == "YES":
+        if design['petalinux']:
             sw = 'both'
         else:
             sw = 'baremetal_only'
@@ -126,7 +129,7 @@ def get_petalinux_targets(data):
     templates = {'fpga': 'microblaze', 'z7': 'zynq', 'zu': 'zynqMP', 'versal': 'versal'}
     targets = []
     for design in data['designs']:
-        if design['petalinux'] == 'NO':
+        if not design['petalinux']:
             continue
         template = templates[design['group']]
         target = '{}_target := {} {} {}'.format(design['label'],template,design['flashsize'],design['flashintf'])
@@ -137,7 +140,7 @@ def get_vitis_targets(data):
     templates = {'fpga': 'microblaze', 'z7': 'zynq', 'zu': 'zynqMP', 'versal': 'versal'}
     targets = []
     for design in data['designs']:
-        if design['baremetal'] == 'NO':
+        if not design['baremetal']:
             continue
         template = templates[design['group']]
         target = '{}_target := {}'.format(design['label'],template)

@@ -4,7 +4,7 @@
 * Opsero Electronic Design Inc.
 * 
 * This file contains a fixed configuration table for the QDMAs
-* in the Versal designs. The values for BASEADDR and CSRADDR
+* in the Versal designs. The values for BASEADDR and ECAMADDR
 * must match those in the Vivado design for this to function
 * correctly. The reason for using this file rather than the 
 * auto-generated xdmapcie_g.c file is that in Vitis 2024.1 the
