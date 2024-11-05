@@ -30,7 +30,7 @@
 /***************************** Type Definitions *****************************/
 
 /****************** Macros (Inline Functions) Definitions *******************/
-#ifdef QDMA_PCIE_BRIDGE
+#if defined(QDMA_PCIE_BRIDGE)
 #define BDF_ENTRY_ADDR_LO              0x2420
 #define BDF_ENTRY_ADDR_HI              0x2424
 #define BDF_ENTRY_PASID                        0x2428
@@ -51,6 +51,7 @@
 /**
 * Additional programming for QDMA bridges for BAR access
 */
+#if defined(QDMA_PCIE_BRIDGE)
 void XDmaPcie_QdmaAddPgm(XDmaPcie *InstancePtr)
 {
        u32 i, Size;
@@ -89,7 +90,7 @@ void XDmaPcie_QdmaAddPgm(XDmaPcie *InstancePtr)
                Xil_Out32(InstancePtr->Config.BaseAddress + BDF_ENTRY_REG + (i * BDF_TABLE_ENTRY_OFF), 0x0);
        }
 }
-
+#endif
 
 /****************************************************************************/
 /**
