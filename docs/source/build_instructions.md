@@ -108,7 +108,7 @@ to build the Vivado and PetaLinux projects with a single command.
    make project TARGET=<target>
    ```
    Valid target labels are:
-   {% for design in data.designs %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
+   {% for design in data.designs if design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
    That will create the Vivado project and block design without generating a bitstream or exporting to XSA.
 4. Open the generated project in the Vivado GUI and click **Generate Bitstream**. Once the build is
    complete, select **File->Export->Export Hardware** and be sure to tick **Include bitstream** and use
@@ -137,7 +137,7 @@ design if it has not already been done.
    make workspace TARGET=<target>
    ```
    Valid target labels for the workspaces are:
-   {% for design in data.designs %}{% if design.baremetal %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
+   {% for design in data.designs if design.publish %}{% if design.baremetal %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
    You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ### Build PetaLinux project in Linux
@@ -161,7 +161,7 @@ design if it has not already been done.
    make petalinux TARGET=<target>
    ```
    Valid target labels for PetaLinux projects are:
-   {% for design in data.designs %}{% if design.petalinux %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
+   {% for design in data.designs if design.petalinux and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
    Note that if you skipped the Vivado build steps above, the Makefile will first generate and
    build the Vivado project, and then build the PetaLinux project.
 
@@ -197,7 +197,5 @@ follow these instructions.
 
 Now when you use `make` to build the PetaLinux projects, they will be configured for offline build.
 
-[supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
-
-
+[supported Linux distributions]: https://docs.amd.com/r/en-US/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 

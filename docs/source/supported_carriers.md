@@ -4,7 +4,7 @@
 
 {% set unique_boards = {} %}
 {% for design in data.designs %}
-    {% if design.publish == "YES" %}
+    {% if design.publish %}
         {% if design.board not in unique_boards %}
             {% set _ = unique_boards.update({design.board: {"group": design.group, "link": design.link, "connectors": []}}) %}
         {% endif %}

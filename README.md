@@ -5,7 +5,7 @@
 This repository provides example designs for connecting NVMe SSDs and other M.2 M-key modules to various FPGA, MPSoC,
 and ACAP evaluation boards. These designs are compatible with both standalone and PetaLinux environments, and all scripts
 and code are provided for building these environments. The interface between the evaluation board and M.2 modules is 
-facilitated by Opsero's [FPGA Drive FMC Gen4] and [M.2 M-key Stack FMC] mezzanine cards, either of which can be used with
+facilitated by Opsero's [FPGA Drive FMC Gen4] (OP063) and [M.2 M-key Stack FMC] (OP073) mezzanine cards, either of which can be used with
 these designs.
 
 | FPGA Drive FMC Gen4 | M.2 M-key Stack FMC |

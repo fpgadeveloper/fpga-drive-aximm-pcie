@@ -1,8 +1,8 @@
 Opsero Electronic Design Inc. 2024
 Jeff Johnson
-ZCU104 FSBL patch 2022.1
+ZCU104 FSBL patch 2024.1
 ========================
-The FSBL for Zynq Ultrascale+ needs a patch to properly enable VADJ on the ZCU104 board in the 2022.1
+The FSBL for Zynq Ultrascale+ needs a patch to properly enable VADJ on the ZCU104 board in the 2024.1
 version of PetaLinux. The FSBL released with this version of PetaLinux has code to read the FMC card's
 EEPROM and then enable VADJ to the correct value. The released FSBL code in fact reads from the ZCU104
 board's EEPROM (address 0x54) and not the FMC's EEPROM (address 0x50). It also only reads 32 bytes 
@@ -10,10 +10,10 @@ from the EEPROM, which is not sufficient to include the VADJ voltage data. For b
 the FSBL does not properly enable VADJ on this board if this patch is not applied.
 
 diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
-index 328332402d..bdb9048181 100644
+index 504f008004..7a3e414a08 100644
 --- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
 +++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
-@@ -82,7 +82,7 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+@@ -85,7 +85,7 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
  	u32 UStatus;
  	s32 Status;
  	u32 NominalVoltage;
@@ -22,7 +22,7 @@ index 328332402d..bdb9048181 100644
  	u32 MinVoltage;
  	u32 MaxVoltage;
  
-@@ -91,8 +91,8 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+@@ -94,8 +94,8 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
  	MaxVoltage = 0U;
  	XRecord.VadjRecordFound = 0U;
  
@@ -33,7 +33,7 @@ index 328332402d..bdb9048181 100644
  	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
  				WriteBuffer, 1U, TCA9548A_ADDR);
  	if (Status != XST_SUCCESS) {
-@@ -106,6 +106,16 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
+@@ -109,6 +109,16 @@ static u32 XFsbl_ReadMinMaxEepromVadj(XIicPs* I2c0InstancePtr, u32 *MinVadj, u32
  		/** For MISRA-C compliance */
  	}
  

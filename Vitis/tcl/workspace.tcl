@@ -345,7 +345,7 @@ proc microblaze_boot_files {workspace_dir xsa_file app_name proc_instance target
     # Just copy the bitstream and .elf
     puts "Copying bitstream and elf for $vivado_folder project."
     # Copy the bitstream and elf file to the boot folder
-    file copy -force "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bit" "./boot/${target}"
+    file copy -force "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bit" "./boot/${target}/${target}.bit"
     file copy -force "${workspace_dir}/${app_name}/Debug/${app_name}.elf" "./boot/${target}"
   }
 }

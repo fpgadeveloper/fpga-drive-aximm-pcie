@@ -1,0 +1,87 @@
+Fix 2GB CPU DDR limitation for PL QDMA in RP mode with NVMe 2024.1
+==================================================================
+
+This patch is a work-around to the 2GB CPU DDR limitation on Versal devices
+when using QDMA in root port mode and NVMe end-points. It applies to PetaLinux
+release 2024.1. This patch was developed by Fidus.
+
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 5c2a3af26d4d..d1fdb29c4823 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -264,12 +264,12 @@ static void nvme_dbbuf_dma_alloc(struct nvme_dev *dev)
+ 
+ 	dev->dbbuf_dbs = dma_alloc_coherent(dev->dev, mem_size,
+ 					    &dev->dbbuf_dbs_dma_addr,
+-					    GFP_KERNEL);
++					    GFP_KERNEL | GFP_DMA32);
+ 	if (!dev->dbbuf_dbs)
+ 		goto fail;
+ 	dev->dbbuf_eis = dma_alloc_coherent(dev->dev, mem_size,
+ 					    &dev->dbbuf_eis_dma_addr,
+-					    GFP_KERNEL);
++					    GFP_KERNEL | GFP_DMA32);
+ 	if (!dev->dbbuf_eis)
+ 		goto fail_free_dbbuf_dbs;
+ 	return;
+@@ -1510,7 +1510,10 @@ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
+ 	}
+ 
+ 	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(nvmeq),
+-				&nvmeq->sq_dma_addr, GFP_KERNEL);
++				&nvmeq->sq_dma_addr, GFP_KERNEL | GFP_DMA32);
++
++	pr_info("fidus-nvme: queue dma addr %lx\n", nvmeq->sq_dma_addr);
++
+ 	if (!nvmeq->sq_cmds)
+ 		return -ENOMEM;
+ 	return 0;
+@@ -1526,7 +1529,7 @@ static int nvme_alloc_queue(struct nvme_dev *dev, int qid, int depth)
+ 	nvmeq->sqes = qid ? dev->io_sqes : NVME_ADM_SQES;
+ 	nvmeq->q_depth = depth;
+ 	nvmeq->cqes = dma_alloc_coherent(dev->dev, CQ_SIZE(nvmeq),
+-					 &nvmeq->cq_dma_addr, GFP_KERNEL);
++					 &nvmeq->cq_dma_addr, GFP_KERNEL | GFP_DMA32);
+ 	if (!nvmeq->cqes)
+ 		goto free_nvmeq;
+ 
+@@ -1946,7 +1949,7 @@ static int __nvme_alloc_host_mem(struct nvme_dev *dev, u64 preferred,
+ 		max_entries = dev->ctrl.hmmaxd;
+ 
+ 	descs = dma_alloc_coherent(dev->dev, max_entries * sizeof(*descs),
+-				   &descs_dma, GFP_KERNEL);
++				   &descs_dma, GFP_KERNEL | GFP_DMA32);
+ 	if (!descs)
+ 		goto out;
+ 
+@@ -2663,6 +2666,7 @@ static int nvme_pci_alloc_iod_mempool(struct nvme_dev *dev)
+ 			dev_to_node(dev->dev));
+ 	if (!dev->iod_mempool)
+ 		return -ENOMEM;
++
+ 	return 0;
+ }
+ 
+@@ -2965,6 +2969,9 @@ static struct nvme_dev *nvme_pci_alloc_dev(struct pci_dev *pdev,
+ 		dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(48));
+ 	else
+ 		dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++
++	dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++
+ 	dma_set_min_align_mask(&pdev->dev, NVME_CTRL_PAGE_SIZE - 1);
+ 	dma_set_max_seg_size(&pdev->dev, 0xffffffff);
+ 
+diff --git a/scripts/setlocalversion b/scripts/setlocalversion
+index 38b96c6797f4..08ab2e843afe 100755
+--- a/scripts/setlocalversion
++++ b/scripts/setlocalversion
+@@ -33,7 +33,7 @@ fi
+ scm_version()
+ {
+ 	local short=false
+-	local no_dirty=false
++	local no_dirty=true
+ 	local tag
+ 
+ 	while [ $# -gt 0 ];
