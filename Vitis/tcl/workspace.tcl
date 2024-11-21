@@ -350,37 +350,88 @@ proc microblaze_boot_files {workspace_dir xsa_file app_name proc_instance target
   }
 }
 
-# Create .bif file for Versal designs
-proc create_versal_bif {filename pdi elf} {
-  # Split the path to get directory and file separately
-  set dirs [file dirname $filename]
-  # Check if the directory exists, if not, create it
-  if { ![file exists $dirs] } {
-    file mkdir $dirs
+# Function to prepend a string to file paths in "file =" lines
+proc prepend_to_file_paths {file_data prepend_string} {
+  # Split file data into lines
+  set lines [split $file_data "\n"]
+  
+  # Loop through the lines and modify those with "file ="
+  foreach line $lines {
+    if {[regexp {file\s*=\s*(.*)} $line match filepath]} {
+      # Prepend the string to the file path
+      set modified_filepath "${prepend_string}[string trim $filepath]"
+      set modified_line [string map "$filepath $modified_filepath" $line]
+      lappend modified_lines $modified_line
+    } else {
+        # Keep the line unchanged if it doesn't match
+      lappend modified_lines $line
+    }
   }
-  set outfile [open $filename w]
-  puts $outfile "all:"
-  puts $outfile "{"
-  puts $outfile "image"
-  puts $outfile "{"
-  puts $outfile "partition"
-  puts $outfile "{"
-  puts $outfile "type = bootimage"
-  puts $outfile "file = $pdi"
-  puts $outfile "}"
-  puts $outfile "}"
-  puts $outfile "image"
-  puts $outfile "{"
-  puts $outfile "name = user_elfs_subsystem"
-  puts $outfile "id = 0x1c000000"
-  puts $outfile "partition"
-  puts $outfile "{"
-  puts $outfile "core = a72-0"
-  puts $outfile "file = $elf"
-  puts $outfile "}"
-  puts $outfile "}"
-  puts $outfile "}"
-  close $outfile
+
+  # Join the modified lines back into the file content
+  return [join $modified_lines "\n"]
+}
+
+# Function to append new content before the last closing curly brace
+proc append_to_outermost_curly_brace {file_content new_content} {
+  # Find the last closing curly brace position
+  set last_curly_pos [string last "\}" $file_content]
+  
+  # If no closing curly brace is found, we have a problem with the file structure
+  if {$last_curly_pos == -1} {
+    error "No closing curly brace found in the file"
+  }
+  
+  # Insert the new content before the last closing curly brace
+  set new_file_data [string range $file_content 0 [expr {$last_curly_pos - 1}]]
+  append new_file_data $new_content "\n\}"
+  
+  return $new_file_data
+}
+
+# Function to generate boot.bif and BOOT.BIN files for a Versal device
+proc versal_boot_files {workspace_dir xsa_file vivado_path vivado_folder app_name} {
+  set xsa_filename [file tail $xsa_file]
+  set wrapper_name [file rootname $xsa_filename]
+  set workspace_boot_path "${workspace_dir}/boot"
+  set bif_src_path "${vivado_path}/${vivado_folder}.runs/impl_1/${wrapper_name}.bif"
+  set bif_dst_path "${workspace_boot_path}/boot.bif"
+  set boot_bin_path "${workspace_boot_path}/BOOT.BIN"
+  puts "bif source: $bif_src_path"
+  puts "bif desg: $bif_dst_path"
+  # Create directory for the boot file if it doesn't already exist
+  if {[file exists $workspace_boot_path] == 0} {
+    file mkdir $workspace_boot_path
+  }
+  # Copy the bif file from the Vivado implementation
+  file copy -force $bif_src_path $bif_dst_path
+  # Read the bif file content
+  set bif_file_content [read [open $bif_dst_path r]]
+  # Define the new image and partition content to append
+  set new_image_block " image
+ {
+  name = user_subsystem
+  id = 0x1c000000
+  partition
+  {
+   core = a72-0
+   file = ${workspace_dir}/${app_name}/Debug/${app_name}.elf
+  }
+ }"
+  set prepend_path "${vivado_path}/${vivado_folder}.runs/impl_1/"
+  # Get the modified content with updated file paths
+  set modified_content [prepend_to_file_paths $bif_file_content $prepend_path]
+
+  # Append the new content and get the final modified content
+  set final_content [append_to_outermost_curly_brace $modified_content $new_image_block]
+
+  # Write the final content back to the file
+  set file_handle [open $bif_dst_path w]
+  puts $file_handle $final_content
+  close $file_handle
+
+  # Use bootgen to generate the BOOT.BIN file
+  exec bootgen -arch versal -image $bif_dst_path -o $boot_bin_path -w on
 }
 
 # Creates Vitis workspace for a project
@@ -520,19 +571,11 @@ proc create_vitis_ws {workspace_dir target target_dict vivado_dir app_name suppo
     microblaze_boot_files $workspace_dir $xsa_file $app_name $proc_instance $target
   # For Versal designs
   } elseif {[str_contains $proc_instance "psv_cortexa72_0"]} {
-    print_sysproj $sysproj_name "Copying the PDI file to the ./boot/${target} directory."
-    # Generate the PDI/BOOT.BIN file
-    set wrapper_name [file rootname [file tail $xsa_file]]
+    print_sysproj $sysproj_name "Creating the BOOT.BIN file and copying to the ./boot/${target} directory."
+    versal_boot_files $workspace_dir $xsa_file $vivado_path $vivado_folder $app_name
     set bootbin_file "${workspace_dir}/boot/BOOT.BIN"
-    create_versal_bif ${workspace_dir}/boot/boot.bif \
-                      ${workspace_dir}/${app_name}/_ide/bootimage/resources/${wrapper_name}.pdi \
-                      ${workspace_dir}/${app_name}/Debug/${app_name}.elf
-    exec bootgen -arch versal -image ${workspace_dir}/boot/boot.bif -w -o ${bootbin_file}
-    # Copy the generated BOOT.BIN file
     if {[file exists $bootbin_file] == 1} {
-      file copy -force $bootbin_file "./boot/${target}/"
-    } else {
-      print_sysproj $sysproj_name "File not found: ${bootbin_file}"
+      file copy -force $bootbin_file "./boot/${target}"
     }
   # For Zynq and Zynq MP designs
   } else {
