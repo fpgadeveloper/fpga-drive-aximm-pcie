@@ -357,6 +357,8 @@ proc prepend_to_file_paths {file_data prepend_string} {
   
   # Loop through the lines and modify those with "file ="
   foreach line $lines {
+    # Replace all backslashes with forwardslashes
+    set line [string map {\\ /} $line]
     if {[regexp {file\s*=\s*(.*)} $line match filepath]} {
       # Prepend the string to the file path
       set modified_filepath "${prepend_string}[string trim $filepath]"
