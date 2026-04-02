@@ -10,8 +10,7 @@
 # - VPK120 CED: 1x PCIe Gen5 (32GT/s) 4-lane design
 #
 # Our designs deviate from the CEDs in the following ways:
-# - VCK190_FMCP1/2, VMK180_FMCP1/2: 2x PCIe Gen4 (16GT/s) 4-lane
-# - VEK280: 1x PCIe Gen5 (32GT/s) 4-lane
+# - VCK190_FMCP1/2, VMK180_FMCP1/2, VEK280: 2x PCIe Gen4 (16GT/s) 4-lane
 # - VHK158, VPK120, VPK180: 1x PCIe Gen5 (32GT/s) 4-lane
 
 # CHECKING IF PROJECT EXISTS
@@ -65,6 +64,13 @@ set is_vek280 [str_contains $target "vek280"]
 set is_vpk120 [str_contains $target "vpk120"]
 set is_vpk180 [str_contains $target "vpk180"]
 set is_vhk158 [str_contains $target "vhk158"]
+
+# GT type
+if {$is_vck190 || $is_vmk180} {
+  set gt_type "GTY"
+} else {
+  set gt_type "GTYP"
+}
 
 # Work out the ref board label
 set ref_board [string toupper $target]
@@ -468,7 +474,10 @@ proc create_qdma_support { index } {
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 m_axis_rc
 
-  if {$is_vpk120 || $is_vek280 || $is_vpk180 || $is_vhk158} {
+  # VPK120, VPK180 and VHK158 have PCIE5 blocks
+  # VCK190, VMK180 and VEK280 have PCIE4 blocks
+  # Strangely the tools insist on us using interfaces pcie5_cfg_control/status_rtl with VEK280
+  if {$is_vpk120 || $is_vpk180 || $is_vhk158 || $is_vek280} {
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:pcie5_cfg_control_rtl:1.0 pcie_cfg_control
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie5_cfg_status_rtl:1.0 pcie_cfg_status
   } else {
@@ -515,7 +524,7 @@ proc create_qdma_support { index } {
   # Create instance: pcie, and set properties
   global ref_board
   set pcie [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_versal pcie ]
-  if {$is_vck190 | $is_vmk180} {
+  if {$is_vck190 || $is_vmk180 || $is_vek280} {
     set_property -dict [ list \
       CONFIG.AXISTEN_IF_CQ_ALIGNMENT_MODE {Address_Aligned} \
       CONFIG.AXISTEN_IF_EXT_512_RQ_STRADDLE {true} \
@@ -782,7 +791,7 @@ proc create_qdma_support { index } {
   }
   # Create instance: pcie_phy, and set properties
   set pcie_phy [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_phy_versal pcie_phy ]
-  if {$is_vck190 | $is_vmk180} {
+  if {$is_vck190 || $is_vmk180 || $is_vek280} {
     set_property -dict [ list \
       CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {16.0_GT/s} \
       CONFIG.PL_LINK_CAP_MAX_LINK_WIDTH {X4} \
@@ -832,11 +841,12 @@ proc create_qdma_support { index } {
 
   # Create instance: gtwiz_versal_0, and set properties
   set gtwiz_versal_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:gtwiz_versal:1.0 gtwiz_versal_0 ]
-  if {$is_vck190 | $is_vmk180} {
+  global gt_type
+  if {$is_vck190 || $is_vmk180 || $is_vek280} {
     set_property -dict [list \
-      CONFIG.GT_TYPE {GTY} \
+      CONFIG.GT_TYPE $gt_type \
       CONFIG.INTF0_GT_SETTINGS(GT_DIRECTION) {DUPLEX} \
-      CONFIG.INTF0_GT_SETTINGS(GT_TYPE) {GTY} \
+      CONFIG.INTF0_GT_SETTINGS(GT_TYPE) $gt_type \
       CONFIG.INTF0_GT_SETTINGS(LR0_SETTINGS) {TX_BUFFER_MODE 0 PCIE_ENABLE true TX_PLL_TYPE LCPLL TX_REFCLK_SOURCE R0 TXPROGDIV_FREQ_ENABLE true TXPROGDIV_FREQ_SOURCE RPLL TX_OUTCLK_SOURCE TXPROGDIVCLK TX_DIFF_SWING_EMPH_MODE\
   CUSTOM TX_BUFFER_BYPASS_MODE Fast_Sync TX_DATA_ENCODING 8B10B TX_LINE_RATE 2.5 TX_USER_DATA_WIDTH 16 TX_INT_DATA_WIDTH 20 TX_REFCLK_FREQUENCY 100 PCIE_USERCLK_FREQ 250 TXPROGDIV_FREQ_VAL 500.000 PCIE_USERCLK2_FREQ\
   250 OOB_ENABLE true RX_BUFFER_MODE 1 RXPROGDIV_FREQ_ENABLE false RX_CC_LEN_SEQ 1 RX_CC_NUM_SEQ 1 RX_CC_K_0_0 true RX_CC_MASK_0_0 false RX_CC_VAL_0_0 00011100 RX_CC_KEEP_IDLE ENABLE RX_COMMA_ALIGN_WORD\
@@ -916,9 +926,9 @@ MSTRCLK 1,0,0,0 IS_CURRENT_QUAD 1}}} \
     ] $gtwiz_versal_0
   } else {
     set_property -dict [list \
-      CONFIG.GT_TYPE {GTYP} \
+      CONFIG.GT_TYPE $gt_type \
       CONFIG.INTF0_GT_SETTINGS(GT_DIRECTION) {DUPLEX} \
-      CONFIG.INTF0_GT_SETTINGS(GT_TYPE) {GTYP} \
+      CONFIG.INTF0_GT_SETTINGS(GT_TYPE) $gt_type \
       CONFIG.INTF0_GT_SETTINGS(LR0_SETTINGS) {TX_BUFFER_MODE 0 PCIE_ENABLE true TX_PLL_TYPE LCPLL TX_REFCLK_SOURCE R0 TXPROGDIV_FREQ_ENABLE true TXPROGDIV_FREQ_SOURCE RPLL TX_OUTCLK_SOURCE TXPROGDIVCLK TX_DIFF_SWING_EMPH_MODE\
   CUSTOM TX_BUFFER_BYPASS_MODE Fast_Sync TX_DATA_ENCODING 8B10B TX_LINE_RATE 2.5 TX_USER_DATA_WIDTH 16 TX_INT_DATA_WIDTH 20 TX_REFCLK_FREQUENCY 100 PCIE_USERCLK_FREQ 250 TXPROGDIV_FREQ_VAL 500.000 PCIE_USERCLK2_FREQ\
   250 OOB_ENABLE true RX_BUFFER_MODE 1 RXPROGDIV_FREQ_ENABLE false RX_CC_LEN_SEQ 1 RX_CC_NUM_SEQ 1 RX_CC_K_0_0 true RX_CC_MASK_0_0 false RX_CC_VAL_0_0 00011100 RX_CC_KEEP_IDLE ENABLE RX_COMMA_ALIGN_WORD\
@@ -1122,7 +1132,7 @@ proc create_qdma { index } {
   global is_vhk158
   global pcie_blk_locn
   set qdma [ create_bd_cell -type ip -vlnv xilinx.com:ip:qdma qdma_$index ]
-  if {$is_vck190 | $is_vmk180} {
+  if {$is_vck190 || $is_vmk180 || $is_vek280} {
     set_property -dict [ list \
       CONFIG.pcie_blk_locn [lindex $pcie_blk_locn $index] \
       CONFIG.axibar_notranslate {true} \
