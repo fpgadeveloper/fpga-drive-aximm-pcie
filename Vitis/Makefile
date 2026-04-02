@@ -113,7 +113,7 @@ help:
 all:
 	@{ \
 	for targ in $(TARGET_LIST); do \
-		$(MAKE) --no-print-directory workspace TARGET=$$targ; \
+		$(MAKE) --no-print-directory bootfile TARGET=$$targ; \
 	done; \
 	}
 
@@ -141,10 +141,19 @@ $(VIV_XSA):
 # --------------------------------------------------------------------
 .PHONY: bootfile
 bootfile: check_target
+	@if [ -f $(VIT_LOCK) ]; then \
+		echo "$(TARGET) is locked. Skipping..."; \
+	else \
+		touch $(VIT_LOCK); \
+		$(MAKE) --no-print-directory bootfile_locked TARGET=$(TARGET) JOBS=$(JOBS); \
+		rm -f $(VIT_LOCK); \
+	fi
+
+bootfile_locked:
 	@{ \
 	  if [ ! -d "$(VIT_TARGET_WS)" ]; then \
 	    echo "Workspace for $(TARGET) not found — creating it first..."; \
-	    $(MAKE) --no-print-directory workspace TARGET=$(TARGET) || exit $$?; \
+	    $(MAKE) --no-print-directory workspace_locked TARGET=$(TARGET) JOBS=$(JOBS) || exit $$?; \
 	  fi; \
 	  echo "Generating bootfile for $(TARGET) ..."; \
 	  vitis -source $(VIT_SCRIPT_BOOT) $(TARGET) $(ARGS_JSON) $(DATA_JSON) || exit $$?; \

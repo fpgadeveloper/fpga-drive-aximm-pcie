@@ -21,7 +21,7 @@
 #     "xiltimer"                   # simple string form (no config)
 #   ],
 #   "src": {
-#     "all":   "common/src",
+#     "all":   "common/src",           # string or list of strings/dicts
 #     "mb":    "microblaze/src",
 #     "zynq":  "zynq/src",
 #     "zynqmp":"zynq/src",
@@ -39,7 +39,7 @@
 #   "combine_bit_elf": true        # ignored here; used by make-boot.py later
 # }
 
-import os, sys, re, glob, json, shutil, zipfile, xml.etree.ElementTree as ET
+import os, sys, re, glob, json, shutil, subprocess, zipfile, xml.etree.ElementTree as ET
 
 # ---------------- utilities ----------------
 def die(msg):
@@ -68,8 +68,8 @@ def copy_tree(src_dir, dst_dir):
             count += 1
     return count
 
-def copy_src_entry(entry, cwd, dst_dir):
-    """Copy source files specified by a src entry (string or dict).
+def _copy_single_src_entry(entry, cwd, dst_dir):
+    """Copy source files specified by a single src entry (string or dict).
     String: copy entire directory.
     Dict: {"dir": "path", "files": ["a.c", "b.c"]} — copy only listed files.
     """
@@ -94,6 +94,91 @@ def copy_src_entry(entry, cwd, dst_dir):
                 info(f"WARNING: source file '{src}' not found; skipping.")
         return count
     return 0
+
+def copy_src_entry(entry, cwd, dst_dir):
+    """Copy source files from a src entry: string, dict, or list of those."""
+    if isinstance(entry, list):
+        total = 0
+        for item in entry:
+            total += _copy_single_src_entry(item, cwd, dst_dir)
+        return total
+    return _copy_single_src_entry(entry, cwd, dst_dir)
+
+def setup_embeddedsw(repo_root, workspace):
+    """Set up a local embeddedsw repo in the workspace from patched driver files.
+
+    If <repo_root>/EmbeddedSw/ exists, creates <workspace>/embeddedsw/ containing:
+      1. The patched files from the repo's EmbeddedSw/ folder
+      2. The full 'src' and 'data' directories from the Vitis install for each
+         driver/library that has patched files (without overwriting the patches)
+
+    Returns the path to the local embeddedsw repo, or None if no EmbeddedSw/ folder.
+    """
+    embeddedsw_src = os.path.join(repo_root, "EmbeddedSw")
+    if not os.path.isdir(embeddedsw_src):
+        return None
+
+    # Locate install's embeddedsw: XILINX_VITIS is e.g. /path/2025.2/Vitis
+    vitis_root = os.environ.get("XILINX_VITIS", "")
+    if not vitis_root:
+        die("XILINX_VITIS not set — cannot locate install embeddedsw")
+    install_esw = os.path.join(os.path.dirname(vitis_root), "data", "embeddedsw")
+    if not os.path.isdir(install_esw):
+        die(f"Install embeddedsw not found at: {install_esw}")
+
+    local_esw = os.path.join(workspace, "embeddedsw")
+    info(f"Setting up local embeddedsw repo in {local_esw}")
+
+    # Step 1: Copy all patched files from repo's EmbeddedSw/ into workspace
+    for root, _, files in os.walk(embeddedsw_src):
+        if not files:
+            continue
+        rel_dir = os.path.relpath(root, embeddedsw_src)
+        if rel_dir == ".":
+            continue  # skip root-level files (e.g. README.md)
+        dst_dir = os.path.join(local_esw, rel_dir)
+        os.makedirs(dst_dir, exist_ok=True)
+        for f in files:
+            shutil.copy2(os.path.join(root, f), os.path.join(dst_dir, f))
+    info(f"  Copied patched files from EmbeddedSw/")
+
+    # Step 2: Find all 'src' and 'data' directories that should be in the local copy.
+    # Look at the install's counterpart for each patched directory's parent to find
+    # sibling src/data dirs that may not have been patched but still need copying.
+    local_dirs = set()
+    for root, dirs, _ in os.walk(local_esw):
+        for d in dirs:
+            if d in ("src", "data"):
+                local_dirs.add(os.path.join(root, d))
+        # Also check the install for sibling src/data dirs
+        rel = os.path.relpath(root, local_esw)
+        install_counterpart = os.path.join(install_esw, rel) if rel != "." else install_esw
+        if os.path.isdir(install_counterpart):
+            for d in ("src", "data"):
+                if os.path.isdir(os.path.join(install_counterpart, d)):
+                    local_dirs.add(os.path.join(root, d))
+
+    # Step 3: Copy full contents from install for each src/data dir (no overwrite)
+    filled = 0
+    for local_dir in local_dirs:
+        rel_dir = os.path.relpath(local_dir, local_esw)
+        install_dir = os.path.join(install_esw, rel_dir)
+        if not os.path.isdir(install_dir):
+            info(f"  WARNING: install dir not found: {install_dir}")
+            continue
+        info(f"  Filling from install: {rel_dir}")
+        for src_root, _, src_files in os.walk(install_dir):
+            src_rel = os.path.relpath(src_root, install_dir)
+            dst_root = os.path.join(local_dir, src_rel) if src_rel != "." else local_dir
+            os.makedirs(dst_root, exist_ok=True)
+            for f in src_files:
+                dst_file = os.path.join(dst_root, f)
+                if not os.path.exists(dst_file):
+                    shutil.copy2(os.path.join(src_root, f), dst_file)
+                    filled += 1
+    info(f"  Filled in {filled} file(s) from install")
+
+    return local_esw
 
 def sync_cmake_sources(app_src):
     """Ensure CMakeLists.txt includes all .c files present in app_src.
@@ -125,7 +210,8 @@ def sync_cmake_sources(app_src):
 # ---------------- board.h generator ----------------
 def create_board_h(board_name, target_dir):
     vitis_root = os.environ.get("XILINX_VITIS", "")
-    vitis_ver = os.path.basename(vitis_root) if vitis_root else "UNKNOWN"
+    # XILINX_VITIS is e.g. /home/jeff/Xilinx/2025.2/Vitis, so version is parent dir name
+    vitis_ver = os.path.basename(os.path.dirname(vitis_root)) if vitis_root else "UNKNOWN"
     bn_up = str(board_name).upper()
     ensure_dir(target_dir)
     path = os.path.join(target_dir, "board.h")
@@ -345,6 +431,9 @@ def main():
     src_zynqmp = src_map.get("zynqmp")
     src_versal = src_map.get("versal")
 
+    pre_build_script = cfg.get("pre_build_script")
+    pre_platform_build_script = cfg.get("pre_platform_build_script")
+
     # Board name: from data.json if available, otherwise from args.json boardnames map
     target = maybe_target
     if data_json_path:
@@ -382,6 +471,10 @@ def main():
     info(f"bsp_libs        : {bsp_libs if bsp_libs else '(none)'}")
     if linker_mods:
         info(f"linker_mods     : {linker_mods}")
+    if pre_platform_build_script:
+        info(f"pre_plat_script : {pre_platform_build_script}")
+    if pre_build_script:
+        info(f"pre_build_script: {pre_build_script}")
 
     if not os.path.isfile(xsa_path):
         die(f"XSA not found at: {xsa_path}")
@@ -397,6 +490,13 @@ def main():
     client = vitis.create_client()
     try:
         client.set_workspace(workspace)
+
+        # Set up local embeddedsw repo (patched BSP drivers) if present
+        repo_root = os.path.normpath(os.path.join(cwd, ".."))
+        local_esw = setup_embeddedsw(repo_root, workspace)
+        if local_esw:
+            client.set_embedded_sw_repo(level='LOCAL', path=local_esw)
+            info(f"Registered local embeddedsw repo: {local_esw}")
 
         plat_name = f"{target}_platform"
         info(f"Creating platform '{plat_name}' (cpu={cpu_hint}, os=standalone) ...")
@@ -447,6 +547,16 @@ def main():
                 for param, value in lib_config.items():
                     info(f"  Setting {lib_name_str} param: {param} = {value}")
                     domain.set_config(option="lib", param=param, value=value, lib_name=lib_name_str)
+
+        # Run pre-platform-build script (if configured)
+        if pre_platform_build_script:
+            script_path = os.path.normpath(os.path.join(cwd, pre_platform_build_script))
+            info(f"Running pre-platform-build script: {script_path}")
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("pre_platform_build", script_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            mod.pre_platform_build(platform=platform, domain_name=domain_name, arch=arch)
 
         info("Building platform ...")
         platform.build()
@@ -506,6 +616,14 @@ def main():
             lscript_path = os.path.join(app_src, "lscript.ld")
             info(f"Applying linker script mod: {linker_mods[arch]}")
             modify_linker_script(lscript_path, linker_mods[arch])
+
+        # Run pre-build script (if configured)
+        if pre_build_script:
+            script_path = os.path.normpath(os.path.join(cwd, pre_build_script))
+            info(f"Running pre-build script: {script_path}")
+            result = subprocess.run([sys.executable, script_path, app_src], cwd=cwd)
+            if result.returncode != 0:
+                die(f"Pre-build script failed with exit code {result.returncode}")
 
         # Build the app
         info("Building application ...")
