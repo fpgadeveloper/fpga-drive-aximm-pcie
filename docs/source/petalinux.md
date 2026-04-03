@@ -21,11 +21,11 @@ users are advised to use a Linux virtual machine to build the PetaLinux projects
    ```
 2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg:
    ```
-   source <path-to-installed-petalinux>/settings.sh
+   source <path-to-petalinux-install>/2025.2/settings.sh
    ```
 3. Launch Vivado by sourcing the `settings64.sh` bash script, eg:
    ```
-   source <vivado-install-dir>/settings64.sh
+   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
    ```
 4. Build the Vivado and PetaLinux project for your specific target platform by running the following
    commands and replacing `<target>` with one of the target design labels found in the build instructions.

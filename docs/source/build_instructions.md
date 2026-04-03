@@ -95,7 +95,7 @@ to build the Vivado and PetaLinux projects with a single command.
 
 1. Open a command terminal and launch the setup script for Vivado:
    ```
-   source <path-to-vivado-install>/2024.1/settings64.sh
+   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
    ```
 2. Clone the Git repository and `cd` into the `Vivado` folder of the repo:
    ```
@@ -128,7 +128,7 @@ design if it has not already been done.
 
 1. Launch the setup scripts for Vitis:
    ```
-   source <path-to-vitis-install>/2024.1/settings64.sh
+   source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh
    ```
 2. To build the Vitis workspace, `cd` to the Vitis directory in the repo,
    then run make to create the Vitis workspace and compile the standalone application:
@@ -148,11 +148,11 @@ design if it has not already been done.
 
 1. Launch the setup script for Vivado (only if you skipped the Vivado build steps above):
    ```
-   source <path-to-vivado-install>/2024.1/settings64.sh
+   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
    ```
 2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg:
    ```
-   source <path-to-petalinux-install>/2024.1/settings.sh
+   source <path-to-petalinux-install>/2025.2/settings.sh
    ```
 3. Build the PetaLinux project for your specific target platform by running the following
    command, replacing `<target>` with a valid value from below:

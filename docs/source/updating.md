@@ -14,15 +14,15 @@ we cannot always provide support if you have trouble updating the designs.
      that you are using.
    * Update the year in all references to `Vivado Synthesis <year>` to the 
      tools version number that you are using. For example, if you are using tools
-     version 2024.1, then the `<year>` should be 2024.
+     version 2025.2, then the `<year>` should be 2024.
    * Update the year in all references to `Vivado Implementation <year>` to the 
      tools version number that you are using. For example, if you are using tools
-     version 2024.1, then the `<year>` should be 2024.
+     version 2025.2, then the `<year>` should be 2024.
 3. In a text editor, open the `Vivado/scripts/xsa.tcl` file and perform the following changes:
    * Update the `version_required` variable value to the tools version number 
      that you are using.
 4. **Windows users only:** In a text editor, open the `Vivado/build-vivado.bat` file and update 
-   the tools version number to the one you are using (eg. 2024.1).
+   the tools version number to the one you are using (eg. 2025.2).
 
 After completing the above, you should now be able to use the [build instructions](build_instructions) to
 build the Vivado project. If there were no significant changes to the tools and/or IP, the build script 

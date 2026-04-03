@@ -178,7 +178,7 @@ def make_mb_bit(impl_dir, bd_name, elf_path, mb_proc_name, out_bit, combine):
             die(f"Could not find MMI in '{impl_dir}' (expected {bd_name}_wrapper.mmi or {bd_name}.mmi)")
         if not os.path.isfile(elf_path):
             die(f"ELF not found: {elf_path}")
-        cmd = ["updatemem", "-meminfo", mmi, "-data", elf_path, "-bit", bit, "-proc", f"{bd_name}_i/{mb_proc_name}", "-out", out_bit]
+        cmd = ["updatemem", "-force", "-meminfo", mmi, "-data", elf_path, "-bit", bit, "-proc", f"{bd_name}_i/{mb_proc_name}", "-out", out_bit]
         note("Running: " + " ".join(cmd))
         try:
             subprocess.check_call(cmd)
@@ -342,6 +342,12 @@ def main():
     if arch == "microblaze":
         out_bit = os.path.join(out_dir, f"{bd_name}_boot.bit" if combine else f"{bd_name}.bit")
         make_mb_bit(impl_dir, bd_name, app_elf, core_hint or "microblaze_0", out_bit, combine)
+        if not combine:
+            if not os.path.isfile(app_elf):
+                die(f"ELF not found: {app_elf}")
+            out_elf = os.path.join(out_dir, f"{app_name}.elf")
+            shutil.copy2(app_elf, out_elf)
+            note(f"Copied app ELF: {out_elf}")
         note("\nSUCCESS (MicroBlaze):")
         note(f"  Output bit : {out_bit}")
         return

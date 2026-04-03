@@ -3,10 +3,10 @@
     "app_name": "ssd_test",
     "app_template": "None",
     "src": {
-        "mb": {"dir": "common/src", "files": ["pcie_enumerate.c"]},
-        "zynq": {"dir": "common/src", "files": ["pcie_enumerate.c"]},
+        "mb": {"dir": "common/src", "files": ["xaxipcie_rc_enumerate_example.c"]},
+        "zynq": {"dir": "common/src", "files": ["xaxipcie_rc_enumerate_example.c"]},
         "zynqmp": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]},
-        "versal": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c", "qdma_config.c"]}
+        "versal": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]}
     },
     "src_overrides": {
         "auboard": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]},

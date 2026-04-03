@@ -2,9 +2,9 @@
 
 In order to test this design on hardware, you will need the following:
 
-* Vivado 2024.1
-* Vitis 2024.1
-* PetaLinux Tools 2024.1
+* Vivado 2025.2
+* Vitis 2025.2
+* PetaLinux Tools 2025.2
 * 1x [FPGA Drive FMC Gen4] or [M.2 M-key Stack FMC]
 * At least one M.2 NVMe PCIe Solid State Drive (see [supported SSDs](supported_ssds))
 * One of the supported carrier boards listed below
