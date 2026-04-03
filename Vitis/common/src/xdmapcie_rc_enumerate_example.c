@@ -165,6 +165,20 @@ int main(void)
 		return XST_FAILURE;
 	}
 
+	/*
+	 * Fix up NpMem/PMem base addresses for QDMA designs.
+	 * The SDT config generator populates these with PCIe-side offsets
+	 * (zero-based) from the ranges property instead of the CPU-side
+	 * absolute addresses from the reg property. Correct them here
+	 * using the actual addresses from xparameters.h.
+	 */
+#if defined(SDT) && defined(XPAR_QDMA_0_BASEADDR_2)
+	XdmaPcieInstance.Config.NpMemBaseAddr += XPAR_QDMA_0_BASEADDR_2;
+	XdmaPcieInstance.Config.NpMemMaxAddr += XPAR_QDMA_0_BASEADDR_2;
+	XdmaPcieInstance.Config.PMemBaseAddr += XPAR_QDMA_0_BASEADDR_3;
+	XdmaPcieInstance.Config.PMemMaxAddr += XPAR_QDMA_0_BASEADDR_3;
+#endif
+
 	/* Scan PCIe Fabric */
 	XDmaPcie_EnumerateFabric(&XdmaPcieInstance);
 
