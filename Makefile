@@ -4,7 +4,6 @@
 
 RM = rm -rf
 ROOT_DIR = $(shell pwd)
-BD_NAME = fpgadrv
 
 # defaults
 .DEFAULT_GOAL := bootimage
@@ -13,6 +12,7 @@ JOBS ?= 8
 
 # valid targets (template name, both (plnx+baremetal) or baremetal_only)
 # UPDATER START
+BD_NAME = fpgadrv
 auboard_target := microblaze baremetal_only
 kc705_hpc_target := microblaze baremetal_only
 kc705_lpc_target := microblaze baremetal_only

@@ -50,6 +50,7 @@
 #include "stdio.h"
 #include "xil_printf.h"
 #include "sleep.h"
+#include "vadj.h"
 
 
 /************************** Constant Definitions ****************************/
@@ -139,6 +140,9 @@ int main(void)
 {
 
 	int Status;
+
+	/* Enable VADJ 1.5V for FMC+ I/Os (Versal boards only) */
+	vadj_enable(VADJ_1V5);
 
 #if defined(XPS_BOARD_VEK385_1)
 	/* Initialize I2C and perform GPIO reset sequence */

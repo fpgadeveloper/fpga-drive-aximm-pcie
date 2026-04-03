@@ -6,7 +6,7 @@
         "mb": {"dir": "common/src", "files": ["xaxipcie_rc_enumerate_example.c"]},
         "zynq": {"dir": "common/src", "files": ["xaxipcie_rc_enumerate_example.c"]},
         "zynqmp": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]},
-        "versal": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]}
+        "versal": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c", "vadj.c", "vadj.h"]}
     },
     "src_overrides": {
         "auboard": {"dir": "common/src", "files": ["xdmapcie_rc_enumerate_example.c"]},

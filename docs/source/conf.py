@@ -60,7 +60,7 @@ from jinja2 import Environment, FileSystemLoader
 
 # Load the JSON data
 def load_json():
-    with open('data.json') as f:
+    with open('../../config/data.json') as f:
         return json.load(f)
 
 # Add the data as a context variable for Jinja2 templates

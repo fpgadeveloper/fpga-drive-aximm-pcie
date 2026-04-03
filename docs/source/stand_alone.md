@@ -178,56 +178,42 @@ Successfully ran XdmaPcie rc enumerate Example
 
 ## Changing Target Slot
 
-In designs that support two M.2 slots, you can change the target slot by modifying a define value in the 
+In designs that support two M.2 slots, you can change the target slot by modifying a define value in the
 example application. The tables below show the lines to modify and their potential values.
 
 |  | AXI PCIe designs | XDMA and QDMA designs |
 |--|------------------|-----------------------|
 | **File to modify** | `xaxipcie_rc_enumerate_example.c` | `xdmapcie_rc_enumerate_example.c` |
-| **Define** | AXIPCIE_DEVICE_ID | XDMAPCIE_DEVICE_ID |
-| **M.2 Slot 1** | XPAR_AXIPCIE_0_DEVICE_ID | XPAR_XDMAPCIE_0_DEVICE_ID |
-| **M.2 Slot 2** | XPAR_AXIPCIE_1_DEVICE_ID | XPAR_XDMAPCIE_1_DEVICE_ID |
+| **Define** | XPAR_XAXIPCIE_0_BASEADDR | XPAR_XXDMAPCIE_0_BASEADDR |
+| **M.2 Slot 1** | XPAR_XAXIPCIE_0_BASEADDR | XPAR_XXDMAPCIE_0_BASEADDR |
+| **M.2 Slot 2** | XPAR_XAXIPCIE_1_BASEADDR | XPAR_XXDMAPCIE_1_BASEADDR |
 
 ## Advanced Design Details
 
-### Linker script modifications for Zynq designs
+### Linker script modifications for MicroBlaze designs
 
-For the Zynq designs, the Vitis's linker script generator automatically assigns all sections
-to the BAR0 memory space, instead of assigning them to the DDR memory space. This causes 
-failure of the application to run, when booted from SD card or JTAG. To overcome this problem,
-the Vitis build script modifies the generated linker script and correctly assigns the sections
-to DDR memory.
+For the MicroBlaze designs, the Vitis linker script generator may assign sections across
+multiple memory regions. To ensure the application runs correctly, the Vitis build script
+modifies the generated linker script and reassigns all sections to local memory.
 
-If you want to manually create an application in the Vitis for one of the Zynq designs,
+If you want to manually create an application in the Vitis for one of the MicroBlaze designs,
 you will have to manually modify the automatically generated linker script, and set all sections
-to DDR memory.
+to local memory.
 
 ### axipcie driver
 
 This project uses a modified version of the axipcie driver.
 
-The `axipcie_v3_4` driver is attached to designs that use the AXI Memory Mapped to PCIe IP (axi_pcie) and 
-designs that use the AXI PCIe Gen3 IP (axi_pcie3). However, the driver contains a bug that affects designs
-that use the AXI PCIe Gen3 IP.
+The `axipcie_v3_4` driver is used by designs that use the AXI Memory Mapped to PCIe IP (axi_pcie) and
+designs that use the AXI PCIe Gen3 IP (axi_pcie3). However, the driver's SDT device tree binding file
+`axipcie_v3_4/data/axipcie.yaml` only declares the compatible string `xlnx,axi-pcie-host-1.00.a`, which
+matches the older AXI Memory Mapped to PCIe IP. It does not include `xlnx,axi-pcie3-3.0`, which is the
+compatible string used by the AXI PCIe Gen3 IP in the device tree. As a result, the SDT driver mapping
+fails to associate the IP with the axipcie driver, and the BSP is built without the driver.
 
-The script `axipcie_v3_4/data/acipcie.tcl` generates the `xparameters.h` and `xaxipcie_g.c` BSP sources that
-both contain a define called `INCLUDE_RC`. To determine the value of this define, the script reads a parameter of 
-the PCIe IP called `CONFIG.INCLUDE_RC`, however this parameter only exists in the AXI Memory Mapped to PCIe IP.
-Our modified version of the script uses the correct parameter to determine the value of `INCLUDE_RC`.
-Specifically, it reads the `CONFIG.device_port_type` parameter and compares it to the value that is expected
-for root complex designs: `Root_Port_of_PCI_Express_Root_Complex`.
+Our modified version of `axipcie.yaml` adds `xlnx,axi-pcie3-3.0` as a compatible string so that the
+driver is correctly included in the BSP for designs that use the AXI PCIe Gen3 IP.
 
-### xdmapcie driver
-
-This project uses a modified version of the xdmapcie driver.
-
-The `xdmapcie_v1_7` driver is attached to designs that use the XDMA or QDMA IP. The driver has a known issue
-that requires patching when used with QDMA. There exists an AMD prescribed patch that is described in 
-[Answer Record AR76665](https://adaptivesupport.amd.com/s/article/76665?language=en_US). The patch from the
-answer record requires hard coding of an interface address into the driver itself. This is not a satisfactory
-solution for the designs of this project for which some designs contain two QDMA instances and we would like
-to target each of them. For this reason, we have made our own modifications to the driver, specifically to the
-file `xdmapcie.c`.
 
 [Putty]: https://www.putty.org/
 [FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/

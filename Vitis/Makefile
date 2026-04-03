@@ -6,9 +6,8 @@ CP = cp -rf
 MKDIR = mkdir -p
 RM = rm -rf
 ROOT_DIR = $(shell pwd)
-BD_NAME = fpgadrv
 ARGS_JSON = py/args.json
-DATA_JSON = ../docs/source/data.json
+DATA_JSON = ../config/data.json
 
 # defaults
 .DEFAULT_GOAL := workspace
@@ -17,6 +16,9 @@ JOBS ?= 8
 
 # valid targets
 # UPDATER START
+BD_NAME = fpgadrv
+APP_NAME = ssd_test
+COMBINE_BIT_ELF = true
 auboard_target := microblaze
 kc705_hpc_target := microblaze
 kc705_lpc_target := microblaze
@@ -56,6 +58,7 @@ VIT_TARGET_WS   = $(ROOT_DIR)/$(TARGET)_workspace
 VIT_LOCK        = $(ROOT_DIR)/.$(TARGET).lock
 VIT_BOOT        = $(ROOT_DIR)/boot
 VIT_BOOT_TARG   = $(VIT_BOOT)/$(TARGET)
+VIT_APP_ELF     = $(VIT_TARGET_WS)/$(APP_NAME)/build/$(APP_NAME).elf
 
 # Vivado paths
 VIV_DIR     = $(ROOT_DIR)/../Vivado
@@ -69,7 +72,11 @@ endef
 
 # The name of the boot image depends on the device family.
 ifeq ($(call get_template_name,$(TARGET)), microblaze)
+  ifeq ($(COMBINE_BIT_ELF), true)
 	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/$(BD_NAME)_boot.bit
+  else
+	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/$(BD_NAME).bit
+  endif
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
 	VIT_BOOT_FILE = $(VIT_BOOT_TARG)/BOOT.BIN
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
@@ -155,18 +162,15 @@ bootfile_locked:
 	    echo "Workspace for $(TARGET) not found — creating it first..."; \
 	    $(MAKE) --no-print-directory workspace_locked TARGET=$(TARGET) JOBS=$(JOBS) || exit $$?; \
 	  fi; \
+	  if [ -f "$(VIT_BOOT_FILE)" ] && [ -f "$(VIT_APP_ELF)" ] && [ "$(VIT_BOOT_FILE)" -nt "$(VIT_APP_ELF)" ]; then \
+	    echo "Bootfile for $(TARGET) is up to date. Skipping."; \
+	    exit 0; \
+	  fi; \
 	  echo "Generating bootfile for $(TARGET) ..."; \
 	  vitis -source $(VIT_SCRIPT_BOOT) $(TARGET) $(ARGS_JSON) $(DATA_JSON) || exit $$?; \
 	  echo ""; \
 	  echo "Boot outputs are in: $(VIT_BOOT_TARG)"; \
-	  if [ "$(call get_template_name,$(TARGET))" = "microblaze" ]; then \
-	    echo "  (MB) Possible files:"; \
-	    echo "    - $(VIT_BOOT_TARG)/$(BD_NAME)_boot.bit   (combine_bit_elf=true)"; \
-	    echo "    - $(VIT_BOOT_TARG)/$(BD_NAME).bit        (combine_bit_elf=false)"; \
-	  else \
-	    echo "  (PS) Expected file:"; \
-	    echo "    - $(VIT_BOOT_TARG)/BOOT.BIN"; \
-	  fi; \
+	  echo "  Boot file: $(VIT_BOOT_FILE)"; \
 	}
 
 .PHONY: clean
