@@ -26,7 +26,7 @@ required:
     - reg
     - xlnx,axibar-num
     - xlnx,include-baroffset-reg
-    - xlnx,port-type
+    - xlnx,dev-port-type
 
 examples:
     xaxipcie_rc_enumerate_example.c:

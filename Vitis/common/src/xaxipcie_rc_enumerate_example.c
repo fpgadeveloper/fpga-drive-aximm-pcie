@@ -207,7 +207,6 @@ int PcieInitRootComplex(XAxiPcie *AxiPciePtr, UINTPTR BaseAddress)
 	ConfigPtr = XAxiPcie_LookupConfig(BaseAddress);
 #endif
 
-
 	Status = XAxiPcie_CfgInitialize(AxiPciePtr, ConfigPtr,
 						ConfigPtr->BaseAddress);
 
@@ -215,6 +214,16 @@ int PcieInitRootComplex(XAxiPcie *AxiPciePtr, UINTPTR BaseAddress)
 		xil_printf("Failed to initialize PCIe Root Complex"
 							"IP Instance\r\n");
 		return XST_FAILURE;
+	}
+
+	/*
+	 * In SDT mode, xlnx,dev-port-type provides a PCI Express port type
+	 * value (e.g. 2 = Root Port) rather than the boolean 0/1 the driver
+	 * expects. Normalize any non-zero value to XAXIPCIE_IS_RC so that
+	 * the driver's assertions in WriteLocalConfigSpace etc. pass.
+	 */
+	if(AxiPciePtr->Config.IncludeRootComplex) {
+		AxiPciePtr->Config.IncludeRootComplex = XAXIPCIE_IS_RC;
 	}
 
 	if(!AxiPciePtr->Config.IncludeRootComplex) {

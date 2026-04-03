@@ -103,38 +103,32 @@ Successfully ran XdmaPcie rc enumerate Example
 ### Output of AXI PCIe designs
 
 ```none
-=============================
-PCIe Enumeration Example
-=============================
-Link:
-  - LINK UP, Gen1 x1 lanes
-Interrupts:
-  - currently enabled:        0
-  - currently pending:        0
-Cleared pending interrupts:
-  - currently enabled:        0
-  - currently pending:        0
-Requester ID:
-  - Bus Number: 00
-  - Device Number: 00
-  - Function Number: 00
-  - Port Number: 00
-PCIe Local Config Space:
-  -   100147 at register CommandStatus
-  -    70100 at register Prim Sec. Bus
-Enumeration of PCIe Fabric:
-PCIeBus 00:
-  - PCIeDev: 00
-  - PCIeFunc: 00
-  - Vendor ID: 10EE
-  - Bridge
-PCIeBus 01:
-  - PCIeDev: 00
-  - PCIeFunc: 00
-  - Vendor ID: 144D
-  - End Point
-  - End Point has been enabled
-End of Enumeration
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Interrupts currently enabled are        0
+Interrupts currently pending are        0
+Link is up
+Bus Number is 00
+Device Number is 00
+Function Number is 00
+Port Number is 00
+PCIe Local Config Space is   100147 at register CommandStatus
+PCIe Local Config Space is    70100 at register Prim Sec. Bus
+Root Complex IP Instance has been successfully initialized
+Start Enumeration of PCIe Fabric on This System
+PCIeBus is 00
+PCIeDev is 00
+PCIeFunc is 00
+Vendor ID is 10EE
+This is a Bridge
+PCIeBus is 01
+PCIeDev is 00
+PCIeFunc is 00
+Vendor ID is 144D
+This is an End Point
+End Point has been enabled
+End of Enumeration of PCIe Fabric on This system
+Successfully ran Axipcie rc enumerate Example
 ```
 
 ### Output of the QDMA designs
@@ -216,6 +210,12 @@ fails to associate the IP with the axipcie driver, and the BSP is built without 
 Our modified version of `axipcie.yaml` adds `xlnx,axi-pcie3-3.0` as a compatible string so that the
 driver is correctly included in the BSP for designs that use the AXI PCIe Gen3 IP.
 
+Additionally, the YAML references `xlnx,port-type` for the root complex detection field, but the device
+tree uses `xlnx,dev-port-type`. Our patch corrects this so that the `IncludeRootComplex` field in the
+config table is populated correctly. However, the device tree value for root port designs is `2` (PCI
+Express Root Port), while the driver expects `1` (`XAXIPCIE_IS_RC`). The example application normalizes
+any non-zero value to `1` after initialization to satisfy the driver's internal assertions.
+
 ### xdmapcie driver
 
 This project uses a modified version of the xdmapcie driver.
@@ -235,7 +235,17 @@ PCIe-side offsets (zero-based) from the device tree `ranges` property, instead o
 addresses needed for BAR assignment. The example application (`xdmapcie_rc_enumerate_example.c`) corrects
 these values after driver initialization using the actual addresses from `xparameters.h`.
 
-### Modifications to the example application
+### Modifications to the AXI PCIe example application
+
+The AXI PCIe example application (`xaxipcie_rc_enumerate_example.c`) is based on the AMD driver example
+with the following modification:
+
+* **IncludeRootComplex normalization** — The SDT device tree property `xlnx,dev-port-type` provides the
+  PCI Express port type value (e.g. `2` for Root Port), but the driver's internal assertions expect
+  `IncludeRootComplex` to be exactly `1`. The application normalizes any non-zero value to
+  `XAXIPCIE_IS_RC` (`1`) after driver initialization to prevent assertion failures.
+
+### Modifications to the QDMA example application
 
 The QDMA example application (`xdmapcie_rc_enumerate_example.c`) is based on the AMD driver example with
 the following modifications:
