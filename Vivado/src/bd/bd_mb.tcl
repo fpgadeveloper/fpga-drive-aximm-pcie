@@ -476,14 +476,19 @@ if {[llength $num_lanes] > 1} {
 }
 
 # Add UART
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550 axi_uart16550_0
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_uart16550_0/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_uart16550_0/S_AXI]
+set axi_uartlite [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uartlite axi_uartlite ]
+set_property -dict [list \
+  CONFIG.C_BAUDRATE {115200} \
+  CONFIG.UARTLITE_BOARD_INTERFACE {Custom} \
+  CONFIG.USE_BOARD_FLOW {true} \
+] $axi_uartlite
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_0 (Periph)} Slave {/axi_uartlite/S_AXI} ddr_seg {Auto} intc_ip {/microblaze_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_uartlite/S_AXI]
 if {$board_name == "auboard_15p"} {
-  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sys_uart ( System UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uart16550_0/UART]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {sys_uart ( System UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uartlite/UART]
 } else {
-  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {rs232_uart ( UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uart16550_0/UART]
+  apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {rs232_uart ( UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uartlite/UART]
 }
-append ints "axi_uart16550_0/ip2intc_irpt "
+append ints "axi_uartlite/interrupt "
 
 # Add Timer
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer axi_timer_0

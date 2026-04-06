@@ -50,7 +50,9 @@
 #include "stdio.h"
 #include "xil_printf.h"
 #include "sleep.h"
+#if __has_include("vadj.h")
 #include "vadj.h"
+#endif
 
 
 /************************** Constant Definitions ****************************/
@@ -141,8 +143,10 @@ int main(void)
 
 	int Status;
 
+#ifdef VADJ_H
 	/* Enable VADJ 1.5V for FMC+ I/Os (Versal boards only) */
 	vadj_enable(VADJ_1V5);
+#endif
 
 #if defined(XPS_BOARD_VEK385_1)
 	/* Initialize I2C and perform GPIO reset sequence */
@@ -225,8 +229,21 @@ int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, UINTPTR BaseAddress)
 	ConfigPtr = XDmaPcie_LookupConfig(BaseAddress);
 #endif
 
+	/*
+	 * In SDT mode, the driver's QDMA_PCIE_BRIDGE/XDMA_PCIE_BRIDGE detection
+	 * may not trigger (SDT uses different xparameters naming), so the
+	 * BaseAddress/Ecam swap in CfgInitialize may not run. Fix it here:
+	 * pass the CSR address as EffectiveAddress so BaseAddress points to
+	 * the bridge registers, then set Ecam to the ECAM config space address.
+	 */
+#if defined(SDT) && defined(XPAR_XXDMAPCIE_0_CSR_SLCR)
+	Status = XDmaPcie_CfgInitialize(XdmaPciePtr, ConfigPtr,
+						XPAR_XXDMAPCIE_0_CSR_SLCR);
+	XdmaPciePtr->Config.Ecam = ConfigPtr->BaseAddress;
+#else
 	Status = XDmaPcie_CfgInitialize(XdmaPciePtr, ConfigPtr,
 						ConfigPtr->BaseAddress);
+#endif
 
 	if (Status != XST_SUCCESS) {
 		xil_printf("Failed to initialize PCIe Root Complex"

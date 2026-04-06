@@ -42,7 +42,7 @@
       "label": "auboard",
       "board": "AUBoard",
       "link": "https://www.xilinx.com/products/boards-and-kits/1-1xj8wo9.html",
-      "url": "avnet.com",
+      "url": "avnet-tria",
       "boardname": "auboard_15p",
       "ip": "axi_pcie3",
       "lanes": [

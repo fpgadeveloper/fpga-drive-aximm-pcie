@@ -37,7 +37,7 @@ set_param board.repoPaths $repo_paths
 
 # Possible targets
 # UPDATER START
-dict set target_dict auboard { avnet.com auboard_15p { X4 } mb }
+dict set target_dict auboard { avnet-tria auboard_15p { X4 } mb }
 dict set target_dict kc705_hpc { xilinx.com kc705 { X4 } mb }
 dict set target_dict kc705_lpc { xilinx.com kc705 { X1 } mb }
 dict set target_dict kcu105_hpc { xilinx.com kcu105 { X4 X4 } mb }
