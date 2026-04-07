@@ -1,5 +1,6 @@
 {
   "bd_name": "fpgadrv",
+  "prj_name": "fpga-drive-aximm-pcie",
   "groups": [
     {
       "label": "fpga",
