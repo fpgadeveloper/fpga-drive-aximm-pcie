@@ -145,6 +145,9 @@ $(VIV_XSA):
 
 # --------------------------------------------------------------------
 # Bootfile generation
+#   - Ensures a workspace exists (creates it if missing)
+#   - Calls the make-boot.py script
+#   - Prints the likely output(s)
 # --------------------------------------------------------------------
 .PHONY: bootfile
 bootfile: check_target
