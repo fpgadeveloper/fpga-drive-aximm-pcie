@@ -168,7 +168,7 @@ set_property -dict [list CONFIG.G_TEMPLATE_LIST {4} CONFIG.G_USE_EXCEPTIONS {1} 
 if {$board_name == "auboard_15p"} {
   set system_rst [get_bd_ports system_resetn]
 } else {
-  create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic reset_invert
+  create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilvector_logic:1.0 reset_invert
   set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells reset_invert]
   connect_bd_net [get_bd_ports reset] [get_bd_pins reset_invert/Op1]
   set system_rst [get_bd_pins reset_invert/Res]
@@ -466,7 +466,7 @@ for {set i 0} {$i < [llength $num_lanes]} {incr i} {
 }
 
 # Constant LOW to enable 3.3V power supply of SSD2 and clock source
-set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+set const_dis_ssd2_pwr [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_dis_ssd2_pwr ]
 create_bd_port -dir O disable_ssd2_pwr
 connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 if {[llength $num_lanes] > 1} {

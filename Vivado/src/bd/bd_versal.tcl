@@ -1344,7 +1344,7 @@ include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_
 include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_bcast]
 
 # Create PERST ports
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_low
+create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_low
 set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells const_low]
 create_bd_port -dir O -from 0 -to 0 -type rst perst_0
 connect_bd_net [get_bd_pins /const_low/dout] [get_bd_ports perst_0]
@@ -1354,7 +1354,7 @@ if {$dual_design} {
 }
 
 # Constant to enable/disable 3.3V power supply of SSD2 and clock source
-set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+set const_dis_ssd2_pwr [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_dis_ssd2_pwr ]
 create_bd_port -dir O disable_ssd2_pwr
 connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 if {$dual_design} {

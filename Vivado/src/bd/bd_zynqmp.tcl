@@ -347,7 +347,7 @@ if {$dual_design} {
 }
 
 # Create concat for the interrupts and connect them
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_interrupts
+create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconcat:1.0 concat_interrupts
 connect_bd_net [get_bd_pins concat_interrupts/dout] [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq0]
 if {$dual_design} {
   set_property -dict [list CONFIG.NUM_PORTS {6}] [get_bd_cells concat_interrupts]
@@ -395,7 +395,7 @@ if {$dual_design} {
 }
 
 # Constant to enable/disable 3.3V power supply of SSD2 and clock source
-set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+set const_dis_ssd2_pwr [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_dis_ssd2_pwr ]
 create_bd_port -dir O disable_ssd2_pwr
 connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 if {$dual_design} {

@@ -109,7 +109,7 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 re
 connect_bd_intf_net [get_bd_intf_pins ref_clk_buf/CLK_IN_D] [get_bd_intf_ports ref_clk_0]
 
 # Add interrupt concat and connect interrupts
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat xlconcat_0
+create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconcat:1.0 xlconcat_0
 set_property -dict [list CONFIG.NUM_PORTS {1}] [get_bd_cells xlconcat_0]
 connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins processing_system7_0/IRQ_F2P]
 connect_bd_net [get_bd_pins axi_pcie_0/interrupt_out] [get_bd_pins xlconcat_0/In0]
@@ -147,7 +147,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/process
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/processing_system7_0/FCLK_CLK0 (100 MHz)} Clk_slave {/axi_pcie_0/axi_aclk_out (125 MHz)} Clk_xbar {/processing_system7_0/FCLK_CLK0 (100 MHz)} Master {/processing_system7_0/M_AXI_GP1} Slave {/axi_pcie_0/S_AXI} intc_ip {/periph_intercon_1} master_apm {0}}  [get_bd_intf_pins axi_pcie_0/S_AXI]
 
 # Constant to enable/disable 3.3V power supply of SSD2 and clock source
-set const_dis_ssd2_pwr [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant const_dis_ssd2_pwr ]
+set const_dis_ssd2_pwr [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_dis_ssd2_pwr ]
 create_bd_port -dir O disable_ssd2_pwr
 connect_bd_net [get_bd_pins const_dis_ssd2_pwr/dout] [get_bd_ports disable_ssd2_pwr]
 # HIGH to disable SSD2
