@@ -43,6 +43,6 @@ In order to test this design on hardware, you will need the following:
 
 For list of the target designs showing the number of M.2 slots and PCIe lanes supported, refer to the build instructions.
 
-[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
-[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+[FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
+[M.2 M-key Stack FMC]: https://docs.opsero.com/op073/datasheet/overview/
 

@@ -88,17 +88,17 @@ ifeq ($(call get_template_name,$(TARGET)), microblaze)
 	PKG_CMD = petalinux-package boot --force --fpga $(VIV_BIT) --u-boot --kernel --flash-size $(call get_flash_size,$(TARGET)) --flash-intf $(call get_flash_intf,$(TARGET)) --format MCS
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
 	SSTATE_ARCH = arm
-	BUILD_PRODUCTS = $(PETL_ZYNQ_FSBL_ELF) $(PETL_DTB)
+	BUILD_PRODUCTS = $(PETL_ZYNQ_FSBL_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 	PKG_CMD = petalinux-package boot --fsbl ./images/linux/zynq_fsbl.elf --fpga $(VIV_BIT) --u-boot
 else ifeq ($(call get_template_name,$(TARGET)), zynqMP)
 	SSTATE_ARCH = arch64
-	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_DTB)
+	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_PMUFW_ELF) $(PETL_ZYNQMP_FSBL_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 	PKG_CMD = petalinux-package boot --fsbl ./images/linux/zynqmp_fsbl.elf --fpga $(VIV_BIT) --u-boot
 else ifeq ($(call get_template_name,$(TARGET)), versal)
 	SSTATE_ARCH = arch64
-	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_DTB)
+	BUILD_PRODUCTS = $(PETL_BL31_ELF) $(PETL_UBOOT_ELF) $(PETL_DTB)
 	PKG_PRODUCTS = $(PETL_BOOT_BIN)
 	PKG_CMD = petalinux-package boot --plm --psmfw --u-boot --dtb
 endif

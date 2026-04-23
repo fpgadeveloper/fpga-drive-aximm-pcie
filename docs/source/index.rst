@@ -26,6 +26,6 @@ This is the documentation for the reference designs for the
    revision_history
 
 
-.. _FPGA Drive FMC Gen4: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
-.. _M.2 M-key Stack FMC: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+.. _FPGA Drive FMC Gen4: https://docs.opsero.com/op063/datasheet/overview/
+.. _M.2 M-key Stack FMC: https://docs.opsero.com/op073/datasheet/overview/
 

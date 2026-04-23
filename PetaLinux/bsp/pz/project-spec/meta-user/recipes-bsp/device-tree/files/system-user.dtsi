@@ -67,3 +67,9 @@
     usb-phy = <&usb0>;
 };
 
+
+/* 2025.01 u-boot data-aborts probing gem0 because pcw.dtsi does not populate
+ * phy-handle. This design does not use PS GEM — disabling avoids the crash. */
+&gem0 {
+    status = "disabled";
+};

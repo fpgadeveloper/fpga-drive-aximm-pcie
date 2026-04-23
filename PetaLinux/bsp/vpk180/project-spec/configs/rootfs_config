@@ -3,6 +3,7 @@
 # Configuration
 #
 CONFIG_system-versal=y
+CONFIG_subsystem-sdt-flow=y
 
 #
 # Filesystem Packages 
@@ -2415,6 +2416,7 @@ CONFIG_linux-xlnx-udev-rules=y
 # hdmi-module
 #
 # CONFIG_kernel-module-hdmi is not set
+# CONFIG_kernel-module-hdmi21 is not set
 
 #
 # icu 
@@ -2660,13 +2662,6 @@ CONFIG_packagegroup-core-boot=y
 # CONFIG_packagegroup-core-x11-utils-dev is not set
 # CONFIG_packagegroup-core-x11-dev is not set
 # CONFIG_packagegroup-core-x11-dbg is not set
-
-#
-# packagegroup-core-x11-base 
-#
-# CONFIG_packagegroup-core-x11-base is not set
-# CONFIG_packagegroup-core-x11-base-dev is not set
-# CONFIG_packagegroup-core-x11-base-dbg is not set
 
 #
 # packagegroup-core-x11-xserver 
@@ -3888,166 +3883,97 @@ CONFIG_u-boot-tools=y
 #
 
 #
-# packagegroup-petalinux 
+# packagegroup-xilinx-audio 
 #
-# CONFIG_packagegroup-petalinux is not set
-# CONFIG_packagegroup-petalinux-dbg is not set
-# CONFIG_packagegroup-petalinux-dev is not set
+# CONFIG_packagegroup-xilinx-audio is not set
+# CONFIG_packagegroup-xilinx-audio-dbg is not set
+# CONFIG_packagegroup-xilinx-audio-dev is not set
 
 #
-# packagegroup-petalinux-audio 
+# packagegroup-xilinx-benchmarks 
 #
-# CONFIG_packagegroup-petalinux-audio is not set
-# CONFIG_packagegroup-petalinux-audio-dbg is not set
-# CONFIG_packagegroup-petalinux-audio-dev is not set
+# CONFIG_packagegroup-xilinx-benchmarks is not set
+# CONFIG_packagegroup-xilinx-benchmarks-dbg is not set
+# CONFIG_packagegroup-xilinx-benchmarks-dev is not set
 
 #
-# packagegroup-petalinux-benchmarks 
+# packagegroup-xilinx-gstreamer 
 #
-# CONFIG_packagegroup-petalinux-benchmarks is not set
-# CONFIG_packagegroup-petalinux-benchmarks-dbg is not set
-# CONFIG_packagegroup-petalinux-benchmarks-dev is not set
+# CONFIG_packagegroup-xilinx-gstreamer is not set
+# CONFIG_packagegroup-xilinx-gstreamer-dev is not set
+# CONFIG_packagegroup-xilinx-gstreamer-dbg is not set
 
 #
-# packagegroup-petalinux-display-debug 
+# packagegroup-lmsensors 
 #
-# CONFIG_packagegroup-petalinux-display-debug is not set
-# CONFIG_packagegroup-petalinux-display-debug-dbg is not set
-# CONFIG_packagegroup-petalinux-display-debug-dev is not set
+# CONFIG_packagegroup-lmsensors is not set
+# CONFIG_packagegroup-lmsensors-dbg is not set
+# CONFIG_packagegroup-lmsensors-dev is not set
 
 #
-# packagegroup-petalinux-gstreamer 
+# packagegroup-xilinx-matchbox 
 #
-# CONFIG_packagegroup-petalinux-gstreamer is not set
-# CONFIG_packagegroup-petalinux-gstreamer-dev is not set
-# CONFIG_packagegroup-petalinux-gstreamer-dbg is not set
+# CONFIG_packagegroup-xilinx-matchbox is not set
+# CONFIG_packagegroup-xilinx-matchbox-dbg is not set
+# CONFIG_packagegroup-xilinx-matchbox-dev is not set
 
 #
-# packagegroup-petalinux-lmsensors 
+# packagegroup-xilinx-multimedia 
 #
-# CONFIG_packagegroup-petalinux-lmsensors is not set
-# CONFIG_packagegroup-petalinux-lmsensors-dbg is not set
-# CONFIG_packagegroup-petalinux-lmsensors-dev is not set
+# CONFIG_packagegroup-xilinx-multimedia is not set
+# CONFIG_packagegroup-xilinx-multimedia-dbg is not set
+# CONFIG_packagegroup-xilinx-multimedia-dev is not set
 
 #
-# packagegroup-petalinux-matchbox 
+# packagegroup-networking-stack 
 #
-# CONFIG_packagegroup-petalinux-matchbox is not set
-# CONFIG_packagegroup-petalinux-matchbox-dbg is not set
-# CONFIG_packagegroup-petalinux-matchbox-dev is not set
+# CONFIG_packagegroup-networking-stack is not set
+# CONFIG_packagegroup-networking-stack-dbg is not set
+# CONFIG_packagegroup-networking-stack-dev is not set
 
 #
-# packagegroup-petalinux-mraa 
+# packagegroup-openamp 
 #
-# CONFIG_packagegroup-petalinux-mraa is not set
-# CONFIG_packagegroup-petalinux-mraa-dbg is not set
-# CONFIG_packagegroup-petalinux-mraa-dev is not set
+# CONFIG_packagegroup-openamp is not set
+# CONFIG_packagegroup-openamp-dev is not set
+# CONFIG_packagegroup-openamp-dbg is not set
 
 #
-# packagegroup-petalinux-multimedia 
+# packagegroup-opencv 
 #
-# CONFIG_packagegroup-petalinux-multimedia is not set
-# CONFIG_packagegroup-petalinux-multimedia-dbg is not set
-# CONFIG_packagegroup-petalinux-multimedia-dev is not set
+# CONFIG_packagegroup-opencv is not set
+# CONFIG_packagegroup-opencv-dev is not set
+# CONFIG_packagegroup-opencv-dbg is not set
 
 #
-# packagegroup-petalinux-networking-debug
+# packagegroup-xilinx-qt 
 #
-# CONFIG_packagegroup-petalinux-networking-debug is not set
-# CONFIG_packagegroup-petalinux-networking-debug-dbg is not set
-# CONFIG_packagegroup-petalinux-networking-debug-dev is not set
-
-#
-# packagegroup-petalinux-networking-stack 
-#
-# CONFIG_packagegroup-petalinux-networking-stack is not set
-# CONFIG_packagegroup-petalinux-networking-stack-dbg is not set
-# CONFIG_packagegroup-petalinux-networking-stack-dev is not set
-
-#
-# packagegroup-petalinux-ocicontainers 
-#
-# CONFIG_packagegroup-petalinux-ocicontainers is not set
-# CONFIG_packagegroup-petalinux-ocicontainers-dev is not set
-# CONFIG_packagegroup-petalinux-ocicontainers-dbg is not set
-
-#
-# packagegroup-petalinux-openamp 
-#
-# CONFIG_packagegroup-petalinux-openamp is not set
-# CONFIG_packagegroup-petalinux-openamp-dev is not set
-# CONFIG_packagegroup-petalinux-openamp-dbg is not set
-
-#
-# packagegroup-petalinux-opencv 
-#
-# CONFIG_packagegroup-petalinux-opencv is not set
-# CONFIG_packagegroup-petalinux-opencv-dev is not set
-# CONFIG_packagegroup-petalinux-opencv-dbg is not set
-
-#
-# packagegroup-petalinux-python-modules 
-#
-# CONFIG_packagegroup-petalinux-python-modules is not set
-# CONFIG_packagegroup-petalinux-python-modules-dbg is not set
-# CONFIG_packagegroup-petalinux-python-modules-dev is not set
-
-#
-# packagegroup-petalinux-qt 
-#
-# CONFIG_packagegroup-petalinux-qt is not set
-# CONFIG_packagegroup-petalinux-qt-dev is not set
-# CONFIG_packagegroup-petalinux-qt-dbg is not set
+# CONFIG_packagegroup-xilinx-qt is not set
+# CONFIG_packagegroup-xilinx-qt-dev is not set
+# CONFIG_packagegroup-xilinx-qt-dbg is not set
 # CONFIG_imageclass-populate-sdk-qt5 is not set
 
 #
-# packagegroup-petalinux-qt-extended 
+# packagegroup-xilinx-qt-extended 
 #
-# CONFIG_packagegroup-petalinux-qt-extended is not set
-# CONFIG_packagegroup-petalinux-qt-extended-dbg is not set
-# CONFIG_packagegroup-petalinux-qt-extended-dev is not set
+# CONFIG_packagegroup-xilinx-qt-extended is not set
+# CONFIG_packagegroup-xilinx-qt-extended-dbg is not set
+# CONFIG_packagegroup-xilinx-qt-extended-dev is not set
 
 #
-# packagegroup-petalinux-self-hosted 
+# packagegroup-self-hosted 
 #
-# CONFIG_packagegroup-petalinux-self-hosted is not set
-# CONFIG_packagegroup-petalinux-self-hosted-dbg is not set
-# CONFIG_packagegroup-petalinux-self-hosted-dev is not set
 
 #
-# packagegroup-petalinux-utils 
+# packagegroup-core-x11 
 #
-# CONFIG_packagegroup-petalinux-utils is not set
-# CONFIG_packagegroup-petalinux-utils-dbg is not set
-# CONFIG_packagegroup-petalinux-utils-dev is not set
 
 #
-# packagegroup-petalinux-v4lutils 
+# packagegroup-xen 
 #
-# CONFIG_packagegroup-petalinux-v4lutils is not set
-# CONFIG_packagegroup-petalinux-v4lutils-dbg is not set
-# CONFIG_packagegroup-petalinux-v4lutils-dev is not set
-
-#
-# packagegroup-petalinux-vitis-acceleration-essential 
-#
-# CONFIG_packagegroup-petalinux-vitis-acceleration-essential is not set
-# CONFIG_packagegroup-petalinux-vitis-acceleration-essential-dbg is not set
-# CONFIG_packagegroup-petalinux-vitis-acceleration-essential-dev is not set
-
-#
-# packagegroup-petalinux-x11 
-#
-# CONFIG_packagegroup-petalinux-x11 is not set
-# CONFIG_packagegroup-petalinux-x11-dev is not set
-# CONFIG_packagegroup-petalinux-x11-dbg is not set
-
-#
-# packagegroup-petalinux-xen 
-#
-# CONFIG_packagegroup-petalinux-xen is not set
-# CONFIG_packagegroup-petalinux-xen-dev is not set
-# CONFIG_packagegroup-petalinux-xen-dbg is not set
+# CONFIG_packagegroup-xen is not set
+# CONFIG_packagegroup-xen-dev is not set
+# CONFIG_packagegroup-xen-dbg is not set
 
 #
 # Image Features
@@ -4066,8 +3992,8 @@ CONFIG_Init-manager-systemd=y
 # user packages 
 #
 # CONFIG_gpio-demo is not set
-# CONFIG_openamp-demo-notebooks is not set
-# CONFIG_packagegroup-petalinux-jupyter is not set
+CONFIG_openamp-demo-notebooks=y
+# CONFIG_packagegroup-xilinx-jupyter is not set
 # CONFIG_peekpoke is not set
 # CONFIG_pm-notebooks is not set
 # CONFIG_python3-ipywidgets is not set
@@ -4079,31 +4005,3 @@ CONFIG_ADD_EXTRA_USERS="root:root;petalinux::passwd-expire;"
 CONFIG_CREATE_NEW_GROUPS="aie;"
 CONFIG_ADD_USERS_TO_GROUPS="petalinux:audio,video,aie,input;"
 CONFIG_ADD_USERS_TO_SUDOERS="petalinux"
-
-# Tools for NVMe SSDs
-
-CONFIG_e2fsprogs=y
-CONFIG_e2fsprogs-mke2fs=y
-CONFIG_e2fsprogs-badblocks=y
-CONFIG_mtd-utils=y
-CONFIG_util-linux=y
-CONFIG_util-linux-mount=y
-CONFIG_util-linux-mkfs=y
-CONFIG_util-linux-blkid=y
-CONFIG_util-linux-fdisk=y
-CONFIG_pciutils=y
-CONFIG_bridge-utils=y
-CONFIG_speed-tests=y
-
-# Add coreutils for full version of dd, and nvme-cli for NVMe tools
-
-CONFIG_coreutils=y
-CONFIG_nvme-cli=y
-
-# Recommended packages for easy system management
-
-CONFIG_dnf
-CONFIG_e2fsprogs-resize2fs
-CONFIG_parted
-CONFIG_imagefeature-package-management=y
-

@@ -36,6 +36,8 @@
 #     "microblaze": "relocate_to_local_mem",
 #     "zynq": "relocate_to_ddr"
 #   },
+#   "stack_size": "0x10000",         # optional: override default stack size in linker script
+#   "heap_size": "0x10000",          # optional: override default heap size in linker script
 #   "combine_bit_elf": true        # ignored here; used by make-boot.py later
 # }
 
@@ -433,15 +435,25 @@ def main():
 
     pre_build_script = cfg.get("pre_build_script")
     pre_platform_build_script = cfg.get("pre_platform_build_script")
+    stack_size = cfg.get("stack_size")
+    heap_size = cfg.get("heap_size")
 
-    # Board name: from data.json if available, otherwise from args.json boardnames map
+    # Board name for board.h: prefer args.json's "boardnames" map — that's
+    # the short ID used by fmc-prod-test-common's eeprom_fmc.c (e.g. "UZEV",
+    # "ZCU102"). Only fall back to data.json's "boardname" / "board" (which
+    # is the Vivado board-store vendor name, e.g. "ultrazed_7ev_cc") when
+    # no args.json mapping exists for this target. This split lets Vivado
+    # use the long vendor name for get_board_parts while board.h gets the
+    # short ID iic_muxes[] expects.
     target = maybe_target
-    if data_json_path:
+    boardnames = cfg.get("boardnames", {})
+    if target in boardnames:
+        board_name_for_header = boardnames[target]
+    elif data_json_path:
         design = load_design_entry(data_json_path, target)
         board_name_for_header = design.get("boardname", design.get("board", target))
     else:
-        boardnames = cfg.get("boardnames", {})
-        board_name_for_header = boardnames.get(target, target)
+        board_name_for_header = target
 
     # Vivado project path (with optional postfix)
     vivado_postfix = cfg.get("vivado_postfix", "")
@@ -612,10 +624,20 @@ def main():
         create_board_h(board_name_for_header, app_src)
 
         # Linker script modifications (if configured for this arch)
+        lscript_path = os.path.join(app_src, "lscript.ld")
         if arch in linker_mods:
-            lscript_path = os.path.join(app_src, "lscript.ld")
             info(f"Applying linker script mod: {linker_mods[arch]}")
             modify_linker_script(lscript_path, linker_mods[arch])
+
+        # Stack/heap size overrides (if configured)
+        if stack_size or heap_size:
+            ld = app.get_ld_script()
+            if stack_size:
+                ld.set_stack_size(size=stack_size)
+                info(f"Linker script: stack size set to {stack_size}")
+            if heap_size:
+                ld.set_heap_size(size=heap_size)
+                info(f"Linker script: heap size set to {heap_size}")
 
         # Run pre-build script (if configured)
         if pre_build_script:

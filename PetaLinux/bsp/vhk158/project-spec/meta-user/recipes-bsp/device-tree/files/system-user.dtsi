@@ -2,7 +2,17 @@
 / {
 };
 
-&qdma_0{
-	ranges = <0x02000000 0x00 0xA8000000 0x00 0xA8000000 0x00 0x08000000>;
+/* QDMA DT override per AMD AR76647 "no-patch" recipe for 2024.2+.
+ * Requires Vivado: CONFIG.axibar_notranslate {true}, pf0_bar0_size_qdma
+ * {16} (or >=64 GB). Identity-maps both M32 and M64 ranges so Linux has
+ * the proper CPU↔PCI address spaces for endpoint BAR allocation.
+ *
+ * Also: the upstream driver's parse_dt takes reg index 0 as the "cfg"
+ * region, but pl.dtsi on this board emits `reg-names = "breg", "cfg"`
+ * (breg at index 0). We reorder here so cfg is at index 0. */
+&qdma_0 {
+	reg = <0x0 0x90000000 0x0 0x10000000>, <0x0 0x80000000 0x0 0x10000000>;
+	reg-names = "cfg", "breg";
+	ranges = <0x02000000 0x00 0xA8000000 0x00 0xA8000000 0x00 0x08000000>,
+	         <0x43000000 0x04 0x80000000 0x04 0x80000000 0x00 0x40000000>;
 };
-

@@ -305,6 +305,6 @@ copying patch files to your Vivado installation and it is **not included** in th
 `AR000036860_Vivado_2024_1_preliminary_rev1`. We have tested the patch and can confirm that it corrects the issue.
 
 
-[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
 [supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 

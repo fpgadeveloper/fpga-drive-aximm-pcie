@@ -35,7 +35,7 @@ You can help us maintain this list by communicating [your experiences] to us or 
 contributing to the documentation on our [Github repo].
 
 [your experiences]: https://opsero.com/contact-us
-[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
-[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+[FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
+[M.2 M-key Stack FMC]: https://docs.opsero.com/op073/datasheet/overview/
 [Github repo]: https://github.com/fpgadeveloper/fpga-drive-aximm-pcie
 

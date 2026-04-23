@@ -74,5 +74,5 @@ The standalone software application reports on the status of the PCIe link and
 performs enumeration of the detected PCIe end-points (ie. the M.2 modules).
 
 
-[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
-[M.2 M-key Stack FMC]: https://www.fpgadrive.com/docs/m2-mkey-stack-fmc/overview/
+[FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
+[M.2 M-key Stack FMC]: https://docs.opsero.com/op073/datasheet/overview/

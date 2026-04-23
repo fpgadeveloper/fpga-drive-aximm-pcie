@@ -235,3 +235,22 @@
    ceva,p1-retry-params = /bits/ 16 <0x96A4 0x3FFC>;
 };
 
+
+/* 2025.2 gen-machineconf assigns port-number=0 to uart1 by default, making
+ * ttyPS0 map to uart1. Our test/logging setup is cabled to the UART_0 USB-
+ * serial interface, so force ttyPS0 back to uart0. */
+&uart0 {
+   port-number = <0>;
+};
+&uart1 {
+   port-number = <1>;
+};
+/ {
+   aliases {
+      serial0 = &uart0;
+      serial1 = &uart1;
+   };
+   chosen {
+      stdout-path = "serial0:115200n8";
+   };
+};

@@ -262,5 +262,5 @@ the following modifications:
   otherwise cause BARs to be assigned at address 0x0.
 
 [Putty]: https://www.putty.org/
-[FPGA Drive FMC Gen4]: https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/overview/
+[FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
 
