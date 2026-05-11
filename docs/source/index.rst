@@ -21,7 +21,7 @@ This is the documentation for the reference designs for the
    build_instructions
    stand_alone
    petalinux
-   updating
+   advanced
    troubleshooting
    revision_history
 
