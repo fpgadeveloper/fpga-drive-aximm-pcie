@@ -229,14 +229,29 @@ int PcieInitRootComplex(XDmaPcie *XdmaPciePtr, UINTPTR BaseAddress)
 	ConfigPtr = XDmaPcie_LookupConfig(BaseAddress);
 #endif
 
+#if defined(SDT) && defined(XDMA_PCIE_BRIDGE)
 	/*
-	 * In SDT mode, the driver's QDMA_PCIE_BRIDGE/XDMA_PCIE_BRIDGE detection
-	 * may not trigger (SDT uses different xparameters naming), so the
-	 * BaseAddress/Ecam swap in CfgInitialize may not run. Fix it here:
-	 * pass the CSR address as EffectiveAddress so BaseAddress points to
-	 * the bridge registers, then set Ecam to the ECAM config space address.
+	 * Vitis 2025.2 SDT BSP fixup for ZynqMP XDMA bridge (xlnx,xdma-4.2
+	 * with XPAR_XDMA_0_COMPATIBLE also defined, i.e. XDMA_PCIE_BRIDGE
+	 * detection triggered). The SDT generator drops the AXIBAR0 address
+	 * (xlnx,csr-slcr from the device tree, e.g. 0xA0000000) into
+	 * Config.Ecam. On this IP the bridge regs and PCIe config space are
+	 * both reached through S_AXI_LITE (= Config.BaseAddress = ECAM), not
+	 * via the AXI→PCIe BAR window. Force Ecam to match BaseAddress so
+	 * enumeration writes go to ECAM instead of the BAR window (which
+	 * would hang the AXI bus with no PCIe completion).
 	 */
-#if defined(SDT) && defined(XPAR_XXDMAPCIE_0_CSR_SLCR)
+	Status = XDmaPcie_CfgInitialize(XdmaPciePtr, ConfigPtr,
+						ConfigPtr->BaseAddress);
+	XdmaPciePtr->Config.Ecam = XdmaPciePtr->Config.BaseAddress;
+#elif defined(SDT) && defined(XPAR_XXDMAPCIE_0_CSR_SLCR)
+	/*
+	 * Versal QDMA and any other SDT xdmapcie target without
+	 * XDMA_PCIE_BRIDGE detection. Tested-working behavior: pass the
+	 * csr-slcr address as EffectiveAddress and override Ecam to
+	 * ConfigPtr->BaseAddress. Do not change without re-testing every
+	 * versal board.
+	 */
 	Status = XDmaPcie_CfgInitialize(XdmaPciePtr, ConfigPtr,
 						XPAR_XXDMAPCIE_0_CSR_SLCR);
 	XdmaPciePtr->Config.Ecam = ConfigPtr->BaseAddress;
