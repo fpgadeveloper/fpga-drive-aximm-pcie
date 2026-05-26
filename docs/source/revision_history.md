@@ -1,5 +1,22 @@
 # Revision History
 
+## 2025.2 Changes
+
+* Bumped Vivado, Vitis and PetaLinux requirement to 2025.2
+* Migrated Vitis flow to the universal Python build driver
+  (`Vitis/py/build-vitis.py` + `args.json`)
+* Switched to System Device Tree (SDT) BSP generation; updated source
+  examples for SDT compatibility (axipcie / xdmapcie drivers)
+* Vendored modified `axipcie_v3_4` and `xdmapcie_v3_1` drivers under
+  `EmbeddedSw/` to fix SDT compatible-string mapping and Versal QDMA
+  address-swap behaviour (see [stand_alone](stand_alone) for details)
+* Verified the previously documented "Slave Illegal Burst" Vivado 2024.1
+  issue no longer reproduces with the current 2025.2 Versal designs;
+  removed the AR000036860 tactical-patch workaround note
+* Added per-BSP U-Boot device-tree overlay
+  (`meta-xilinx-tools/recipes-bsp/uboot-device-tree/`) for every
+  target so U-Boot sees the FMC-side PCIe bridge
+
 ## 2022.1 Changes
 
 * Added Makefiles to improve the build experience for Linux users

@@ -110,7 +110,7 @@ losing data on one of your hard drives.
 ```{tip} You need to install the cable drivers before being able to boot via JTAG.
 Note that the Vitis installer does not automatically install the cable drivers, it must be done separately.
 For instructions, read section 
-[installing the cable drivers](https://docs.xilinx.com/r/2022.1-English/ug973-vivado-release-notes-install-license/Installing-Cable-Drivers) 
+[installing the cable drivers](https://docs.amd.com/r/en-US/ug973-vivado-release-notes-install-license/Installing-Cable-Drivers) 
 from the Vivado release notes.
 ```
 
@@ -223,88 +223,37 @@ sudo screen /dev/ttyUSB0 115200
 
    ![Create the file system using mkfs](images/setup_ssd_in_petalinux_6.png)
 
-8. Make a directory to mount the file system to using: `mkdir /media/nvme`.
-9. Mount the SSD to that directory: `mount /dev/nvme0n1p1 /media/nvme`.
+8. After a reboot, systemd auto-mounts the new partition under
+   `/run/media/nvme0n1p1`. For example, on a dual-SSD board you'll see:
 
-![Make a directory for the SSD and mount it](images/setup_ssd_in_petalinux_7.png)
+   ```none
+   uzev-fpgadrv-2025-2:~$ lsblk
+   NAME         MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+   ...
+   nvme0n1      259:0    0 931.5G  0 disk
+   `-nvme0n1p1  259:2    0 931.5G  0 part /run/media/nvme0n1p1
+   nvme1n1      259:1    0 931.5G  0 disk
+   `-nvme1n1p1  259:3    0 931.5G  0 part /run/media/nvme1n1p1
+   ```
+
+   If you want to mount the SSD in the same session in which you formatted
+   it (without rebooting), do it manually:
+
+   ```
+   mkdir -p /media/nvme
+   mount /dev/nvme0n1p1 /media/nvme
+   ```
 
 From this point you will be able to access the SSD from the Linux command line.
-The SSD will be mounted to the directory `/media/nvme`. You should be able to copy files to 
-that directory, create new files, delete files and use all the disk tools that are available in
-the PetaLinux build.
+You should be able to copy files to the mount point, create new files,
+delete files and use all the disk tools that are available in the
+PetaLinux build.
 
 ## Patches and Known Issues
 
-### QDMA Root Port Linux Driver Patch
-
-* Patch file: `Opsero_QDMA_Bridge_Support_Fixes_for_RC_Linux_Driver_2024_1_32_n_64.patch`
-* Location: `PetaLinux/bsp/<target board>/project-spec/meta-user/recipes-kernel/linux/linux-xlnx/`
-
-The Versal projects in this repository contain a patch to the QDMA/XDMA Linux driver. The patch incorporates
-the fixes from the patch on [Answer record AR76647](https://adaptivesupport.amd.com/s/article/76647?language=en_US) and
-it contains two additional changes to the driver:
-
-1. The "cfg" resource (S_AXI_LITE) is referenced by name, rather than index in the device tree probe function. It
-   is necessary to reference this resource by name rather than by index, because the "reg" property of the device
-   tree contains two resources "cfg" and "bref", and the order in which they are listed depends on the addresses
-   assigned to them in the Vivado design. The device tree generator lists the one with the lower address first.
-2. Added code to configure the [BDF table](https://docs.amd.com/r/en-US/pg302-qdma/BDF-Table) of the QDMA.
-   Without configuring the BDF table, all transactions on the AXI BAR (S_AXI_BRIDGE) return DECERR 
-   (decode error) since the address translation is not being done correctly.
-
-### Slave Illegal Burst Errors
-
-The Versal projects in this repository will function correctly however they will produce 
-["Slave Illegal Burst" errors](https://adaptivesupport.amd.com/s/question/0D54U000088bqe3SAA/slave-illegal-burst-qdma-axi-bridge?language=en_US). Below is a snippet of a boot log showing these errors:
-
-```
-[    4.027049] nvme nvme0: pci function 0000:01:00.0
-[    4.031809] pci 0000:00:00.0: enabling device (0000 -> 0002)
-[    4.037523] nvme 0000:01:00.0: enabling device (0000 -> 0002)
-[    4.038983] nvme nvme1: pci function 0001:01:00.0
-[    4.045785] tun: Universal TUN/TAP device driver, 1.6
-[    4.048058] xilinx-xdma-pcie 80000000.axi-pcie: Slave Illegal Burst
-[    4.048077] pci 0001:00:00.0: enabling device (0000 -> 0002)
-[    4.059465] xilinx-xdma-pcie 80000000.axi-pcie: Slave Illegal Burst
-[    4.059606] CAN device driver interface
-[    4.065198] nvme 0001:01:00.0: enabling device (0000 -> 0002)
-[    4.071816] usbcore: registered new interface driver asix
-[    4.075383] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.081180] usbcore: registered new interface driver ax88179_178a
-[    4.086675] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.092927] usbcore: registered new interface driver cdc_ether
-[    4.099059] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.105377] usbcore: registered new interface driver net1080
-[    4.111246] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.117568] usbcore: registered new interface driver cdc_subset
-[    4.123334] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.129576] usbcore: registered new interface driver zaurus
-[    4.135528] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.141856] usbcore: registered new interface driver cdc_ncm
-[    4.147449] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.153774] usbcore: registered new interface driver r8153_ecm
-[    4.159478] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.165909] VFIO - User Level meta-driver version: 0.3
-[    4.171651] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.189462] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.191018] usbcore: registered new interface driver uas
-[    4.195783] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.195790] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.201149] usbcore: registered new interface driver usb-storage
-[    4.207444] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.213889] i2c_dev: i2c /dev entries driver
-[    4.219824] nvme nvme0: Shutdown timeout set to 10 seconds
-[    4.227018] usbcore: registered new interface driver uvcvideo
-[    4.230468] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-[    4.236251] Bluetooth: HCI UART driver ver 2.3
-[    4.241846] xilinx-xdma-pcie 90000000.axi-pcie: Slave Illegal Burst
-```
-
-This is a known issue of Vivado 2024.1 and will be fixed in a future release. AMD has a tactical patch for this issue that requires
-copying patch files to your Vivado installation and it is **not included** in this project repository. As a tactical patch, we are not allowed to share it; you must request a copy from your FAE. You can refer to the tactical patch by this name: 
-`AR000036860_Vivado_2024_1_preliminary_rev1`. We have tested the patch and can confirm that it corrects the issue.
-
+For a full description of each patch applied on top of the stock AMD BSPs,
+see [advanced](advanced).
 
 [FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/
-[supported Linux distributions]: https://docs.xilinx.com/r/2022.1-English/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
+[supported Linux distributions]: https://docs.amd.com/r/en-US/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 

@@ -326,7 +326,7 @@ PetaLinux/bsp/<board>/project-spec/
     │   ├── device-tree/
     │   │   ├── device-tree.bbappend
     │   │   └── files/
-    │   │       └── system-user.dtsi    <- board-specific DT additions
+    │   │       └── system-user.dtsi    <- board-specific Linux DT additions
     │   ├── u-boot/
     │   │   ├── u-boot-xlnx_%.bbappend
     │   │   └── files/
@@ -337,6 +337,12 @@ PetaLinux/bsp/<board>/project-spec/
     │       ├── fsbl-firmware_%.bbappend
     │       └── files/
     │           └── zcu104_vadj_fsbl.patch
+    ├── meta-xilinx-tools/
+    │   └── recipes-bsp/
+    │       └── uboot-device-tree/
+    │           ├── uboot-device-tree.bbappend
+    │           └── files/
+    │               └── system-user.dtsi    <- U-Boot DT overlay
     └── recipes-kernel/
         └── linux/
             ├── linux-xlnx_%.bbappend
@@ -440,10 +446,11 @@ the stock one?"* — it is what to re-apply if you ever do that.
 * **U-Boot patch `0001-ubifs-distroboot-support.patch`** on ZynqMP
   boards, `0001-xilinx_versal.h-ubifs-distroboot-support.patch` on
   Versal boards.
-* **Versal boards additionally** carry a
-  `meta-xilinx-tools/recipes-bsp/uboot-device-tree/` overlay that
-  overrides the U-Boot device tree (required because the stock
-  U-Boot device tree does not describe the FMC-side PCIe bridge).
+* **`meta-xilinx-tools/recipes-bsp/uboot-device-tree/` overlay** in
+  every BSP (Zynq-7000, ZynqMP, and Versal), each providing its own
+  `system-user.dtsi`. It overrides the U-Boot device tree (required
+  because the stock U-Boot device tree does not describe the FMC-side
+  PCIe bridge).
 
 ### PicoZed FMC Carrier (pz) BSP
 

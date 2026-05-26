@@ -6,12 +6,15 @@ Vitis subdirectory of this repo. The build script creates a Vitis workspace cont
 Xilinx which is located in the Vitis installation files.
 The program demonstrates basic usage of the stand-alone driver including how to check link-up, link speed, 
 the number of lanes used, as well as how to perform PCIe enumeration. The original example applications can 
-be viewed on the [embeddedsw Github repo](https://github.com/Xilinx/embeddedsw/tree/xilinx_v2024.1):
+be viewed on the [embeddedsw Github repo](https://github.com/Xilinx/embeddedsw/tree/xlnx_rel_v2025.2):
 
 * For the AXI PCIe designs:
-  [xaxipcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/b173d246826f662b9a98215d8f39e93d39d699b4/XilinxProcessorIPLib/drivers/axipcie/examples/xaxipcie_rc_enumerate_example.c)
-* For the XDMA designs:
-  [xdmapcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/b173d246826f662b9a98215d8f39e93d39d699b4/XilinxProcessorIPLib/drivers/xdmapcie/examples/xdmapcie_rc_enumerate_example.c)
+  [xaxipcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/xlnx_rel_v2025.2/XilinxProcessorIPLib/drivers/axipcie/examples/xaxipcie_rc_enumerate_example.c)
+* For the XDMA and QDMA designs:
+  [xdmapcie_rc_enumerate_example.c](https://github.com/Xilinx/embeddedsw/blob/xlnx_rel_v2025.2/XilinxProcessorIPLib/drivers/xdmapcie/examples/xdmapcie_rc_enumerate_example.c)
+
+Note that the repo carries lightly modified copies of these examples in
+`Vitis/common/src/` (see [advanced](advanced) for the modifications).
 
 ## Building the Vitis workspace
 
@@ -60,8 +63,8 @@ appear as follows:
 ### Output of XDMA designs
 
 ```none
-Xilinx Zynq MP First Stage Boot Loader
-Release 2022.1   Sep 25 2023  -  16:02:40
+Zynq MP First Stage Boot Loader
+Release 2025.2   May 14 2026  -  14:56:34
 PMU-FW is not running, certain applications may not be supported.
 Interrupts currently enabled are        0
 Interrupts currently pending are        0
@@ -82,20 +85,21 @@ PCIeFunc is 00
 xdma_pcie: Vendor ID is 10EE
 Device ID is 9131
 xdma_pcie: This is a Bridge
-xdma_pcie: bus: 0, device: 0, function: 0: BAR 0 is not implemented
-xdma_pcie: bus: 0, device: 0, function: 0: BAR 1 is not implemented
+xdma_pcie: bus: 00, device: 00, function: 00: BAR 0 is not implemented
+xdma_pcie: bus: 00, device: 00, function: 00: BAR 1 is not implemented
 xdma_pcie:
 PCIeBus is 01
 PCIeDev is 00
 PCIeFunc is 00
 xdma_pcie: Vendor ID is 144D
-Device ID is A808
+Device ID is A80A
 xdma_pcie: This is an End Point
-xdma_pcie: bus: 1, device: 0, function: 0: BAR 0, ADDR: 0xA0000000 size : 16K
-xdma_pcie: bus: 1, device: 0, function: 0: BAR 2 is not implemented
-xdma_pcie: bus: 1, device: 0, function: 0: BAR 3 is not implemented
-xdma_pcie: bus: 1, device: 0, function: 0: BAR 4 is not implemented
-xdma_pcie: bus: 1, device: 0, function: 0: BAR 5 is not implemented
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 0, ADDR: 0xA1000000 size : 16K
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 1required IO space; it is unassigned
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 2 is not implemented
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 3 is not implemented
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 4 is not implemented
+xdma_pcie: bus: 01, device: 00, function: 00: BAR 5 is not implemented
 xdma_pcie: End Point has been enabled
 Successfully ran XdmaPcie rc enumerate Example
 ```
