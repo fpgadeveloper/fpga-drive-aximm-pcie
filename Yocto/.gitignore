@@ -1,0 +1,14 @@
+# Per-target workspaces (.repo / sources / build / images / etc.) are
+# created by `make yocto TARGET=<board>` and must not be tracked. They
+# always live at the top level of Yocto/, so ignore *any* top-level
+# subdirectory and then re-allow the source-tree ones explicitly.
+/*/
+!/bsp/
+!/scripts/
+
+# Local environment overrides and generated state.
+/offline.txt
+/logs/
+/tools/
+.*.lock
+configdone.txt
