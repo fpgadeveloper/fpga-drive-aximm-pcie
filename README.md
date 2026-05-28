@@ -71,12 +71,12 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 | Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
 |-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
 | [UltraZed-EV Carrier] | `uzev`          | 4     | 4     | HPC         | :white_check_mark: | :white_check_mark: | :x:         | Standard :free: |
-| [ZCU104]              | `zcu104`        | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :x:         | Standard :free: |
+| [ZCU104]              | `zcu104`        | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
 | [ZCU106]              | `zcu106_hpc0`   | 4     | 4     | HPC0        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
 | [ZCU106]              | `zcu106_hpc1`   | 1     | -     | HPC1        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
 | [ZCU111]              | `zcu111`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
 | [ZCU208]              | `zcu208`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [ZCU216]              | `zcu216`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
+| [ZCU216]              | `zcu216`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :x:         | Enterprise |
 
 ### Versal designs
 

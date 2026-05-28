@@ -33,11 +33,11 @@ YOCTO_IMAGE_RECIPE = edf-linux-disk-image
 
 # valid targets (template name)
 # UPDATER START
+zcu104_target := zynqMP
 zcu106_hpc0_target := zynqMP
 zcu106_hpc1_target := zynqMP
 zcu111_target := zynqMP
 zcu208_target := zynqMP
-zcu216_target := zynqMP
 # UPDATER END
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
@@ -70,8 +70,9 @@ YOCTO_CFG_DONE = $(YOCTO_DIR)/configdone.txt
 YOCTO_IMG_DIR = $(YOCTO_DIR)/images/linux
 YOCTO_BOOT_BIN = $(YOCTO_IMG_DIR)/BOOT.BIN
 YOCTO_BOOT_SCR = $(YOCTO_IMG_DIR)/boot.scr
-YOCTO_IMAGE_UB = $(YOCTO_IMG_DIR)/image.ub
+YOCTO_IMAGE = $(YOCTO_IMG_DIR)/Image
 YOCTO_ROOTFS = $(YOCTO_IMG_DIR)/rootfs.tar.gz
+YOCTO_WIC = $(YOCTO_IMG_DIR)/rootfs.wic.xz
 
 YOCTO_OFFLINE = $(YOCTO_ROOT)/offline.txt
 YOCTO_LOCK = $(YOCTO_ROOT)/.$(TARGET).lock
@@ -100,8 +101,10 @@ else ifeq ($(call get_template_name,$(TARGET)), microblaze)
 	VIV_BOOTFILE = $(VIV_BIT)
 endif
 
-# Final build products produced by bitbake (deployed into images/linux/ by package-output.sh)
-BUILD_PRODUCTS = $(YOCTO_BOOT_BIN) $(YOCTO_IMAGE_UB) $(YOCTO_ROOTFS)
+# Final build products produced by bitbake (deployed into images/linux/ by package-output.sh).
+# EDF produces a raw `Image` (not a u-boot-wrapped image.ub) and a `rootfs.wic.xz`
+# SD-card image; `scripts/copy_to_sd.sh -yocto` flashes the wic, so include it here.
+BUILD_PRODUCTS = $(YOCTO_BOOT_BIN) $(YOCTO_IMAGE) $(YOCTO_ROOTFS) $(YOCTO_WIC)
 
 .PHONY: help
 help:

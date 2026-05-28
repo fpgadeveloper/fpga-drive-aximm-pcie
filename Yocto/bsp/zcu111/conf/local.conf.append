@@ -1,0 +1,20 @@
+# FPGA Drive FMC reference design overrides for ZCU111, EDF flow.
+#
+# - DISTRO is set by the amd-edf template (default-edf.xml manifest).
+# - MACHINE is the AMD-validated zynqmp-zcu111-sdt-full (pinned here).
+# - IMAGE_FSTYPES is set by edf-linux-disk-image.
+# - The EDF wks file partitions the SD card as: /boot/efi (vfat), /boot (ext4),
+#   / (ext4) → rootfs lives on /dev/mmcblk0p3.
+# - Design-specific PL hardware (xdma PCIe etc.) is conveyed via the
+#   device-tree.bbappend in our meta-user layer (system-user.dtsi overlay).
+
+MACHINE = "zynqmp-zcu111-sdt-full"
+
+# CMA pool needed for PCIe DMA from large NVMe transfers.
+APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=1536M"
+
+# Hostname (overrides amd-edf default of "amd-edf").
+hostname:pn-base-files = "zcu111-fpgadrv-2025-2"
+
+# Reserve space in the rootfs for the toolset we install at image time.
+IMAGE_ROOTFS_EXTRA_SPACE = "524288"
