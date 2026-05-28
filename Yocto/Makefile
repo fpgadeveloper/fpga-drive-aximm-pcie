@@ -35,6 +35,9 @@ YOCTO_IMAGE_RECIPE = edf-linux-disk-image
 # UPDATER START
 zcu106_hpc0_target := zynqMP
 zcu106_hpc1_target := zynqMP
+zcu111_target := zynqMP
+zcu208_target := zynqMP
+zcu216_target := zynqMP
 # UPDATER END
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
@@ -42,11 +45,15 @@ TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 # target board (the first word in the target name, before the first underscore)
 TARGET_BOARD = $(word 1,$(subst _, ,$(TARGET)))
 
-# Vivado paths (XSA is the hardware handoff from the Vivado project)
+# Vivado paths (XSA is the hardware handoff from the Vivado project).
+# The boot artifact differs per architecture:
+#   - zynq / zynqMP: .bit (PL bitstream, embedded into BOOT.BIN via xilinx-bootbin)
+#   - versal: .pdi   (PDI replaces the AMD reference base PDI on Versal)
 VIV_DIR = $(YOCTO_ROOT)/../Vivado
 VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
 VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
 VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
+VIV_PDI = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.pdi
 
 # yocto paths and files
 YOCTO_DIR = $(YOCTO_ROOT)/$(TARGET)
@@ -81,12 +88,16 @@ SSTATE_PATH ?= $(shell test -e $(YOCTO_OFFLINE) && head -n 1 $(YOCTO_OFFLINE))
 
 ifeq ($(call get_template_name,$(TARGET)), zynqMP)
 	SSTATE_ARCH = aarch64
+	VIV_BOOTFILE = $(VIV_BIT)
 else ifeq ($(call get_template_name,$(TARGET)), versal)
 	SSTATE_ARCH = aarch64
+	VIV_BOOTFILE = $(VIV_PDI)
 else ifeq ($(call get_template_name,$(TARGET)), zynq)
 	SSTATE_ARCH = arm
+	VIV_BOOTFILE = $(VIV_BIT)
 else ifeq ($(call get_template_name,$(TARGET)), microblaze)
 	SSTATE_ARCH = microblaze
+	VIV_BOOTFILE = $(VIV_BIT)
 endif
 
 # Final build products produced by bitbake (deployed into images/linux/ by package-output.sh)
@@ -166,7 +177,8 @@ $(YOCTO_CFG_DONE): $(YOCTO_HW_XSA) $(BSP_DIR)/conf/local.conf.append | $(YOCTO_S
 		"$(YOCTO_HW_XSA)" \
 		"$(SSTATE_PATH)" \
 		"$(SSTATE_ARCH)" \
-		"$(VIV_BIT)"
+		"$(VIV_BOOTFILE)" \
+		"$(call get_template_name,$(TARGET))"
 	touch $@
 
 $(YOCTO_HW_XSA): $(VIV_XSA) | $(YOCTO_SETUP)

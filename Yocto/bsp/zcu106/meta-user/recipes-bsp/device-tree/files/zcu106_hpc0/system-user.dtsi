@@ -1,6 +1,10 @@
 /*
  * FPGA Drive FMC reference design DT overlay for ZCU106 (EDF flow).
  *
+ * This overlay is the zcu106_hpc0 variant: 2x xilinx_xdma 4-lane Root Ports
+ * for the dual M.2 sockets on the FPGA Drive FMC at HPC0. The bbappend
+ * selects the per-target file via FPGADRV_TARGET (see device-tree.bbappend).
+ *
  * The SoC-side hardware (cortexa53, uart, gem, sdhci, etc.) is described
  * by the AMD-validated cortexa53-linux.dts in meta-amd-adaptive-socs-bsp.
  * This file is appended to that DT (via EXTRA_DT_INCLUDE_FILES) to add

@@ -41,8 +41,8 @@ def create_tables(data):
     for group in used_groups:
         tables.append('### {} designs'.format(group['name']))
         tables.append('')
-        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Vivado<br> Edition |')
-        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |')
+        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|')
         for design in data['designs']:
             if not design['publish']:
                 continue
@@ -58,6 +58,7 @@ def create_tables(data):
                 cols.append('{0}'.format(design['connector']).ljust(11))
                 cols.append('{0}'.format(to_emoji[design['baremetal']]).ljust(11))
                 cols.append('{0}'.format(to_emoji[design['petalinux']]).ljust(11))
+                cols.append('{0}'.format(to_emoji[design.get('yocto', False)]).ljust(11))
                 cols.append('{0}'.format(to_edition[design['license']]).ljust(5))
                 tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']
@@ -141,6 +142,17 @@ def get_petalinux_targets(data):
             continue
         template = templates[design['group']]
         target = '{}_target := {} {} {}'.format(design['label'],template,design['flashsize'],design['flashintf'])
+        targets.append(target)
+    return(targets)
+
+def get_yocto_targets(data):
+    templates = {'fpga': 'microblaze', 'z7': 'zynq', 'zu': 'zynqMP', 'versal': 'versal'}
+    targets = []
+    for design in data['designs']:
+        if not design.get('yocto'):
+            continue
+        template = templates[design['group']]
+        target = '{}_target := {}'.format(design['label'],template)
         targets.append(target)
     return(targets)
 
@@ -238,6 +250,11 @@ update_file(vitis_makefile,vitis_targets)
 petalinux_makefile = '../PetaLinux/Makefile'
 petalinux_targets = get_petalinux_targets(data)
 update_file(petalinux_makefile,petalinux_targets)
+
+# Update the Yocto makefile
+yocto_makefile = '../Yocto/Makefile'
+yocto_targets = get_yocto_targets(data)
+update_file(yocto_makefile,yocto_targets)
 
 # Update the gitignore
 gitignore = '../.gitignore'
