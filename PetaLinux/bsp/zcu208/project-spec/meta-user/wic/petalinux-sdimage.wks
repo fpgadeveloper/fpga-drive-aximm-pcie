@@ -1,0 +1,15 @@
+# SD-card image for PetaLinux flow: 2-partition layout
+# (FAT32 'boot' + ext4 'root').
+#
+# - p1 'boot' (FAT32, 1 GiB) holds BOOT.BIN, boot.scr, and the kernel
+#   (image.ub / Image / uImage) and any other files listed in
+#   IMAGE_BOOT_FILES. The SoC BootROM reads BOOT.BIN from this partition.
+# - p2 'root' (ext4, fills the card) is the rootfs.
+#
+# Flash with: scripts/copy_to_sd.sh -petalinux -repo <r> -target <t>
+# (the script detects rootfs.wic.xz and dd's it onto the SD card's raw
+#  block device, replacing whatever was there before).
+
+bootloader --ptable msdos
+part /boot --source bootimg-partition --ondisk mmcblk0 --fstype=vfat --label boot --active --align 1024 --size 1024
+part /     --source rootfs            --ondisk mmcblk0 --fstype=ext4 --label root --align 1024
