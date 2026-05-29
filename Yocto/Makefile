@@ -45,6 +45,22 @@ TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 # target board (the first word in the target name, before the first underscore)
 TARGET_BOARD = $(word 1,$(subst _, ,$(TARGET)))
 
+# Build flow per target.
+#   gen-machineconf   - AMD's recommended `parse-sdt` path: generate a custom
+#                       MACHINE (PS + PL device tree) directly from the project
+#                       XSA, so PS changes made in Vivado flow through into the
+#                       Yocto build automatically.
+#   validated-machine - legacy path: pin a pre-validated AMD MACHINE and convey
+#                       PL hardware via a hand-curated system-user.dtsi overlay.
+# List the targets that use the gen-machineconf flow here; everything else
+# defaults to validated-machine.
+GEN_MACHINECONF_TARGETS := zcu104
+ifneq ($(filter $(TARGET),$(GEN_MACHINECONF_TARGETS)),)
+	FLOW = gen-machineconf
+else
+	FLOW = validated-machine
+endif
+
 # Vivado paths (XSA is the hardware handoff from the Vivado project).
 # The boot artifact differs per architecture:
 #   - zynq / zynqMP: .bit (PL bitstream, embedded into BOOT.BIN via xilinx-bootbin)
@@ -181,7 +197,8 @@ $(YOCTO_CFG_DONE): $(YOCTO_HW_XSA) $(BSP_DIR)/conf/local.conf.append | $(YOCTO_S
 		"$(SSTATE_PATH)" \
 		"$(SSTATE_ARCH)" \
 		"$(VIV_BOOTFILE)" \
-		"$(call get_template_name,$(TARGET))"
+		"$(call get_template_name,$(TARGET))" \
+		"$(FLOW)"
 	touch $@
 
 $(YOCTO_HW_XSA): $(VIV_XSA) | $(YOCTO_SETUP)

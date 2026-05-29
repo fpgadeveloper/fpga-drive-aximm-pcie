@@ -1,0 +1,27 @@
+/*
+ * SoC-side board fixups for the ZCU104, layered on top of the
+ * gen-machineconf / lopper-generated cortexa53-linux.dts (which already
+ * carries the PS config and the PL xilinx_xdma PCIe node from the XSA).
+ *
+ * SD card (sdhci1 / ff170000.mmc):
+ *   The Vivado design configures the SD interface as "custom"
+ *   (xlnx,sd-board-interface = "custom"), so the XSA-derived SDT exports a
+ *   minimal sdhci1 node with a zero 200 MHz output tap delay. Linux then
+ *   negotiates UHS-I SDR104 and immediately fails reading the partition
+ *   table ("mmcblk0: recovery failed!" / sector-0 I/O error -> root-fs
+ *   mount panic). The ZCU104's SD level shifter cannot sustain the faster
+ *   UHS modes, so cap the controller at high-speed (<=50 MHz, no 1.8 V
+ *   switch). These values mirror the PetaLinux zcu104 BSP for this repo and
+ *   the stock 2025.2 xilinx-zcu104 BSP, both proven on this hardware. PCIe
+ *   NVMe (not the SD card) is the performance path, so this is harmless.
+ */
+
+&sdhci1 {
+   no-1-8-v;
+   disable-wp;
+   broken-cd;
+   max-frequency = <50000000>;
+   /* Mask the UHS capability bits the level shifter can't sustain. */
+   sdhci-caps-mask = <0 0x200000>;
+   sdhci-caps = <0 0>;
+};

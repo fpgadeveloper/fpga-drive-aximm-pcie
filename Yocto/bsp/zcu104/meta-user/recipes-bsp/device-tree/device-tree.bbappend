@@ -1,12 +1,17 @@
-# The per-board BSP is shared across multiple targets (e.g. zcu106_hpc0 and
-# zcu106_hpc1). The board PS DT is identical between targets, but the PL
-# overlay (xdma PCIe nodes, lane counts) differs because each target is a
-# distinct Vivado block design. We therefore key the system-user.dtsi lookup
-# off FPGADRV_TARGET, which Yocto/scripts/configure-build.sh writes into
-# local.conf at workspace setup time.
+# Board-level device-tree fixups layered on top of the gen-machineconf /
+# lopper-generated CONFIG_DTFILE (conf/dts/fpgadrv-zcu104/cortexa53-linux.dts).
+#
+# The design-specific PL hardware (xilinx_xdma PCIe) already comes from the
+# SDT's pl.dtsi, so this file does NOT touch the PL. It only carries SoC-side
+# board quirks the XSA / sdtgen output doesn't encode — currently the ZCU104
+# SD-card level-shifter limitation (see system-user.dtsi).
+#
+# meta-xilinx's device-tree.bb consumes EXTRA_DT_INCLUDE_FILES by copying each
+# file into the DT build dir and appending a `#include "<file>"` to the base
+# DTS, so the &sdhci1 override below is applied on top of the generated tree.
+# A fixed path is used (NOT ${FPGADRV_TARGET}) so the file always resolves at
+# bitbake parse time, including while gen-machineconf is parsing recipes.
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/files/${FPGADRV_TARGET}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI:append = " file://system-user.dtsi"
-
-require ${@'device-tree-sdt.inc' if d.getVar('SYSTEM_DTFILE') != '' else ''}
+EXTRA_DT_INCLUDE_FILES:append = " system-user.dtsi"
