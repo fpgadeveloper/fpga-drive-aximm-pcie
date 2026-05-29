@@ -1,0 +1,32 @@
+/*
+ * SoC-side board fixups, layered on top of the gen-machineconf /
+ * lopper-generated cortexa53-linux.dts (which already carries the PS config
+ * and the PL xilinx_xdma PCIe node(s) from the XSA).
+ *
+ * UART (ttyPS console):
+ *   The 2025.2 lopper/gen-machineconf flow emits port-number = <0> on BOTH
+ *   uart0 (ff000000) and uart1 (ff010000), so the ttyPS0/ttyPS1 assignment is
+ *   left to probe order. This board's console is on psu_uart_0, so pin the
+ *   port numbers (and serial aliases) explicitly. Mirrors the PetaLinux BSPs.
+ *
+ * Note: unlike the ZCU104, this board's SD interface sustains UHS modes (the
+ * PetaLinux BSP needs no sdhci cap), so no SD override is applied here.
+ */
+
+&uart0 {
+   port-number = <0>;
+};
+
+&uart1 {
+   port-number = <1>;
+};
+
+/ {
+   aliases {
+      serial0 = &uart0;
+      serial1 = &uart1;
+   };
+   chosen {
+      stdout-path = "serial0:115200n8";
+   };
+};

@@ -1,14 +1,29 @@
 # FPGA Drive FMC reference design overrides for ZCU208, EDF flow.
 #
-# - DISTRO is set by the amd-edf template (default-edf.xml manifest).
-# - MACHINE is the AMD-validated zynqmp-zcu208-sdt-full (pinned here).
-# - IMAGE_FSTYPES is set by edf-linux-disk-image.
-# - The EDF wks file partitions the SD card as: /boot/efi (vfat), /boot (ext4),
-#   / (ext4) → rootfs lives on /dev/mmcblk0p3.
-# - Design-specific PL hardware (xdma PCIe etc.) is conveyed via the
-#   device-tree.bbappend in our meta-user layer (system-user.dtsi overlay).
-
-MACHINE = "zynqmp-zcu208-sdt-full"
+# This board uses the gen-machineconf "parse-sdt" flow (AMD's recommended
+# path). Yocto/scripts/configure-build.sh generates a System Device Tree from
+# the Vivado XSA and runs gen-machineconf to produce a *custom* MACHINE
+# (fpgadrv-<target>) whose device tree — PS and PL — is derived directly from
+# the hardware. MACHINE is therefore NOT pinned here; it is set by
+# configure-build. (bsp/zcu106 is shared by the zcu106_hpc0 and zcu106_hpc1
+# targets; each gets its own MACHINE/SDT from its own XSA.)
+#
+# Consequences of the parse-sdt flow:
+#   - The PL hardware (xilinx_xdma PCIe Root Port[s]) is captured by the SDT's
+#     pl.dtsi and lopper-merged into the generated Linux device tree, so no
+#     hand-curated PL system-user.dtsi is needed. The only system-user.dtsi
+#     content is SoC-side board fixups (UART ttyPS mapping).
+#   - The Vivado bitstream is extracted into the SDT and wired via
+#     BITSTREAM_PATH; because no PL overlay is requested, fpga-overlay is left
+#     out of MACHINE_FEATURES and xilinx-bootbin embeds the bitstream into
+#     BOOT.BIN (FSBL programs the PL at boot, before Linux/PCIe come up).
+#   - DISTRO is set by the amd-edf template; IMAGE_FSTYPES by edf-linux-disk-image.
+#   - The EDF wks partitions the SD card as: /boot/efi (vfat), /boot (ext4),
+#     / (ext4) -> rootfs lives on /dev/mmcblk0p3.
+#
+# A customer who changes the PS in Vivado (clocks, peripherals, MIO, DDR, ...)
+# only needs to rebuild the XSA and re-run `make yocto TARGET=<target>`; the
+# change flows through XSA -> SDT -> machine.conf -> device tree automatically.
 
 # CMA pool needed for PCIe DMA from large NVMe transfers.
 APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=1536M"

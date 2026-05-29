@@ -1,4 +1,4 @@
-# FPGA Drive FMC reference design overrides for ZCU111, EDF flow.
+# FPGA Drive FMC reference design overrides for UltraZed-EV, EDF flow.
 #
 # This board uses the gen-machineconf "parse-sdt" flow (AMD's recommended
 # path). Yocto/scripts/configure-build.sh generates a System Device Tree from
@@ -29,7 +29,7 @@
 APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=1536M"
 
 # Hostname (overrides amd-edf default of "amd-edf").
-hostname:pn-base-files = "zcu111-fpgadrv-2025-2"
+hostname:pn-base-files = "uzev-fpgadrv-2025-2"
 
 # Reserve space in the rootfs for the toolset we install at image time.
 IMAGE_ROOTFS_EXTRA_SPACE = "524288"

@@ -33,11 +33,13 @@ YOCTO_IMAGE_RECIPE = edf-linux-disk-image
 
 # valid targets (template name)
 # UPDATER START
+uzev_target := zynqMP
 zcu104_target := zynqMP
 zcu106_hpc0_target := zynqMP
 zcu106_hpc1_target := zynqMP
 zcu111_target := zynqMP
 zcu208_target := zynqMP
+zcu216_target := zynqMP
 # UPDATER END
 
 TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
@@ -45,31 +47,18 @@ TARGET_LIST := $(sort $(patsubst %_target,%,$(filter %_target,$(.VARIABLES))))
 # target board (the first word in the target name, before the first underscore)
 TARGET_BOARD = $(word 1,$(subst _, ,$(TARGET)))
 
-# Build flow per target.
-#   gen-machineconf   - AMD's recommended `parse-sdt` path: generate a custom
-#                       MACHINE (PS + PL device tree) directly from the project
-#                       XSA, so PS changes made in Vivado flow through into the
-#                       Yocto build automatically.
-#   validated-machine - legacy path: pin a pre-validated AMD MACHINE and convey
-#                       PL hardware via a hand-curated system-user.dtsi overlay.
-# List the targets that use the gen-machineconf flow here; everything else
-# defaults to validated-machine.
-GEN_MACHINECONF_TARGETS := zcu104
-ifneq ($(filter $(TARGET),$(GEN_MACHINECONF_TARGETS)),)
-	FLOW = gen-machineconf
-else
-	FLOW = validated-machine
-endif
+# All targets are built with AMD's recommended gen-machineconf `parse-sdt`
+# flow: configure-build.sh generates a System Device Tree from the project XSA
+# and gen-machineconf produces a custom MACHINE (PS + PL device tree) directly
+# from the hardware, so PS changes made in Vivado flow through into the Yocto
+# build automatically. There is no per-target flow selection.
 
-# Vivado paths (XSA is the hardware handoff from the Vivado project).
-# The boot artifact differs per architecture:
-#   - zynq / zynqMP: .bit (PL bitstream, embedded into BOOT.BIN via xilinx-bootbin)
-#   - versal: .pdi   (PDI replaces the AMD reference base PDI on Versal)
+# Vivado paths. The XSA is the only hardware handoff the Yocto build needs:
+# sdtgen extracts the PL boot artifact (.bit/.pdi) from it into the SDT, and
+# gen-machineconf wires it up automatically.
 VIV_DIR = $(YOCTO_ROOT)/../Vivado
 VIV_PRJ_DIR = $(VIV_DIR)/$(TARGET)
 VIV_XSA = $(VIV_PRJ_DIR)/$(BD_NAME)_wrapper.xsa
-VIV_BIT = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.bit
-VIV_PDI = $(VIV_PRJ_DIR)/$(TARGET).runs/impl_1/$(BD_NAME)_wrapper.pdi
 
 # yocto paths and files
 YOCTO_DIR = $(YOCTO_ROOT)/$(TARGET)
@@ -95,27 +84,9 @@ YOCTO_LOCK = $(YOCTO_ROOT)/.$(TARGET).lock
 
 BSP_DIR = $(YOCTO_ROOT)/bsp/$(TARGET_BOARD)
 
-# Macros to read the per-target fields
-define get_template_name
-$(word 1,$($(1)_target))
-endef
-
-# Offline sstate-cache (optional)
+# Offline sstate-cache (optional). configure-build.sh auto-detects which arch
+# subdirs exist under this path and wires one SSTATE_MIRRORS entry per arch.
 SSTATE_PATH ?= $(shell test -e $(YOCTO_OFFLINE) && head -n 1 $(YOCTO_OFFLINE))
-
-ifeq ($(call get_template_name,$(TARGET)), zynqMP)
-	SSTATE_ARCH = aarch64
-	VIV_BOOTFILE = $(VIV_BIT)
-else ifeq ($(call get_template_name,$(TARGET)), versal)
-	SSTATE_ARCH = aarch64
-	VIV_BOOTFILE = $(VIV_PDI)
-else ifeq ($(call get_template_name,$(TARGET)), zynq)
-	SSTATE_ARCH = arm
-	VIV_BOOTFILE = $(VIV_BIT)
-else ifeq ($(call get_template_name,$(TARGET)), microblaze)
-	SSTATE_ARCH = microblaze
-	VIV_BOOTFILE = $(VIV_BIT)
-endif
 
 # Final build products produced by bitbake (deployed into images/linux/ by package-output.sh).
 # EDF produces a raw `Image` (not a u-boot-wrapped image.ub) and a `rootfs.wic.xz`
@@ -194,11 +165,7 @@ $(YOCTO_CFG_DONE): $(YOCTO_HW_XSA) $(BSP_DIR)/conf/local.conf.append | $(YOCTO_S
 		"$(TARGET)" \
 		"$(BSP_DIR)" \
 		"$(YOCTO_HW_XSA)" \
-		"$(SSTATE_PATH)" \
-		"$(SSTATE_ARCH)" \
-		"$(VIV_BOOTFILE)" \
-		"$(call get_template_name,$(TARGET))" \
-		"$(FLOW)"
+		"$(SSTATE_PATH)"
 	touch $@
 
 $(YOCTO_HW_XSA): $(VIV_XSA) | $(YOCTO_SETUP)

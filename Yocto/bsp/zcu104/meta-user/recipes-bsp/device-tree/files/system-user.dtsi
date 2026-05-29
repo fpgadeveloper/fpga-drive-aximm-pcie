@@ -3,6 +3,12 @@
  * gen-machineconf / lopper-generated cortexa53-linux.dts (which already
  * carries the PS config and the PL xilinx_xdma PCIe node from the XSA).
  *
+ * UART (ttyPS console):
+ *   The 2025.2 lopper/gen-machineconf flow emits port-number = <0> on BOTH
+ *   uart0 (ff000000) and uart1 (ff010000), so the ttyPS0/ttyPS1 assignment is
+ *   left to probe order. This board's console is on psu_uart_0, so pin the
+ *   port numbers (and serial aliases) explicitly. Mirrors the PetaLinux BSPs.
+ *
  * SD card (sdhci1 / ff170000.mmc):
  *   The Vivado design configures the SD interface as "custom"
  *   (xlnx,sd-board-interface = "custom"), so the XSA-derived SDT exports a
@@ -15,6 +21,24 @@
  *   the stock 2025.2 xilinx-zcu104 BSP, both proven on this hardware. PCIe
  *   NVMe (not the SD card) is the performance path, so this is harmless.
  */
+
+&uart0 {
+   port-number = <0>;
+};
+
+&uart1 {
+   port-number = <1>;
+};
+
+/ {
+   aliases {
+      serial0 = &uart0;
+      serial1 = &uart1;
+   };
+   chosen {
+      stdout-path = "serial0:115200n8";
+   };
+};
 
 &sdhci1 {
    no-1-8-v;
