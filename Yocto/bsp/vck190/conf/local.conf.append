@@ -1,0 +1,41 @@
+# FPGA Drive FMC reference design overrides for VCK190, EDF flow.
+#
+# This board uses the gen-machineconf "parse-sdt" flow (AMD's recommended
+# path), the same flow now used for every zynqMP target.
+# Yocto/scripts/configure-build.sh generates a System Device Tree from the
+# Vivado XSA and runs gen-machineconf to produce a *custom* MACHINE
+# (fpgadrv-<target>) whose device tree -- PS, PL, and the per-domain DTS the
+# PLM/PSM firmware build from -- is derived directly from the hardware.
+# MACHINE is therefore NOT pinned here; it is set by configure-build.
+# (bsp/vck190 is shared by vck190_fmcp1 and vck190_fmcp2; each gets its own
+# MACHINE/SDT from its own XSA.)
+#
+# WHY parse-sdt for Versal (vs. the earlier pinned-MACHINE attempt): the
+# AMD-validated MACHINE (versal-vck190-sdt-seg) builds the PLM from a
+# hand-curated per-domain CONFIG_DTFILE that describes AMD's reference vck190,
+# not our PL -- so the PLM had the wrong NPI/NoC tables and boot failed at
+# PLM Error 0x01410000 on the post-bitstream rnpi partition. parse-sdt runs
+# lopper on OUR SDT to generate the per-domain DTS, so the PLM is built
+# against our actual design. (See the versal-yocto-handoff investigation.)
+#
+# Consequences of the parse-sdt flow:
+#   - The PL hardware (xilinx_qdma PCIe Root Ports) is captured by the SDT's
+#     pl.dtsi and lopper-merged into the generated Linux device tree, so no
+#     hand-curated PL system-user.dtsi is needed. system-user.dtsi carries
+#     only SoC-side board fixups.
+#   - The Vivado boot artifact (.pdi) is extracted into the SDT and wired
+#     automatically; because no PL overlay is requested, fpga-overlay is left
+#     out of MACHINE_FEATURES and the bitstream/PDI is embedded into BOOT.BIN.
+#   - DISTRO is set by the amd-edf template; IMAGE_FSTYPES by edf-linux-disk-image.
+#   - The Versal EDF wks (edf-disk-single-rootfs-efi.wks) partitions the card
+#     as esp(vfat)/storage(vfat)/root(ext4); bootimg-efi-amd populates the esp
+#     with BOOT.BIN + systemd-boot directly (no manual BOOT.BIN copy step).
+
+# CMA pool needed for PCIe DMA from large NVMe transfers.
+APPEND:append = " earlycon clk_ignore_unused rw rootwait cma=1536M"
+
+# Hostname (overrides amd-edf default of "amd-edf").
+hostname:pn-base-files = "vck190-fpgadrv-2025-2"
+
+# Reserve space in the rootfs for the toolset we install at image time.
+IMAGE_ROOTFS_EXTRA_SPACE = "524288"

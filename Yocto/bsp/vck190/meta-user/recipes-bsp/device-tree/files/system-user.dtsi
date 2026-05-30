@@ -1,0 +1,30 @@
+/*
+ * SoC-side / PL device-tree fixups for VCK190, layered on top of the
+ * gen-machineconf / lopper-generated <...>-linux.dts (which already carries
+ * the PS config and the PL xilinx_qdma PCIe Root Ports from the XSA via
+ * pl.dtsi). Scoped to the Linux domain by device-tree.bbappend.
+ *
+ * PCIe outbound-window fix (qdma_0 / qdma_1 `ranges`):
+ *   The SDT/lopper-generated `ranges` set the PCI base address to 0x0 (i.e.
+ *   PCI 0x0 -> CPU 0xa8000000), but the Versal QDMA bridge forwards CPU
+ *   addresses 1:1 to the PCIe bus. With the mismatched ranges the kernel
+ *   assigns endpoint BARs near PCI 0x0 while CPU accesses through the window
+ *   land at PCI 0xa8000000 -> nothing responds -> AXI decode error surfaces
+ *   as an Asynchronous SError and the kernel panics in nvme_pci_enable.
+ *   PetaLinux's HSI-generated DT uses 1:1 ranges (PCI addr == CPU addr); we
+ *   override to match. (Confirmed on hardware: with this fix both QDMA Root
+ *   Ports enumerate and both NVMe SSDs probe cleanly.)
+ *
+ *   Format: <pci_addr(3 cells) cpu_addr(2 cells) size(2 cells)>; first entry
+ *   is the 32-bit MEM window, second is the 64-bit (prefetchable) window.
+ */
+
+&qdma_0 {
+	ranges = <0x02000000 0x0 0xa8000000  0x0 0xa8000000  0x0 0x04000000>,
+		 <0x43000000 0x4 0x80000000  0x4 0x80000000  0x0 0x40000000>;
+};
+
+&qdma_1 {
+	ranges = <0x02000000 0x0 0xac000000  0x0 0xac000000  0x0 0x04000000>,
+		 <0x43000000 0x4 0xc0000000  0x4 0xc0000000  0x0 0x40000000>;
+};

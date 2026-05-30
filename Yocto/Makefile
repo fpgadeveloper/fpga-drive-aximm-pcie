@@ -34,6 +34,7 @@ YOCTO_IMAGE_RECIPE = edf-linux-disk-image
 # valid targets (template name)
 # UPDATER START
 uzev_target := zynqMP
+vck190_fmcp1_target := versal
 zcu104_target := zynqMP
 zcu106_hpc0_target := zynqMP
 zcu106_hpc1_target := zynqMP
