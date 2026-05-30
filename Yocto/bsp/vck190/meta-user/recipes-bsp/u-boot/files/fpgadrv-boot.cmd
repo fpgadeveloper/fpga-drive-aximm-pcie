@@ -19,6 +19,27 @@
 
 setenv bootargs 'earlycon=pl011,mmio32,0xff000000 console=ttyAMA0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=1536M'
 
+# Enable the FMC VADJ rail before booting Linux. On the VCK190/VMK180 the IR38164
+# buck regulator (U185, I2C addr 0x1E, behind the 0x74 mux on I2C bus 0) supplies
+# VADJ_FMC. Normally the system controller would enable it, but doing it here in
+# U-Boot guarantees VADJ is up before Linux brings the PCIe/QDMA link out of reset
+# and works even when the system controller is not used/configured. This mirrors
+# the PetaLinux platform-top.h vadj_1v5_en sequence and sets VADJ to 1.5V.
+echo "FPGA Drive FMC: enabling VADJ (1.5V) via IR38164"
+i2c dev 0
+i2c mw 0x74 0x00.0 0x01 0x1
+i2c mw 0x1E 0x24.1 0x01 0x1
+i2c mw 0x1E 0x25.1 0x80 0x1
+i2c mw 0x1E 0x3A.1 0x01 0x1
+i2c mw 0x1E 0x3B.1 0xF3 0x1
+i2c mw 0x1E 0x3D.1 0x01 0x1
+i2c mw 0x1E 0x3E.1 0xF3 0x1
+i2c mw 0x1E 0x3F.1 0x00 0x1
+i2c mw 0x1E 0x40.1 0x00 0x1
+i2c mw 0x1E 0x41.1 0x00 0x1
+i2c mw 0x1E 0x42.1 0x00 0x1
+i2c mw 0x1E 0x22.1 0x80 0x1
+
 echo "FPGA Drive FMC: loading Image from esp (mmc 0:1)"
 if fatload mmc 0:1 ${kernel_addr_r} Image; then
 	booti ${kernel_addr_r} - 0x1000
