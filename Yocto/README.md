@@ -4,13 +4,15 @@ This folder builds Linux images for the FPGA Drive FMC reference designs
 using the AMD Yocto / Embedded Development Framework (EDF) flow — the
 announced successor to PetaLinux Tools.
 
-> **Status**: all seven Zynq UltraScale+ targets build end-to-end via the
-> `gen-machineconf parse-sdt` flow: `zcu104`, `zcu106_hpc0`, `zcu106_hpc1`,
-> `zcu111`, `zcu208`, `zcu216`, and `uzev` (Avnet UltraZed-EV). Validated on
-> hardware (Linux boots, the PL bitstream loads from BOOT.BIN, the
-> `xilinx_pcie_dma` Root Ports come up, M.2 NVMe SSDs enumerate at PCIe
-> Gen3 x4) on `zcu104`, `zcu106_hpc0`, and `uzev`; the rest are build-tested
-> and expected to behave identically.
+> **Status**: all seven Zynq UltraScale+ targets plus the Versal
+> `vck190_fmcp1` build end-to-end via the `gen-machineconf parse-sdt` flow:
+> `zcu104`, `zcu106_hpc0`, `zcu106_hpc1`, `zcu111`, `zcu208`, `zcu216`,
+> `uzev` (Avnet UltraZed-EV), and `vck190_fmcp1`. Validated on hardware (Linux
+> boots, the PL bitstream/PDI loads from BOOT.BIN, the PL PCIe Root Ports come
+> up, M.2 NVMe SSDs enumerate at PCIe Gen3 x4) on `zcu104`, `zcu106_hpc0`,
+> `uzev`, and `vck190_fmcp1` (which boots hands-free to a Linux login with both
+> QDMA Root Ports and both NVMe up); the rest are build-tested and expected to
+> behave identically.
 
 ## How it works: the parse-sdt flow
 
@@ -27,11 +29,13 @@ XSA  --sdtgen-->  System Device Tree  --gen-machineconf parse-sdt-->  MACHINE + 
 `scripts/configure-build.sh` runs `xsct`/`sdtgen` on the XSA to produce a
 System Device Tree (which includes `pl.dtsi`, the PL hardware extracted from
 the design), then runs `gen-machineconf parse-sdt` to emit
-`conf/machine/fpgadrv-<target>.conf` plus the lopper-pruned
-`cortexa53-linux.dts`. The PL `xilinx_pcie_dma` Root Ports therefore come from
-the design's own SDT — no hand-curated device tree. Because no PL overlay is
-requested, the Vivado bitstream is embedded into `BOOT.BIN` (the FSBL programs
-the PL at boot, before Linux/PCIe come up).
+`conf/machine/fpgadrv-<target>.conf` plus the lopper-pruned per-domain device
+trees (`cortexa53-linux.dts` on ZynqMP, `cortexa72-linux.dts` on Versal). The
+PL PCIe Root Ports — `xilinx_pcie_dma` (XDMA) on ZynqMP, `xilinx_qdma` (QDMA)
+on Versal — therefore come from the design's own SDT, no hand-curated device
+tree. Because no PL overlay is requested, the Vivado boot artifact (the `.bit`
+on ZynqMP, the `.pdi` on Versal) is embedded into `BOOT.BIN` (the FSBL/PLM
+programs the PL at boot, before Linux/PCIe come up).
 
 The only per-board hand-written file is `system-user.dtsi`, which carries
 SoC-side board quirks the XSA doesn't encode (see "Per-board fixups" below).
@@ -109,23 +113,39 @@ quirks, not PL hardware:
   mapping (for the PS-GTR-routed PCIe/SATA/USB3), Ethernet PHY, the I2C
   power/clock tree, eMMC, and SATA. It is ported from the proven PetaLinux
   `uzev` BSP.
+* **`vck190_fmcp1` (Versal)**: the SDT/lopper-generated `xilinx_qdma` PCIe
+  `ranges` set the PCI base to `0x0`, but the QDMA bridge forwards CPU
+  addresses to the bus 1:1. Left as-is, the kernel places endpoint BARs near
+  PCI `0x0` while CPU window accesses land elsewhere, so the first NVMe BAR
+  access faults with an Asynchronous SError (kernel panic in
+  `nvme_pci_enable`). `system-user.dtsi` overrides both QDMA `ranges` to a 1:1
+  PCI↔CPU mapping (matching PetaLinux's HSI device tree). Versal also carries
+  U-Boot bbappends — see "Versal boot" below.
 
 ## Flashing to SD card
 
-The build produces a full wic disk image (`rootfs.wic.xz`) with a 4-partition
-layout — `esp` (vfat), `boot` (ext4), `root` (ext4), and `storage` (vfat).
-Flash the wic image to the SD card's raw device; per-partition file copies do
-**not** work because the EDF `boot.scr` boots from the device it finds the
-script on and sets `root=/dev/mmcblk${devnum}p3` dynamically.
+The build produces a full wic disk image (`rootfs.wic.xz`). Flash it to the SD
+card's raw device; per-partition file copies do **not** work because the boot
+script boots from the device it finds itself on.
 
-One extra step is needed after the flash: the EDF wks file for ZynqMP leaves
-the `esp` partition empty (it was designed for Versal + systemd-boot), but the
-ZynqMP BootROM reads `BOOT.BIN` from the first FAT partition. So we flash the
-wic image, then drop `BOOT.BIN` onto `esp` by hand.
+The post-flash step differs by SoC family:
+
+* **ZynqMP** (4-partition layout — `esp` (vfat), `boot` (ext4), `root` (ext4),
+  `storage` (vfat)): the EDF wks leaves the `esp` partition empty, but the
+  ZynqMP BootROM reads `BOOT.BIN` from the first FAT partition — so after
+  flashing you must drop `BOOT.BIN` onto `esp` by hand (step 4 below).
+* **Versal** `vck190_fmcp1` (3-partition layout — `esp` (vfat), `storage`
+  (vfat), `root` (ext4)): **no manual step** — this BSP places both `BOOT.BIN`
+  and a `boot.scr` onto the `esp` automatically (via `IMAGE_EFI_BOOT_FILES`),
+  so the flashed card boots hands-free. Flash the wic (steps 1–3), then skip
+  to step 5. (The Versal BootROM FAT-boots `BOOT.BIN`; U-Boot's bootcmd, set by
+  a bsp config fragment, runs the `boot.scr`, which loads `Image` and boots
+  with the device tree the PLM loaded — see the `bsp/vck190` u-boot bbappends.)
 
 > On `uzev` the on-SOM eMMC enumerates as `mmcblk0` and the SD card as
-> `mmcblk1`; the dynamic `root=/dev/mmcblk${devnum}p3` in the boot script
-> handles this automatically (rootfs mounts on `mmcblk1p3`).
+> `mmcblk1`; the dynamic `root=/dev/mmcblk${devnum}p3` in the ZynqMP boot
+> script handles this automatically (rootfs mounts on `mmcblk1p3`). The Versal
+> `boot.scr` uses a fixed `root=/dev/mmcblk0p3`.
 
 ### 1. Identify the SD card device — carefully
 
@@ -176,7 +196,10 @@ xzcat Yocto/<TARGET>/images/linux/rootfs.wic.xz \
     | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
-### 4. Install BOOT.BIN on the esp partition
+### 4. Install BOOT.BIN on the esp partition (ZynqMP only)
+
+> Skip this step on Versal `vck190_fmcp1` — its `BOOT.BIN` and `boot.scr` are
+> already on the `esp` (placed by the build). Go straight to step 5.
 
 ```
 sudo partprobe /dev/sdX
@@ -249,7 +272,9 @@ Yocto/
     <board>/                one per board (zcu106 is shared by hpc0 + hpc1)
       conf/
         local.conf.append   board overrides (hostname, kernel cmdline)
-      meta-user/            Yocto layer: kernel cfg, system-user.dtsi, image bbappend
+      meta-user/            Yocto layer: kernel cfg, system-user.dtsi, image
+                            bbappend (Versal also adds u-boot bbappends: a
+                            boot.scr + a CONFIG_BOOTCOMMAND override)
   <TARGET>/                 (gitignored) per-target workspace built by make
   tools/                    (gitignored) helper checkouts
   logs/                     (gitignored) build logs
