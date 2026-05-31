@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Override the EDF default U-Boot bootcmd so the board auto-boots our boot.scr
 # off the esp instead of dropping into the (incomplete) EFI bootmenu. The
 # override lives in a kconfig fragment; see files/fpgadrv-bootcmd.cfg. EDF's own

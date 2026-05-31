@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
 # Initialize a per-target Yocto workspace using Google's `repo` tool against
 # the AMD yocto-manifests repository. Idempotent: re-running on an already-
 # initialized workspace is a no-op (no resync).

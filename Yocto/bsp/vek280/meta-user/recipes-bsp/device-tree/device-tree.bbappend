@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Board-level device-tree fixups layered on top of the gen-machineconf /
 # lopper-generated CONFIG_DTFILE (conf/dts/fpgadrv-<target>/<...>-linux.dts).
 #

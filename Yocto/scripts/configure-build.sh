@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
 # Configure a Yocto workspace's build/ directory using AMD's recommended
 # gen-machineconf "parse-sdt" flow (the only supported flow):
 #

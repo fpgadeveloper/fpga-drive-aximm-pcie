@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Opsero Electronic Design Inc. 2025
 #
 # This Makefile can be used to build Linux images using the AMD Yocto / EDF

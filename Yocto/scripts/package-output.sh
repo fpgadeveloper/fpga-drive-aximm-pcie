@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
 # Gather bitbake's deploy outputs into <WORKSPACE>/images/linux/ so the
 # top-level packaging stage (../Makefile) can find them in the same
 # canonical location used by PetaLinux builds.

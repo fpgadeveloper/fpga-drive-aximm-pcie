@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # FPGA Drive FMC reference-design packages (ported from
 # PetaLinux/bsp/zcu111/project-spec/configs/rootfs_config — only the
 # explicitly-enabled CONFIG_<pkg>=y entries are reproduced here).

@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # FPGA Drive FMC reference design U-Boot boot script (Versal, EDF flow).
 #
 # Why a boot.scr at all: the EDF Versal image is wired for systemd-boot/EFI,

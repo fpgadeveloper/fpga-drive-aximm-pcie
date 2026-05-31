@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Replace the stock EDF boot.cmd with our own. The stock edf-linux-mmc-boot.cmd
 # ext4loads the kernel from partition 2 and boots with U-Boot's control FDT --
 # neither matches our Versal layout (esp/storage/root) nor our need to use the

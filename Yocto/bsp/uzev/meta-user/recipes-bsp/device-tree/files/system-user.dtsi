@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+
 /*
  * Board fixups for the Avnet UltraZed-EV Carrier (UZ7EV), layered on top of
  * the gen-machineconf / lopper-generated cortexa53-linux.dts (which carries

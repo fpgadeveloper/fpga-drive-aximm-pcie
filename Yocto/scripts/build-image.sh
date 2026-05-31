@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
 # Run bitbake in a configured Yocto workspace.
 #
 # Args:

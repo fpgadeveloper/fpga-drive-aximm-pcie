@@ -1,3 +1,7 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # FPGA Drive FMC reference-design packages
 #
 # edf-linux-disk-image uses IMAGE_INSTALL = "..." (assignment) and pulls in
