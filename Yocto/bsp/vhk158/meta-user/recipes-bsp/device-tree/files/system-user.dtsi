@@ -1,0 +1,33 @@
+/*
+ * SoC-side / PL device-tree fixups for VHK158, layered on top of the
+ * gen-machineconf / lopper-generated <...>-linux.dts (which already carries
+ * the PS config and the PL xilinx_qdma PCIe Root Port from the XSA via
+ * pl.dtsi). Scoped to the Linux domain by device-tree.bbappend.
+ *
+ * VHK158 is a single-QDMA design (one PCIe Root Port -> SSD1), so only qdma_0
+ * is overridden.
+ *
+ * PCIe outbound-window fix (qdma_0 `ranges`):
+ *   The Versal QDMA bridge forwards CPU addresses 1:1 to the PCIe bus, but the
+ *   SDT/lopper-generated `ranges` set the PCI base to 0x0, so endpoint BAR
+ *   accesses fault (Asynchronous SError, panic in nvme_pci_enable). Identity-
+ *   map both the 32-bit MEM and 64-bit (prefetchable) windows to match
+ *   PetaLinux's HSI DT.
+ *
+ * reg / reg-names reorder:
+ *   The upstream xilinx-xdma-pcie driver's parse_dt takes reg index 0 as the
+ *   "cfg" region, but pl.dtsi on this board emits reg-names = "breg","cfg"
+ *   (breg at index 0). Restate reg with cfg first so the driver finds the ECAM
+ *   window. Ported verbatim from PetaLinux/bsp/vhk158; the cfg/breg base
+ *   addresses are fixed by the Versal CPM/PL map. (Verify against the generated
+ *   linux.dts if the QDMA fails to probe.)
+ *
+ *   ranges format: <pci_addr(3) cpu_addr(2) size(2)>.
+ */
+
+&qdma_0 {
+	reg = <0x0 0x90000000 0x0 0x10000000>, <0x0 0x80000000 0x0 0x10000000>;
+	reg-names = "cfg", "breg";
+	ranges = <0x02000000 0x00 0xa8000000  0x00 0xa8000000  0x00 0x08000000>,
+		 <0x43000000 0x04 0x80000000  0x04 0x80000000  0x00 0x40000000>;
+};

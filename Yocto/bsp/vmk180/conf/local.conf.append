@@ -1,4 +1,4 @@
-# FPGA Drive FMC reference design overrides for VCK190, EDF flow.
+# FPGA Drive FMC reference design overrides for VMK180, EDF flow.
 #
 # This board uses the gen-machineconf "parse-sdt" flow (AMD's recommended
 # path), the same flow now used for every zynqMP target.
@@ -7,7 +7,7 @@
 # (fpgadrv-<target>) whose device tree -- PS, PL, and the per-domain DTS the
 # PLM/PSM firmware build from -- is derived directly from the hardware.
 # MACHINE is therefore NOT pinned here; it is set by configure-build.
-# (bsp/vck190 is shared by vck190_fmcp1 and vck190_fmcp2; each gets its own
+# (bsp/vmk180 is shared by vmk180_fmcp1 and vmk180_fmcp2; each gets its own
 # MACHINE/SDT from its own XSA.)
 #
 # Consequences of the parse-sdt flow:
@@ -27,7 +27,7 @@
 APPEND:append = " earlycon clk_ignore_unused rw rootwait cma=1536M"
 
 # Hostname (overrides amd-edf default of "amd-edf").
-hostname:pn-base-files = "vck190-fpgadrv-2025-2"
+hostname:pn-base-files = "vmk180-fpgadrv-2025-2"
 
 # Reserve space in the rootfs for the toolset we install at image time.
 IMAGE_ROOTFS_EXTRA_SPACE = "524288"
