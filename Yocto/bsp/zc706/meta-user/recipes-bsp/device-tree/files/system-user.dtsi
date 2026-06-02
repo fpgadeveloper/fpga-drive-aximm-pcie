@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+
+/*
+ * SoC-side board fixups for the ZC706 (Zynq-7000), layered on top of the
+ * gen-machineconf / lopper-generated cortexa9-linux.dts (which already carries
+ * the PS config and the PL axi_pcie Gen2 Root Port from the XSA). Scoped to the
+ * Linux domain by device-tree.bbappend.
+ *
+ * Disable PS GEM0: this reference design does not use the PS Ethernet, and the
+ * pcw.dtsi emitted for these boards leaves gem0 without a phy-handle, which
+ * makes 2025.x u-boot data-abort while probing it. Mirrors the PetaLinux BSP.
+ *
+ * Kernel command line: the Zynq-7000 EDF boot.scr (meta-xilinx u-boot-xlnx-scr)
+ * reads bootargs from /chosen/bootargs and only appends root=. Unlike the
+ * zynqMP/Versal flow, the zynq parse-sdt device tree does NOT emit a default
+ * bootargs, so /chosen/bootargs is empty -> the kernel boots with no console
+ * and no earlycon and appears to hang at "Starting kernel ..." (silent). Set it
+ * here. console=ttyPS0 is serial0 (PS UART1 @ 0xe0001000, the board's console);
+ * earlycon gives output before the UART driver probes. cma sized for the 1 GB
+ * board. root= is appended by the boot.scr (mmcblk0p3 on the EDF wks).
+ *
+ * Root compatible: the parse-sdt/lopper board merge overwrites the root
+ * `compatible` with only the board string (e.g. "xlnx,zc706") and drops the
+ * SoC-family "xlnx,zynq-7000" that the base zynq-7000.dtsi sets. The kernel's
+ * Zynq machine matches on "xlnx,zynq-7000"; without it the kernel falls back to
+ * the generic ARM DT machine ("Hardware name: Generic DT based system"), so
+ * zynq_early_slcr_init() never runs, the SLCR base (slcr->data) stays NULL, and
+ * the clock-controller PLL setup NULL-derefs -> panic in clk_register_zynq_pll
+ * during of_clk_init. Put "xlnx,zynq-7000" back. The board-specific compatible
+ * is informational (no driver matches it), so replacing it is harmless.
+ */
+
+/ {
+	compatible = "xlnx,zynq-7000";
+
+	chosen {
+		bootargs = "earlycon console=ttyPS0,115200 clk_ignore_unused cma=512M";
+	};
+};
+
+&gem0 {
+	status = "disabled";
+};

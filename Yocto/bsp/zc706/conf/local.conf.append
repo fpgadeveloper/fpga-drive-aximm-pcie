@@ -1,0 +1,29 @@
+# Copyright (C) 2025-2026, Opsero Electronic Design Inc.  All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+# FPGA Drive FMC reference design overrides for the ZC706 (Zynq-7000), EDF flow.
+#
+# bsp/zc706 is shared by zc706_hpc and zc706_lpc; each gets its own MACHINE/SDT from its own Vivado XSA via
+# gen-machineconf parse-sdt (PS + PL device tree derived from hardware;
+# MACHINE is NOT pinned here).
+#
+# Zynq-7000 notes:
+#   - Boot is FSBL -> u-boot -> uImage (no PMU/PLM). KERNEL_IMAGETYPE=uImage and
+#     the boot.scr come from meta-xilinx's zynq-generic machine, so no custom
+#     boot.scr is needed (unlike Versal).
+#   - The PL axi_pcie (Gen2) Root Port comes from the SDT's pl.dtsi; the kernel
+#     gets the pcie-xilinx driver (see recipes-kernel/linux bsp.cfg).
+#   - The EDF wks partitions the SD card esp(vfat)/boot(ext4)/root(ext4), so the
+#     rootfs lives on /dev/mmcblk0p3.
+
+# Console is the Zynq PS UART (exposed to Linux as ttyPS0). CMA is kept modest:
+# these carriers have 1 GB DDR, so a large CMA pool isn't available; 512M
+# matches the PetaLinux BSP.
+APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=512M"
+
+# Hostname (overrides amd-edf default of "amd-edf").
+hostname:pn-base-files = "zc706-fpgadrv-2025-2"
+
+# Reserve space in the rootfs for the toolset we install at image time.
+IMAGE_ROOTFS_EXTRA_SPACE = "524288"

@@ -2,6 +2,11 @@
 
 ## 2025.2 Changes
 
+* Added a Yocto / EDF build flow (`Yocto/`) — AMD's Embedded Development
+  Framework, the successor to PetaLinux — driven by a single
+  `make yocto TARGET=<board>` command via the `gen-machineconf parse-sdt`
+  flow, covering the Zynq-7000, Zynq UltraScale+ and Versal targets. The
+  PetaLinux flow for this repository will be retired after 2025.2.
 * Bumped Vivado, Vitis and PetaLinux requirement to 2025.2
 * Migrated Vitis flow to the universal Python build driver
   (`Vitis/py/build-vitis.py` + `args.json`)
@@ -17,14 +22,6 @@
   (`meta-xilinx-tools/recipes-bsp/uboot-device-tree/`) for every
   target so U-Boot sees the FMC-side PCIe bridge
 
-## 2022.1 Changes
-
-* Added Makefiles to improve the build experience for Linux users
-* Consolidated Vivado batch files (user is prompted to select target design)
-* Vitis build script now creates a separate workspace for each target design (improved user experience)
-* Converted documentation to markdown (from reStructuredText)
-* Removed the unnecessary postfix "pcie" from all designs
-
 ## 2024.1 Changes
 
 * Removed PetaLinux support for pure FPGA platforms (eg. KC705)
@@ -34,3 +31,11 @@
 * Improved documentation, centralized targed design info to JSON file
 * Removed single slot designs for platforms that can support two slots
 * Removed "dual" postfix from dual designs
+
+## 2022.1 Changes
+
+* Added Makefiles to improve the build experience for Linux users
+* Consolidated Vivado batch files (user is prompted to select target design)
+* Vitis build script now creates a separate workspace for each target design (improved user experience)
+* Converted documentation to markdown (from reStructuredText)
+* Removed the unnecessary postfix "pcie" from all designs

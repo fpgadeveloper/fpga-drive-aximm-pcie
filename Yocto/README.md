@@ -4,16 +4,6 @@ This folder builds Linux images for the FPGA Drive FMC reference designs
 using the AMD Yocto / Embedded Development Framework (EDF) flow — the
 announced successor to PetaLinux Tools.
 
-> **Status**: all seven Zynq UltraScale+ targets plus the Versal
-> `vck190_fmcp1` build end-to-end via the `gen-machineconf parse-sdt` flow:
-> `zcu104`, `zcu106_hpc0`, `zcu106_hpc1`, `zcu111`, `zcu208`, `zcu216`,
-> `uzev` (Avnet UltraZed-EV), and `vck190_fmcp1`. Validated on hardware (Linux
-> boots, the PL bitstream/PDI loads from BOOT.BIN, the PL PCIe Root Ports come
-> up, M.2 NVMe SSDs enumerate at PCIe Gen3 x4) on `zcu104`, `zcu106_hpc0`,
-> `uzev`, and `vck190_fmcp1` (which boots hands-free to a Linux login with both
-> QDMA Root Ports and both NVMe up); the rest are build-tested and expected to
-> behave identically.
-
 ## How it works: the parse-sdt flow
 
 The build generates a **custom Yocto MACHINE directly from the Vivado XSA** —
@@ -130,10 +120,12 @@ script boots from the device it finds itself on.
 
 The post-flash step differs by SoC family:
 
-* **ZynqMP** (4-partition layout — `esp` (vfat), `boot` (ext4), `root` (ext4),
-  `storage` (vfat)): the EDF wks leaves the `esp` partition empty, but the
-  ZynqMP BootROM reads `BOOT.BIN` from the first FAT partition — so after
-  flashing you must drop `BOOT.BIN` onto `esp` by hand (step 4 below).
+* **ZynqMP and Zynq-7000** (4-partition layout — `esp` (vfat), `boot` (ext4),
+  `root` (ext4), `storage` (vfat)): the EDF wks leaves the `esp` partition
+  empty, and `BOOT.BIN` is installed onto the ext4 `boot` partition (which the
+  BootROM cannot read). The BootROM reads `BOOT.BIN` from the first FAT
+  partition (`esp`) — so after flashing you must drop `BOOT.BIN` onto `esp` by
+  hand (step 4 below).
 * **Versal** `vck190_fmcp1` (3-partition layout — `esp` (vfat), `storage`
   (vfat), `root` (ext4)): **no manual step** — this BSP places both `BOOT.BIN`
   and a `boot.scr` onto the `esp` automatically (via `IMAGE_EFI_BOOT_FILES`),
@@ -196,10 +188,10 @@ xzcat Yocto/<TARGET>/images/linux/rootfs.wic.xz \
     | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
-### 4. Install BOOT.BIN on the esp partition (ZynqMP only)
+### 4. Install BOOT.BIN on the esp partition (ZynqMP and Zynq-7000)
 
-> Skip this step on Versal `vck190_fmcp1` — its `BOOT.BIN` and `boot.scr` are
-> already on the `esp` (placed by the build). Go straight to step 5.
+> Skip this step on Versal — its `BOOT.BIN` and `boot.scr` are already on the
+> `esp` (placed by the build). Go straight to step 5.
 
 ```
 sudo partprobe /dev/sdX

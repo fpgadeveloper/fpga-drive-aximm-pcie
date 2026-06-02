@@ -2,11 +2,11 @@
 
 This section is intended for users who want to modify the reference
 designs — adding IP to the block design, changing constraints, modifying
-the standalone application, or adding packages or drivers to the
-PetaLinux project. It describes how the repository is laid out, how the
-Make-driven build flow works, how the Vitis and PetaLinux sides are
-organised, and what modifications have been added on top of the stock
-AMD BSPs.
+the standalone application, or adding packages or drivers to the embedded
+Linux build (PetaLinux or Yocto). It describes how the repository is laid
+out, how the Make-driven build flow works, how the Vitis, PetaLinux, and
+Yocto / EDF sides are organised, and what modifications have been added on
+top of the stock AMD BSPs.
 
 The actual *build* instructions are in [build_instructions](build_instructions);
 this section is about understanding the project well enough to modify
@@ -26,6 +26,11 @@ it.
 ├── PetaLinux/
 │   ├── Makefile               <- PetaLinux build orchestration
 │   └── bsp/                   <- Per-board BSP fragments
+│       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
+├── Yocto/
+│   ├── Makefile               <- Yocto / EDF build orchestration
+│   ├── scripts/               <- init-workspace / configure-build / build-image / package-output
+│   └── bsp/                   <- Per-board meta-user layers
 │       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
 ├── submodules/                <- Vendor board definition files (BDFs)
 ├── Vivado/
@@ -54,8 +59,8 @@ it.
 ```
 
 Per-target build outputs are written to `Vivado/<target>/`,
-`Vitis/<target>_workspace/`, and `PetaLinux/<target>/`; packaged
-boot-image zips are written to `bootimages/`. None of these are
+`Vitis/<target>_workspace/`, `PetaLinux/<target>/`, and `Yocto/<target>/`;
+packaged boot-image zips are written to `bootimages/`. None of these are
 committed.
 
 There is no port-config overlay in this repository — the FPGA Drive
@@ -74,8 +79,10 @@ boards with multiple FMC connectors, the connector:
 
 Examples: `uzev`, `vck190_fmcp1`, `zcu106_hpc0`, `kc705_hpc`,
 `zc706_lpc`. The first underscore-delimited token is taken as the
-*target board* and is what `PetaLinux/Makefile` uses to select the BSP
-under `PetaLinux/bsp/<board>/`.
+*target board* and is what `PetaLinux/Makefile` and `Yocto/Makefile` use
+to select the BSP under `PetaLinux/bsp/<board>/` or `Yocto/bsp/<board>/`
+respectively. Boards with multiple connectors therefore share a BSP — for
+example `zcu106_hpc0` and `zcu106_hpc1` both use `…/bsp/zcu106/`.
 
 The complete list of valid targets is in the `UPDATER START` block of
 each Makefile and is generated from `config/data.json` (see below).
@@ -96,7 +103,7 @@ When adding or modifying a target, edit `data.json` and re-run
 
 ## Make-driven build flow
 
-There are four Makefiles in the repository, each scoped to a stage of
+There are five Makefiles in the repository, each scoped to a stage of
 the build:
 
 | Makefile              | Scope                                                                                          |
@@ -105,6 +112,7 @@ the build:
 | `./Vivado/Makefile`   | Creates the Vivado project, runs synthesis and implementation, exports the XSA.                |
 | `./Vitis/Makefile`    | Creates the Vitis workspace and platform from the XSA, builds the standalone application, packages BOOT.BIN/.mcs. |
 | `./PetaLinux/Makefile`| Creates the PetaLinux project from the XSA, applies BSP overlays, builds, packages.            |
+| `./Yocto/Makefile`    | Creates the Yocto / EDF workspace, generates a custom MACHINE from the XSA (`gen-machineconf parse-sdt`), applies the meta-user BSP, builds with bitbake, packages. |
 
 Each target is flagged in the top-level Makefile as either
 `baremetal_only` (Vitis only — all the MicroBlaze targets, since
@@ -131,6 +139,21 @@ make bootimage TARGET=t
          -> petalinux-build
          -> petalinux-package boot ...
   -> zip the resulting boot files into bootimages/
+```
+
+The Yocto / EDF flow is driven independently of the top-level `bootimage`
+cascade above, from `Yocto/Makefile`:
+
+```
+make -C Yocto yocto TARGET=t
+  -> init-workspace.sh   : repo init + repo sync of the AMD yocto-manifests (rel-v2025.2)
+  -> ensures the Vivado XSA exists (Vivado/Makefile xsa TARGET=t)
+  -> configure-build.sh  : xsct/sdtgen generates a System Device Tree from the XSA,
+                           then `gen-machineconf parse-sdt` produces a custom MACHINE
+                           (fpgadrv-t) and adds the bsp/<board>/meta-user layer
+  -> build-image.sh      : bitbake edf-linux-disk-image
+  -> package-output.sh   : gather BOOT.BIN / kernel / boot.scr / system.dtb /
+                           rootfs.wic.xz into Yocto/t/images/linux/
 ```
 
 Per-target lock files (`.<target>.lock` in each Makefile's directory)
@@ -403,7 +426,124 @@ adds U-Boot Kconfig options; `platform-top.h` overrides the U-Boot
 platform header; patches are listed in `SRC_URI:append` in
 `u-boot-xlnx_%.bbappend`.
 
+## Yocto side
+
+The Yocto / EDF flow builds an embedded Linux image with AMD's Embedded
+Development Framework — the announced successor to PetaLinux — using the
+`gen-machineconf parse-sdt` flow. It is orchestrated by `Yocto/Makefile`
+and four scripts under `Yocto/scripts/`:
+
+| Script               | Role (rough PetaLinux analogue)                                          |
+|----------------------|--------------------------------------------------------------------------|
+| `init-workspace.sh`  | `repo init` + `repo sync` of the AMD yocto-manifests (≈ `petalinux-create`) |
+| `configure-build.sh` | XSA → System Device Tree (sdtgen) → custom MACHINE via `gen-machineconf parse-sdt` (≈ importing the XSA + `petalinux-config`) |
+| `build-image.sh`     | `bitbake edf-linux-disk-image` (≈ `petalinux-build`)                     |
+| `package-output.sh`  | gather the flashable artifacts into `images/linux/` (≈ `petalinux-package`) |
+
+The step-by-step build instructions are in
+[build_instructions](build_instructions.md#build-yocto-project-in-linux)
+and in `Yocto/README.md`; this section covers how the per-board
+customization is organised.
+
+Because the MACHINE is generated from the hardware (`parse-sdt` runs
+lopper on the SDT, which carries both the PS config and the PL — the PCIe
+Root Port IP — straight from the XSA), there is no hand-maintained machine
+config and no pinned MACHINE. A PS change in Vivado flows through
+XSA → SDT → machine.conf → device tree automatically.
+
+### BSP composition
+
+`configure-build.sh` adds the board's meta-user layer at
+`Yocto/bsp/<board>/meta-user/` to `bblayers.conf`, so its bbappends and
+recipes are applied on top of the generated MACHINE. The board is selected
+by first-token match (the same rule as the PetaLinux side), so boards on
+the same chip share a BSP (`vck190_fmcp1`/`vck190_fmcp2` → `bsp/vck190`,
+`pz_7015`/`pz_7030` → `bsp/pz`); each target still gets its own
+MACHINE / SDT / device tree from its own XSA.
+
+### Layout of a Yocto board BSP
+
+```
+Yocto/bsp/<board>/
+├── conf/
+│   └── local.conf.append                     <- bootargs (APPEND), hostname, image tweaks
+└── meta-user/
+    ├── conf/
+    │   ├── layer.conf
+    │   └── petalinuxbsp.conf
+    ├── recipes-bsp/
+    │   ├── device-tree/
+    │   │   ├── device-tree.bbappend          <- injects system-user.dtsi (Linux domain only)
+    │   │   └── files/system-user.dtsi        <- board-specific Linux DT fixups
+    │   └── u-boot/                            <- (Versal only) custom boot.scr + bootcmd override
+    │       ├── u-boot-edf-scr_%.bbappend  +  files/fpgadrv-boot.cmd
+    │       └── u-boot-xlnx_%.bbappend     +  files/fpgadrv-bootcmd.cfg
+    ├── recipes-core/images/
+    │   └── edf-linux-disk-image.bbappend      <- extra rootfs packages (IMAGE_INSTALL:append)
+    └── recipes-kernel/linux/
+        ├── linux-xlnx_%.bbappend
+        └── linux-xlnx/bsp.cfg                 <- kernel Kconfig additions
+```
+
+### Adding a package to the root filesystem
+
+Append to `IMAGE_INSTALL:append` in
+`bsp/<board>/meta-user/recipes-core/images/edf-linux-disk-image.bbappend`:
+
+```
+IMAGE_INSTALL:append = " <package>"
+```
+
+### Adding a kernel config option
+
+Append the option to
+`bsp/<board>/meta-user/recipes-kernel/linux/linux-xlnx/bsp.cfg`; the
+adjacent `linux-xlnx_%.bbappend` registers it as a kernel config fragment.
+
+### Adding a device-tree fragment
+
+Edit
+`bsp/<board>/meta-user/recipes-bsp/device-tree/files/system-user.dtsi`.
+It is `#include`d onto the generated Linux device tree via
+`EXTRA_DT_INCLUDE_FILES`, **guarded to the Linux domain only** — applying
+it to the FSBL/PMU/PLM domain device trees makes `dtc` fail because those
+domains do not define the SoC peripheral labels the overrides reference.
+
+### What the Yocto BSPs change
+
+The Yocto equivalent of the PetaLinux *"what would I lose"* list below.
+On top of the stock EDF flow, the Yocto BSPs layer:
+
+* **All boards:** hostname (`local.conf.append`), the reference-design
+  rootfs packages (`edf-linux-disk-image.bbappend`), and the kernel
+  PCIe/NVMe configs (`bsp.cfg`).
+* **Zynq-7000 (pz, zc706):** `system-user.dtsi` restores the root
+  `compatible = "xlnx,zynq-7000"` (the parse-sdt board merge drops it,
+  which otherwise boots a generic machine and panics in the clock driver),
+  sets `/chosen/bootargs` (console + earlycon — the zynq DT carries no
+  default bootargs), and disables PS `gem0`. `bsp.cfg` adds
+  `CONFIG_PCIE_XILINX` + NVMe and the `CONFIG_VMSPLIT_2G` /
+  `CONFIG_PAGE_OFFSET=0x80000000` relayout needed to `ioremap` the 256 MB
+  AXI-PCIe config window.
+* **Zynq UltraScale+:** `bsp.cfg` adds `CONFIG_PCIE_XDMA_PL` + NVMe;
+  `system-user.dtsi` pins the UART `port-number`/serial aliases (so the
+  console is deterministic) and, on `zcu104`/`uzev`, caps the SD controller
+  at high-speed (the level shifter cannot sustain UHS).
+* **Versal:** `system-user.dtsi` overrides the QDMA PCIe `ranges` to a 1:1
+  identity map (the SDT sets the PCI base to 0x0, which faults NVMe BAR
+  access). The U-Boot bbappends add a custom `boot.scr` (`fpgadrv-boot.cmd`
+  — with the IR38164 VADJ-enable sequence on VCK190/VMK180/VPK120/VPK180
+  and `earlycon=pl011,mmio32`) and override `CONFIG_BOOTCOMMAND`; the image
+  bbappend places `BOOT.BIN` and `boot.scr` onto the FAT esp via
+  `IMAGE_EFI_BOOT_FILES` so the card boots hands-free.
+
+See the `Yocto/bsp/<board>/` sources and their in-file comments for the
+exact values and the rationale behind each fixup.
+
 ## Modifications layered on the stock BSPs
+
+This section describes the **PetaLinux** BSPs; the equivalent Yocto BSP
+changes are summarised under [Yocto side](#yocto-side) above.
 
 The board BSPs in this repository started as the corresponding stock
 AMD reference BSPs and have been modified in the following ways. This
@@ -512,9 +652,12 @@ the stock one?"* — it is what to re-apply if you ever do that.
 | `Vivado/logs/`                      | Per-target Vivado build logs (xpr + xsa).                                       |
 | `Vitis/<target>_workspace/`         | Per-target Vitis workspace (platform + application + BSP).                      |
 | `Vitis/boot/<target>/`              | Packaged Vitis boot files (`BOOT.BIN` for Zynq/ZynqMP/Versal, `.bit` with combined ELF for MicroBlaze). |
-| `PetaLinux/<target>/`               | PetaLinux project. All Yocto build state lives here.                            |
+| `PetaLinux/<target>/`               | PetaLinux project. All its bitbake build state lives here.                      |
 | `PetaLinux/<target>/images/linux/`  | `BOOT.BIN`, `image.ub`, `boot.scr`, `rootfs.tar.gz`, etc.                       |
 | `PetaLinux/<target>/build/build.log`| PetaLinux build log.                                                            |
+| `Yocto/<target>/`                   | Yocto / EDF workspace (`.repo`, `sources`, `build`, `images`).                  |
+| `Yocto/<target>/images/linux/`      | `BOOT.BIN`, kernel (`Image` or `uImage`), `boot.scr`, `system.dtb`, `rootfs.wic.xz`, `rootfs.tar.gz`. |
+| `Yocto/<target>/build/`             | bitbake build directory (`tmp/`, `sstate-cache/`, `downloads/`).                |
 | `bootimages/`                       | Per-target zipped boot files (`<prj>_<target>_petalinux-<ver>.zip` and `<prj>_<target>_standalone-<ver>.zip`). |
 
 None of these directories are committed to the repository.

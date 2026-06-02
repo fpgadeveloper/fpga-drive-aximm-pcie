@@ -72,7 +72,13 @@ echo "[package-output] gathering from $MACHINE_DIR"
 # (boot header sidecar, ~4 KB) — exclude the boot header.
 gather "BOOT-*-*.bin"                       "BOOT.BIN"      "_bh"
 gather "boot.scr"                           "boot.scr"
-gather "Image"                              "Image"
+# Kernel image: zynqMP/Versal deploy a raw `Image`; Zynq-7000 (zynq) deploys a
+# u-boot-wrapped `uImage`. Gather whichever this machine produced.
+if [ -e "$MACHINE_DIR/Image" ]; then
+    gather "Image"                          "Image"
+else
+    gather "uImage"                         "uImage"
+fi
 gather "*.dtb"                              "system.dtb"
 gather "u-boot.elf*"                        "u-boot.elf"
 

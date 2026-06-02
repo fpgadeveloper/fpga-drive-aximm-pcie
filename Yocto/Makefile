@@ -37,6 +37,8 @@ YOCTO_IMAGE_RECIPE = edf-linux-disk-image
 
 # valid targets (template name)
 # UPDATER START
+pz_7015_target := zynq
+pz_7030_target := zynq
 uzev_target := zynqMP
 vck190_fmcp1_target := versal
 vck190_fmcp2_target := versal
@@ -46,6 +48,8 @@ vmk180_fmcp2_target := versal
 vek280_target := versal
 vpk120_target := versal
 vpk180_target := versal
+zc706_hpc_target := zynq
+zc706_lpc_target := zynq
 zcu104_target := zynqMP
 zcu106_hpc0_target := zynqMP
 zcu106_hpc1_target := zynqMP
@@ -87,7 +91,13 @@ YOCTO_CFG_DONE = $(YOCTO_DIR)/configdone.txt
 YOCTO_IMG_DIR = $(YOCTO_DIR)/images/linux
 YOCTO_BOOT_BIN = $(YOCTO_IMG_DIR)/BOOT.BIN
 YOCTO_BOOT_SCR = $(YOCTO_IMG_DIR)/boot.scr
+# Kernel image name differs by SoC: zynqMP/Versal produce a raw `Image`;
+# Zynq-7000 (template `zynq`) produces a u-boot-wrapped `uImage`.
+ifeq ($($(TARGET)_target),zynq)
+YOCTO_IMAGE = $(YOCTO_IMG_DIR)/uImage
+else
 YOCTO_IMAGE = $(YOCTO_IMG_DIR)/Image
+endif
 YOCTO_ROOTFS = $(YOCTO_IMG_DIR)/rootfs.tar.gz
 YOCTO_WIC = $(YOCTO_IMG_DIR)/rootfs.wic.xz
 

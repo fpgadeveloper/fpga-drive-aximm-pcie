@@ -61,10 +61,10 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 
 | Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
 |-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
-| [PicoZed 7015]        | `pz_7015`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :x:         | Standard :free: |
-| [PicoZed 7030]        | `pz_7030`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :x:         | Standard :free: |
-| [ZC706]               | `zc706_hpc`     | 4     | -     | HPC         | :white_check_mark: | :white_check_mark: | :x:         | Enterprise |
-| [ZC706]               | `zc706_lpc`     | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :x:         | Enterprise |
+| [PicoZed 7015]        | `pz_7015`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
+| [PicoZed 7030]        | `pz_7030`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
+| [ZC706]               | `zc706_hpc`     | 4     | -     | HPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
+| [ZC706]               | `zc706_lpc`     | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
 
 ### Zynq UltraScale+ designs
 
@@ -136,17 +136,37 @@ Notes:
 
 ## Software
 
-These reference designs can be driven by either a standalone application or within a PetaLinux environment. 
-The repository includes all necessary scripts and code to build both environments. The table 
-below outlines the corresponding applications available in each environment:
+These reference designs can be driven by a **standalone** (bare-metal) application or
+from within an embedded **Linux** environment. The repository includes all the scripts
+and code needed to build either one.
 
-| Environment      | Available Applications  |
-|------------------|-------------------------|
-| Standalone       | PCIe enumeration test |
-| PetaLinux        | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+For Linux, two build flows are provided, both based on AMD's 2025.2 tools:
 
-The standalone software application reports on the status of the PCIe link and 
-performs enumeration of the detected PCIe end-points (ie. the M.2 modules).
+* **PetaLinux** — AMD's long-standing embedded Linux build tool (see the `PetaLinux/`
+  directory).
+* **Yocto / EDF** — AMD's Embedded Development Framework, the announced successor to
+  PetaLinux, built with the `gen-machineconf parse-sdt` flow (see the `Yocto/`
+  directory).
+
+> [!IMPORTANT]
+> **The PetaLinux flow is being retired for this repository.** Version 2025.2 is the
+> last tool release for which we will support PetaLinux; from the next tool version
+> onward, Linux images will be built with the Yocto / EDF flow only. New work should
+> use the Yocto flow.
+
+For 2025.2, both flows produce an equivalent Linux image with the same applications,
+so you can pick whichever fits your workflow. The [target design tables](#target-designs)
+show which boards are supported by each flow.
+
+| Environment | Build flow          | Available applications |
+|-------------|---------------------|------------------------|
+| Standalone  | Vitis               | PCIe enumeration test |
+| Linux       | PetaLinux  /  Yocto | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+
+The standalone application reports on the status of the PCIe link and performs
+enumeration of the detected PCIe end-points (i.e. the M.2 modules). Under Linux, those
+same M.2 SSDs come up as NVMe block devices that you can partition, format and test
+with the bundled tools.
 
 ## Build instructions
 
@@ -155,11 +175,13 @@ Clone the repo:
 git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
 ```
 
-Source Vivado and PetaLinux tools:
+Source the AMD tools. All flows need Vivado; the PetaLinux flow needs the PetaLinux
+settings, and the Yocto flow needs the Vitis settings (for `xsct`/`sdtgen`):
 
 ```
-source <path-to-petalinux>/2025.2/settings.sh
 source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
+source <path-to-petalinux>/2025.2/settings.sh          # for the PetaLinux flow
+source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh   # for the Yocto flow
 ```
 
 To build the standalone PCIe enumeration test application (Vivado project and Vitis workspace):
@@ -169,12 +191,23 @@ cd fpga-drive-aximm-pcie/Vitis
 make workspace TARGET=uzev
 ```
 
-Build all (Vivado project and PetaLinux):
+Build a Linux image — either flow builds the Vivado project first if needed.
+
+PetaLinux flow:
 
 ```
 cd fpga-drive-aximm-pcie/PetaLinux
 make petalinux TARGET=uzev
 ```
+
+Yocto / EDF flow:
+
+```
+cd fpga-drive-aximm-pcie/Yocto
+make yocto TARGET=uzev
+```
+
+Run `make help` in either directory to list the supported targets.
 
 More comprehensive build instructions can be found in the user guide:
 * [For Windows users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#windows-users)

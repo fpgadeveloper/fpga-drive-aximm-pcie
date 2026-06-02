@@ -21,6 +21,7 @@ This is the documentation for the reference designs for the
    build_instructions
    stand_alone
    petalinux
+   yocto
    advanced
    troubleshooting
    revision_history

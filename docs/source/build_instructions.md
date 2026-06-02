@@ -51,7 +51,7 @@ Notes:
 ## Windows users
 
 Windows users will be able to build the Vivado projects and compile the standalone applications,
-however Linux is required to build the PetaLinux projects. 
+however Linux is required to build the embedded Linux images (PetaLinux or Yocto). 
 
 ```{tip} If you wish to build the PetaLinux projects,
 we recommend that you build the entire project (including the Vivado project) on a machine (either 
@@ -86,9 +86,21 @@ Before running these steps, you must first build and export the Vivado project a
 These projects can be built using a machine (either physical or virtual) with one of the 
 [supported Linux distributions].
 
+An embedded Linux image can be built with either of two flows: **PetaLinux** or the
+**Yocto / EDF** flow (AMD's Embedded Development Framework, the announced successor to
+PetaLinux). Both are driven by a single `make` command and produce an equivalent image — see
+[build PetaLinux](#build-petalinux-project-in-linux) or
+[build Yocto](#build-yocto-project-in-linux) below.
+
+```{attention} The PetaLinux flow for this repository is being retired. Version 2025.2 is
+the last tool release for which we will support PetaLinux; from the next tool version onward,
+Linux images will be built with the Yocto / EDF flow only. New work should use the Yocto flow.
+```
+
 ```{tip} The build steps can be completed in the order shown below, or
-you can go directly to the [build PetaLinux](#build-petalinux-project-in-linux) instructions below
-to build the Vivado and PetaLinux projects with a single command.
+you can go directly to the Linux build instructions
+([PetaLinux](#build-petalinux-project-in-linux) or [Yocto](#build-yocto-project-in-linux))
+to build the Vivado and Linux projects with a single command.
 ```
 
 ### Build Vivado project in Linux
@@ -196,6 +208,60 @@ follow these instructions.
    FORWARD SLASH.
 
 Now when you use `make` to build the PetaLinux projects, they will be configured for offline build.
+
+### Build Yocto project in Linux
+
+These steps build the Yocto / EDF image for the target design, using AMD's recommended
+`gen-machineconf` `parse-sdt` flow. As with PetaLinux, you are not required to have built the
+Vivado design first — the Makefile triggers the Vivado build for the corresponding design if it
+has not already been done.
+
+You will need [Google's `repo` tool](https://gerrit.googlesource.com/git-repo/) on your `PATH`.
+
+1. Launch the setup script for Vivado (only if you skipped the Vivado build steps above):
+   ```
+   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
+   ```
+2. Launch the setup script for Vitis. The Yocto flow uses `xsct`/`sdtgen` (which ship with Vitis,
+   not PetaLinux) to generate a System Device Tree from the XSA:
+   ```
+   source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh
+   ```
+3. Build the Yocto image for your target by running the following command, replacing `<target>`
+   with a valid value from below:
+   ```
+   cd Yocto
+   make yocto TARGET=<target>
+   ```
+   Valid target labels for Yocto builds are:
+   {% for design in data.designs if design.yocto and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
+   The first build of a target runs `repo sync` (several GB of git history) and bitbake from
+   scratch, so it takes a while; subsequent builds are incremental. The output products
+   (`BOOT.BIN`, the kernel, `boot.scr`, `system.dtb`, `rootfs.wic.xz`) are gathered into
+   `Yocto/<target>/images/linux/`.
+
+### Yocto offline build
+
+To build the Yocto projects offline (or simply faster), point the build at a locally extracted
+AMD sstate-cache mirror.
+
+1. Download the sstate-cache artefacts from the Xilinx downloads site and extract them to a single
+   location, for example `/home/user/yocto-sstate`, leaving the following directory structure:
+   ```
+   /home/user/yocto-sstate
+                          +---  aarch64       (Zynq UltraScale+ and Versal)
+                          +---  arm           (Zynq-7000)
+                          +---  microblaze    (PMU/PLM firmware)
+                          +---  downloads
+   ```
+2. Create a text file called `offline.txt` in the `Yocto` directory of the repository containing a
+   single line with that path, written with NO TRAILING FORWARD SLASH:
+   ```
+   /home/user/yocto-sstate
+   ```
+
+`make yocto` will then auto-detect which architecture sub-directories are present and configure
+the build to use the mirror.
 
 [supported Linux distributions]: https://docs.amd.com/r/en-US/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
 
