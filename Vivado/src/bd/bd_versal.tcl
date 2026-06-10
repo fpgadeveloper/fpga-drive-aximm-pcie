@@ -129,7 +129,8 @@ if {$is_vpk120 || $is_vek280 || $is_vpk180} {
 # Extra config for this design:
 # PL CLK0 output clock enabled 250MHz
 # Enable interrupts: IRO0-IRQ5
-# NoC interfaces: PS to NoC Interface 0 + 1, NoC to PS Interface 0
+# NoC interfaces: PS to NoC Interface 0 + 1 (no NoC to PS interface, see NoC
+# config comment further down)
 # PS-PL interfaces: PL Resets 1, Enable M_AXI_FPD 128 + M_AXI_LPD 128
 
 if {$is_vpk120 || $is_vpk180} {
@@ -188,7 +189,7 @@ if {$is_vpk120 || $is_vpk180} {
       PS_USE_FPD_CCI_NOC0 {1} \
       PS_USE_M_AXI_FPD {1} \
       PS_USE_M_AXI_LPD {1} \
-      PS_USE_NOC_FPD_AXI0 {1} \
+      PS_USE_NOC_FPD_AXI0 {0} \
       PS_USE_NOC_LPD_AXI0 {1} \
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
@@ -260,7 +261,7 @@ if {$is_vpk120 || $is_vpk180} {
       PS_USE_FPD_CCI_NOC0 {1} \
       PS_USE_M_AXI_FPD {1} \
       PS_USE_M_AXI_LPD {1} \
-      PS_USE_NOC_FPD_AXI0 {1} \
+      PS_USE_NOC_FPD_AXI0 {0} \
       PS_USE_NOC_LPD_AXI0 {1} \
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
@@ -327,7 +328,7 @@ if {$is_vpk120 || $is_vpk180} {
       PS_USE_FPD_CCI_NOC0 {1} \
       PS_USE_M_AXI_FPD {1} \
       PS_USE_M_AXI_LPD {1} \
-      PS_USE_NOC_FPD_AXI0 {1} \
+      PS_USE_NOC_FPD_AXI0 {0} \
       PS_USE_NOC_LPD_AXI0 {1} \
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
@@ -403,7 +404,7 @@ if {$is_vpk120 || $is_vpk180} {
       PS_USE_FPD_CCI_NOC0 {1} \
       PS_USE_M_AXI_FPD {1} \
       PS_USE_M_AXI_LPD {1} \
-      PS_USE_NOC_FPD_AXI0 {1} \
+      PS_USE_NOC_FPD_AXI0 {0} \
       PS_USE_NOC_LPD_AXI0 {1} \
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
@@ -422,25 +423,40 @@ if {$is_vpk120 || $is_vpk180} {
 # S02_AXI - FPD_CCI_NOC_2 - PS Cache Coh - 2
 # S03_AXI - FPD_CCI_NOC_3 - PS Cache Coh - 3
 # S04_AXI - LPD_AXI_NOC_0 - PS LPD       - 2
-# S05_AXI - PMC_NOC_AXI_0 - PS PMC       - M00_AXI + 1
+# S05_AXI - PMC_NOC_AXI_0 - PS PMC       - 1
 # S06_AXI - FPD_AXI_NOC_1 - PS Non-Coh   - 0
 # S07_AXI - FPD_AXI_NOC_0 - PS Non-Coh   - 0
 # S08_AXI - BRIDGE        - PL           - 3
+#
+# Unlike AMD's PL QDMA RP CED that this design is based on, there is no M00_AXI
+# NSU looping back into the PS via NOC_FPD_AXI_0. The CED attaches that NSU
+# (with fixed destID 0x140 and no assigned BD address) to the PMC's NoC port
+# (S05_AXI here). The PMC is a "virtual" PS master whose NMU routing tables are
+# programmed from the static NoC solution at boot, and on SSIT (stacked
+# silicon) Versal devices (eg. VP1802 on the VPK180, VP1552 — monolithic parts
+# like VC1902/VM1802/VE2802/VP1202 are unaffected) the NoC compiler cannot
+# combine address-decoded MC routes with a fixed-destID NSU on the same
+# virtual-master NMU: it skips the address decode settings entirely (CRITICAL
+# WARNING Ipconfig 75-657 / BD 41-2842), which breaks the PMC-to-DDR route and
+# hangs the PLM during PDI boot (GitHub issue #40). Every BD address segment through that NSU was
+# excluded anyway, so the path carried no addressable traffic; it has been
+# removed entirely so that every NMU has a single, address-decoded MC fanout.
+# (Moving the NSU to another NMU instead would either re-trigger BD 41-2842 or
+# expose PS peripherals to SSD DMA, depending on segment assignment.)
 
 # Configure the NoC
 set_property -dict [list \
   CONFIG.MC_CHAN_REGION1 {DDR_CH1} \
-  CONFIG.NUM_CLKS {10} \
-  CONFIG.NUM_MI {1} \
+  CONFIG.NUM_CLKS {9} \
+  CONFIG.NUM_MI {0} \
   CONFIG.NUM_SI {9} \
 ] [get_bd_cells axi_noc_0]
-set_property -dict [list CONFIG.CATEGORY {ps_nci_phy}] [get_bd_intf_pins /axi_noc_0/M00_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_3 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S00_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S01_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_0 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S02_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S03_AXI]
 set_property -dict [list CONFIG.CATEGORY {ps_rpu} CONFIG.CONNECTIONS {MC_3 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S04_AXI]
-set_property -dict [list CONFIG.CONNECTIONS {M00_AXI {read_bw {1720} write_bw {1720} read_avg_burst {4} write_avg_burst {4} initial_boot {true} } MC_2 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
+set_property -dict [list CONFIG.CONNECTIONS {MC_2 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S05_AXI]
 set_property -dict [list CONFIG.CATEGORY {ps_nci} CONFIG.CONNECTIONS {MC_0 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S06_AXI]
 set_property -dict [list CONFIG.CATEGORY {ps_nci} CONFIG.CONNECTIONS {MC_0 {read_bw {5} write_bw {5} read_avg_burst {4} write_avg_burst {4} initial_boot {true} }}] [get_bd_intf_pins /axi_noc_0/S07_AXI]
 set_property -dict [list CONFIG.CONNECTIONS {MC_1 {read_bw {1720} write_bw {1720} read_avg_burst {4} write_avg_burst {4} }}] [get_bd_intf_pins /axi_noc_0/S08_AXI]
@@ -450,10 +466,6 @@ connect_bd_intf_net [get_bd_intf_pins versal_cips_0/FPD_AXI_NOC_0] [get_bd_intf_
 connect_bd_intf_net [get_bd_intf_pins versal_cips_0/FPD_AXI_NOC_1] [get_bd_intf_pins axi_noc_0/S07_AXI]
 connect_bd_net [get_bd_pins versal_cips_0/fpd_axi_noc_axi0_clk] [get_bd_pins axi_noc_0/aclk6]
 connect_bd_net [get_bd_pins versal_cips_0/fpd_axi_noc_axi1_clk] [get_bd_pins axi_noc_0/aclk7]
-connect_bd_net [get_bd_pins versal_cips_0/noc_fpd_axi_axi0_clk] [get_bd_pins axi_noc_0/aclk8]
-
-# Connect NoC's AXI Master interface to the CIPS
-connect_bd_intf_net [get_bd_intf_pins axi_noc_0/M00_AXI] [get_bd_intf_pins versal_cips_0/NOC_FPD_AXI_0]
 
 # QDMA support block
 proc create_qdma_support { index } {
@@ -1235,7 +1247,7 @@ if {$dual_design} {
 # QDMA axi_aclk drives CIPS M_AXI_FPD/LPD clock inputs and the NoC
 connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins versal_cips_0/m_axi_fpd_aclk]
 connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins versal_cips_0/m_axi_lpd_aclk]
-connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins axi_noc_0/aclk9]
+connect_bd_net [get_bd_pins versal_cips_0/pl0_ref_clk] [get_bd_pins axi_noc_0/aclk8]
 
 # Add processor system reset for CIPS pl0_resetn
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset_pl0
@@ -1325,23 +1337,11 @@ if {$dual_design} {
   set_property range 128M [get_bd_addr_segs {versal_cips_0/M_AXI_FPD/SEG_qdma_0_BAR0}]
 }
 
-# Include in address space to follow the CED
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_iou_slcr_0]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_1]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_2]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_3]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_4]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_5]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_6]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_7]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_8]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_9]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_10]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_11]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_12]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_13]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_14]
-include_bd_addr_seg [get_bd_addr_segs -excluded versal_cips_0/PMC_NOC_AXI_0/SEG_versal_cips_0_pspmc_0_psv_pmc_cfi_cframe_bcast]
+# Note: the CED-era include_bd_addr_seg calls for the PMC iou_slcr/cframe
+# segments were removed; those segments no longer exist in the PMC address
+# space (they were BD 5-699 no-ops in 2025.2) and the NoC-to-PS path they
+# belonged to (NOC_FPD_AXI_0) has been removed from this design entirely
+# (see the NoC config comment above).
 
 # Create PERST ports
 create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 const_low
