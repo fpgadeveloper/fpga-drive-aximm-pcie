@@ -128,7 +128,7 @@ make bootimage TARGET=t
               Vivado/Makefile xsa TARGET=t
                 -> vivado -mode batch -source scripts/build.tcl   (creates project)
                 -> vivado -mode batch -source scripts/xsa.tcl     (synth, impl, XSA export)
-         -> vitis -source py/build-vitis.py  ... (creates platform + app, builds)
+         -> vitis -s py/build-vitis.py  ... (creates platform + app, builds)
          -> python3 py/make-boot.py          ... (packages BOOT.BIN / .mcs)
   -> PetaLinux side (if target is "both"):
        PetaLinux/Makefile petalinux TARGET=t

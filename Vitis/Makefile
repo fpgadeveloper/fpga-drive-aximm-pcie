@@ -138,7 +138,7 @@ workspace_locked: $(VIT_TARGET_WS)
 
 $(VIT_TARGET_WS): $(VIV_XSA)
 	@if [ -d $@ ]; then echo "Workspace for $(TARGET) already exists but is outdated. Use 'make clean TARGET=$(TARGET)' to remove it."; exit 1; fi
-	vitis -source $(VIT_SCRIPT_WS) $(TARGET) $(ARGS_JSON) $(DATA_JSON)
+	vitis -s $(VIT_SCRIPT_WS) $(TARGET) $(ARGS_JSON) $(DATA_JSON)
 
 $(VIV_XSA):
 	$(MAKE) -C $(VIV_DIR) xsa TARGET=$(TARGET) JOBS=$(JOBS)
@@ -170,7 +170,7 @@ bootfile_locked:
 	    exit 0; \
 	  fi; \
 	  echo "Generating bootfile for $(TARGET) ..."; \
-	  vitis -source $(VIT_SCRIPT_BOOT) $(TARGET) $(ARGS_JSON) $(DATA_JSON) || exit $$?; \
+	  vitis -s $(VIT_SCRIPT_BOOT) $(TARGET) $(ARGS_JSON) $(DATA_JSON) || exit $$?; \
 	  echo ""; \
 	  echo "Boot outputs are in: $(VIT_BOOT_TARG)"; \
 	  echo "  Boot file: $(VIT_BOOT_FILE)"; \

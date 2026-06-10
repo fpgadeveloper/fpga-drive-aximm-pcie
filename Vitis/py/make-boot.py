@@ -235,7 +235,10 @@ def bootgen_arch_token(arch):
     return {"zynq":"zynq", "zynqmp":"zynqmp", "versal":"versal"}[arch]
 
 def run_bootgen(arch, bif_path, out_bin):
-    cmd = ["bootgen", "-arch", bootgen_arch_token(arch), "-image", bif_path, "-o", out_bin, "-w", "on"]
+    # shutil.which finds bootgen.bat on Windows (PATHEXT); a bare "bootgen"
+    # in subprocess only resolves to .exe there, which doesn't exist.
+    bootgen = shutil.which("bootgen") or "bootgen"
+    cmd = [bootgen, "-arch", bootgen_arch_token(arch), "-image", bif_path, "-o", out_bin, "-w", "on"]
     note("Running: " + " ".join(cmd))
     try:
         subprocess.check_call(cmd)
