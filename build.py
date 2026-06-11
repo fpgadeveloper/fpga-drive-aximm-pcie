@@ -278,9 +278,16 @@ def vitis_tools(ctx: Context):
     return vitis_exe, tool_env
 
 
+def has_vitis_flow(ctx: Context):
+    return (ctx.vit_dir / "py").is_dir()
+
+
 def stage_workspace(ctx: Context):
     if not ctx.design.get("baremetal", False):
         return "skipped (no baremetal app for this target)"
+    if not has_vitis_flow(ctx):
+        return ("skipped (data.json marks this target baremetal but the repo "
+                "ships no Vitis flow -- upstream inconsistency)")
     vitis_exe, tool_env = vitis_tools(ctx)
 
     if IS_WINDOWS:
@@ -319,6 +326,9 @@ def stage_workspace(ctx: Context):
 def stage_bootfile(ctx: Context):
     if not ctx.design.get("baremetal", False):
         return "skipped (no baremetal app for this target)"
+    if not has_vitis_flow(ctx):
+        return ("skipped (data.json marks this target baremetal but the repo "
+                "ships no Vitis flow -- upstream inconsistency)")
     stage_workspace(ctx)
     vitis_exe, tool_env = vitis_tools(ctx)
 
@@ -368,7 +378,9 @@ def _zip_tree(zip_path: Path, entries):
 def stage_bootimage(ctx: Context):
     results = []
 
-    if ctx.design.get("baremetal", False):
+    if ctx.design.get("baremetal", False) and not has_vitis_flow(ctx):
+        results.append("standalone zip skipped (repo has no Vitis flow)")
+    elif ctx.design.get("baremetal", False):
         if ctx.bare_zip.is_file():
             results.append("standalone zip exists")
         elif ctx.boot_file.is_file():
