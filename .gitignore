@@ -69,3 +69,11 @@ PetaLinux/zcu208/
 Vivado/zcu216/
 PetaLinux/zcu216/
 # UPDATER END
+dfx_runtime.txt
+.repo.yaml
+.memdata_temp_mem_file.mem
+Vivado/*.bif
+Vivado/*.pdi
+Vivado/*.rcdo
+Vivado/*.rnpi
+Vivado/wdi_info.xml
