@@ -1,0 +1,68 @@
+new_bif:
+{
+ id_code = 0x14ca8093
+ extended_id_code = 0x01
+ id = 0x2
+ image
+ {
+  name = pmc_subsys
+  id = 0x1c000001
+  partition
+  {
+   id = 0x01
+   type = bootloader
+   file = gen_files\plm.elf
+  }
+  partition
+  {
+   id = 0x09
+   type = pmcdata, load = 0xf2000000
+   file = gen_files\pmc_data.cdo
+  }
+ }
+ image
+ {
+  name = lpd
+  id = 0x4210002
+  partition
+  {
+   id = 0x0C
+   type = cdo
+   file = gen_files\lpd_data.cdo
+  }
+  partition
+  {
+   id = 0x0B
+   core = psm
+   file = static_files\psm_fw.elf
+  }
+ }
+ image
+ {
+  name = fpd
+  id = 0x420c003
+  partition
+  {
+   id = 0x08
+   type = cdo
+   file = gen_files\fpd_data.cdo
+  }
+ }
+ image
+ {
+  name = pl_cfi
+  id = 0x18700000
+  partition
+  {
+   id = 0x03
+   type = cdo
+   file = fpgadrv_wrapper.rcdo
+  }
+  partition
+  {
+   id = 0x05
+   type = cdo
+   file = fpgadrv_wrapper.rnpi
+  }
+ }
+}

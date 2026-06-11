@@ -1,0 +1,117 @@
+version 2.0
+marker 0x64 "FPD_DATA"
+marker 0 "FPD RESET RELESE"
+marker 0 "ACE Control Register"
+mask_write 0xfd5c0060 0xf000f 0
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0360 0x3 0
+marker 0 "APLL INIT"
+marker 0 "Helper data. Values are to be looked up in a table from Data Sheet"
+mask_write 0xfd1a0044 0xfe7fedef 0x7e4e2c6c
+marker 0 "BY PASS PLL"
+marker 0 "PLL Basic Control"
+mask_write 0xfd1a0040 0x8 0x8
+marker 0 "UPDATE FB_DIV"
+marker 0 "PLL Basic Control"
+mask_write 0xfd1a0040 0x73ff00 0x15400
+marker 0 "ASSERT RESET"
+marker 0 "PLL Basic Control"
+mask_write 0xfd1a0040 0x1 0x1
+marker 0 "CLEAR ERROR STATUS AFTER RESET"
+marker 0 "PSM Error Status Register. If any of the bits in this register is 1, it could generate any of the following events: (1) PSM Correctable error routed to PMC Error Handling, (2) PSM Non-Correctable error routed to PMC Error Handling, (3) IRQ to PSM MB, (4) PS SRST. Writing a 1 to any bit will clear the request. The register is only reset by the Power-on Reset and maintains its state through a System Reset."
+write 0xffc91000 0x4000
+marker 0 "DEASSERT RESET"
+marker 0 "PLL Basic Control"
+mask_write 0xfd1a0040 0x1 0
+marker 0 "CHECK PLL STATUS"
+mask_poll 0xfd1a0050 0x1 0x1 0x1000 0 0x27
+marker 0 "REMOVE PLL BY PASS"
+marker 0 "PLL Basic Control"
+mask_write 0xfd1a0040 0x8 0
+marker 0 "Control for a clock that will be generated in the LPD, but used in the FPD or PMC as a clock source for the peripheral clock muxes."
+mask_write 0xfd1a0100 0x3ff00 0x400
+marker 0 "PS-PL SLAVE INTERFACE"
+marker 0 "Read Channel Control Register"
+mask_write 0xfd360000 0x3 0
+marker 0 "Write Channel Control Register"
+mask_write 0xfd360014 0x3 0
+marker 0 "Read Channel Control Register"
+mask_write 0xfd380000 0x3 0
+marker 0 "Write Channel Control Register"
+mask_write 0xfd380014 0x3 0
+marker 0 "afi fs SLCR control register. This register is static and should not be modified during operation."
+mask_write 0xfd615000 0x300 0x200
+marker 0 "FPD CLOCK CONTROL REGISTER"
+marker 0 "This register controls the acpu0_clock"
+mask_write 0xfd1a010c 0x203ff07 0x2000102
+marker 0 "This register controls the fpd_top_switch clock"
+mask_write 0xfd1a0104 0x203ff07 0x2000101
+marker 0 "This register controls the fpd_lsbus clock"
+mask_write 0xfd1a0108 0x203ff07 0x2000400
+marker 0 "This register controls the dbg_fpd clock"
+mask_write 0xfd1a0114 0x203ff07 0x2000201
+marker 0 "FPD_SYSMON_SAT"
+marker 0 "UNLOCK FPD SYSMON"
+marker 0 "NPI Lock Register"
+write 0xfd62000c 0xf9e8d7c6
+marker 0 "SYSMON FPD SATELLITE BASE CONFIGURATION"
+marker 0 "DMA WRITE 1"
+write 0xfd620100 0xff
+write 0xfd620104 0x1f1d77
+write 0xfd620108 0xf
+write 0xfd62010c 0x2128
+write 0xfd620110 0x2
+write 0xfd620114 0x1
+write 0xfd620124 0xdcdc2321 0x2de 0 0 0x60524 0x60 0x1bd6446 0x10624d 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+marker 0 "DMA WRITE 2"
+write 0xfd620188 0
+write 0xfd62018c 0
+write 0xfd620190 0
+write 0xfd620194 0
+write 0xfd620198 0
+write 0xfd62019c 0
+write 0xfd6201a0 0
+write 0xfd620500 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0 0 0
+write 0xfd62011c 0xf84
+write 0xfd620120 0xf8
+write 0xfd620118 0x4f
+marker 0 "FPD SATELLITE PCSR END SEQUENCE"
+marker 0 "GATEREG DEASSERT"
+marker 0 "Programming Mask Register"
+write 0xfd620000 0x2
+marker 0 "Programming Control Register"
+write 0xfd620004 0
+marker 0 "INITSTATE DEASSERT"
+marker 0 "Programming Mask Register"
+write 0xfd620000 0x40
+marker 0 "Programming Control Register"
+write 0xfd620004 0
+marker 0 "HOLDSTATE DE-ASSERTED AND PCOMPLETE ASSERTED IN AMS SATELLITES."
+marker 0 "Programming Mask Register"
+write 0xfd620000 0x81
+marker 0 "Programming Control Register"
+write 0xfd620004 0x1
+marker 0 "LOCK FPD SYSMON SAT"
+marker 0 "NPI Lock Register"
+write 0xfd62000c 0x1
+marker 0 "CLEAR LPD SSC BYPASS"
+marker 0 "UNLOCK PMC SYSMON"
+marker 0 "NPI Lock Register"
+write 0xf127000c 0xf9e8d7c6
+marker 0 "Description"
+mask_write 0xf1270104 0x40000 0
+marker 0 "LOCK PMC SYSMON"
+marker 0 "NPI Lock Register"
+write 0xf127000c 0x1
+marker 0 "FPD PERIPHERAL RESET RELESE"
+marker 0 "RELEASE DEBUG RESETS IF DEBUGGER IS ENABLE"
+marker 0 "Reset for Individual block"
+mask_write 0xfd1a030c 0x1 0
+marker 0 "RELEASE TMSTMP RESET"
+marker 0 "DEFUNCT-No longer used. Reset for Individual block"
+mask_write 0xfd1a0310 0x1 0
+marker 0 "INTERRUPT ENABLE FOR SMMU"
+marker 0 "PS-PMC PERIPHERAL ROUTING TO FPD SETTIGS"
+marker 0 "INTERRUPT STATUS REGISTER FOR ALL CLOCK MONITORS. THIS IS A STICKY REGISTER THAT HOLDS THE VALUE OF THE INTERRUPT UNTIL CLEARED BY A VALUE OF 1."
+marker 0 "INTERRUPT ENABLE REGISTER. A WRITE OF 1 TO THIS LOCATION WILL ENABLE THE INTERRUPT. (CLKMON_MASK: 0)"
+marker 0x65 "FPD_DATA"

@@ -52,6 +52,70 @@ def fail(msg):
     sys.exit(1)
 
 
+def _pid_alive(pid):
+    if IS_WINDOWS:
+        import ctypes
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        h = ctypes.windll.kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+        if not h:
+            # Access denied means the process exists but is protected.
+            ERROR_ACCESS_DENIED = 5
+            return ctypes.windll.kernel32.GetLastError() == ERROR_ACCESS_DENIED
+        ctypes.windll.kernel32.CloseHandle(h)
+        return True
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+class BuildLock:
+    """Per-target lock, same role as the legacy Makefile .<target>.lock files:
+    lets several 'build all targets' loops run concurrently without two of
+    them building the same target. Improvement over the legacy touch-files:
+    the lock records pid@host, and a lock whose process is dead (e.g. after a
+    crash or reboot) is reclaimed automatically instead of wedging the target
+    until someone deletes the file by hand."""
+
+    def __init__(self, repo_root: Path, target: str):
+        self.path = repo_root / f".{target}.lock"
+        self.acquired = False
+
+    def acquire(self):
+        import socket
+        me = f"{os.getpid()}@{socket.gethostname()}"
+        if self.path.exists():
+            try:
+                pid_s, host = self.path.read_text().strip().split("@", 1)
+                pid = int(pid_s)
+            except (ValueError, OSError):
+                pid, host = None, ""
+            import socket as _s
+            if host and host != _s.gethostname():
+                print(f"{self.path.name}: locked by {pid}@{host} (another "
+                      f"machine). Skipping...")
+                return False
+            if pid and _pid_alive(pid):
+                print(f"{self.path.name}: locked by running pid {pid}. "
+                      f"Skipping...")
+                return False
+            print(f"{self.path.name}: reclaiming stale lock "
+                  f"(pid {pid} is gone).")
+            self.path.unlink(missing_ok=True)
+        self.path.write_text(me)
+        self.acquired = True
+        return True
+
+    def release(self):
+        if self.acquired:
+            self.path.unlink(missing_ok=True)
+            self.acquired = False
+
+
 # --------------------------------------------------------------------------- #
 # Repo manifest
 # --------------------------------------------------------------------------- #
@@ -441,6 +505,38 @@ def stage_petalinux(ctx: Context):
     return "built"
 
 
+def stage_yocto(ctx: Context):
+    if not ctx.design.get("yocto", False):
+        return "skipped (target has no Yocto flow)"
+    if not (ctx.repo.root / "Yocto" / "Makefile").is_file():
+        return ("skipped (data.json marks this target yocto but the repo "
+                "ships no Yocto flow yet)")
+    if IS_WINDOWS:
+        print("  Yocto cannot run on Windows. Build this target on a Linux "
+              "machine:")
+        print(f"    ./build.sh --target {ctx.target} --to yocto")
+        return "BLOCKED (Linux required)"
+    img = ctx.repo.root / "Yocto" / ctx.target / "images" / "linux"
+    if (img / "BOOT.BIN").is_file() or (img / "image.ub").is_file():
+        return "skipped (images exist)"
+    # Delegate to the Yocto Makefile (the engine). It needs the Vitis
+    # environment for xsct/sdtgen.
+    vitis = find_tool("Vitis", ctx.viv_ver)
+    if not vitis:
+        fail(f"Vitis {ctx.viv_ver} not found (the Yocto flow needs xsct/sdtgen).")
+    cmd = ["make", "-C", str(ctx.repo.root / "Yocto"),
+           "yocto", f"TARGET={ctx.target}", f"JOBS={ctx.jobs}"]
+    rc = run_tool(["bash", "-c",
+                   f'source "{vitis / "settings64.sh"}" >/dev/null && '
+                   + shlex.join(cmd)],
+                  cwd=ctx.repo.root)
+    produced = [f.name for f in img.glob("*")] if img.is_dir() else []
+    if rc != 0 or not produced:
+        fail(f"Yocto build failed (rc={rc}; images dir "
+             f"{'empty' if not produced else 'ok'}: {img}).")
+    return "built"
+
+
 def _zip_tree(zip_path: Path, entries):
     """entries: list of (src_file, arcname) or (text, arcname) for readmes."""
     zip_path.parent.mkdir(exist_ok=True)
@@ -509,7 +605,8 @@ def stage_bootimage(ctx: Context):
 
 STAGE_FUNCS = {"ip": stage_ip, "project": stage_project, "xsa": stage_xsa,
                "workspace": stage_workspace, "bootfile": stage_bootfile,
-               "petalinux": stage_petalinux, "bootimage": stage_bootimage}
+               "petalinux": stage_petalinux, "yocto": stage_yocto,
+               "bootimage": stage_bootimage}
 
 
 def fmt_artifact(p: Path):
@@ -539,6 +636,9 @@ def print_status(ctx: Context):
         rows.append(("standalone zip", ctx.bare_zip))
     if ctx.design.get("petalinux", False):
         rows.append(("petalinux zip", ctx.petl_zip))
+    if ctx.design.get("yocto", False):
+        rows.append(("yocto boot",
+                     ctx.repo.root / "Yocto" / ctx.target / "images" / "linux" / "BOOT.BIN"))
     width = max(len(n) for n, _ in rows)
     for name, p in rows:
         print(f"  {name:<{width}}  {fmt_artifact(p):<42}  {p}")
@@ -587,6 +687,8 @@ def stages_for(goal, design):
         return ["xsa", "bootfile"]
     if goal == "petalinux":
         return ["xsa", "petalinux"]
+    if goal == "yocto":
+        return ["xsa", "yocto"]
     order = ["xsa"]
     if design.get("baremetal", False):
         order.append("bootfile")
@@ -604,7 +706,8 @@ def main():
                     help="path to the design repo (default: this script's directory)")
     ap.add_argument("--target", help="target label, e.g. vck190_fmcp1")
     ap.add_argument("--to", default=None,
-                    choices=["ip", "project", "xsa", "workspace", "bootfile", "petalinux", "bootimage"],
+                    choices=["ip", "project", "xsa", "workspace", "bootfile",
+                             "petalinux", "yocto", "bootimage"],
                     help="final stage to build (default: bootimage); with "
                          "--clean, limits cleaning to that stage's outputs")
     ap.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
@@ -627,7 +730,9 @@ def main():
         print(f"{repo.prj_name} targets:")
         for d in repo.data["designs"]:
             flags = [k for k in ("baremetal", "petalinux", "yocto") if d.get(k)]
-            lic = "  [license required]" if d.get("license") else ""
+            lic = "  [Enterprise edition]" if d.get("license") else ""
+            if d.get("ip_license"):
+                lic += "  [IP license]"
             print(f"  {d['label']:<16} {FAMILY.get(d['group'], d['group']):<11} "
                   f"({', '.join(flags)}){lic}")
         return
@@ -663,15 +768,26 @@ def main():
     print(f"    host: {'Windows' if IS_WINDOWS else 'Linux'} | "
           f"Vivado required: {ctx.viv_ver} | jobs: {args.jobs}")
     if design.get("license", False):
-        print("    NOTE: this target uses license-required IP -- bitstream "
-              "generation needs a valid license.")
+        print("    NOTE: this target requires the Vivado Enterprise edition "
+              "(paid license); it cannot be built with the free Standard "
+              "edition.")
+    if design.get("ip_license", False):
+        print("    NOTE: this design uses separately-licensed IP core(s); "
+              "bitstream generation requires the IP license (an evaluation "
+              "license works for testing).")
 
+    lock = BuildLock(repo.root, args.target)
+    if not lock.acquire():
+        return
     summary = []
-    for name in stages_for(goal, design):
-        print(f"\n--- stage: {name} ---")
-        result = STAGE_FUNCS[name](ctx)
-        print(f"--- stage {name}: {result} ---")
-        summary.append((name, result))
+    try:
+        for name in stages_for(goal, design):
+            print(f"\n--- stage: {name} ---")
+            result = STAGE_FUNCS[name](ctx)
+            print(f"--- stage {name}: {result} ---")
+            summary.append((name, result))
+    finally:
+        lock.release()
 
     print(f"\n=== summary: {args.target} ===")
     for name, result in summary:

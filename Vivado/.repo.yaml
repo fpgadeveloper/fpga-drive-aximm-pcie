@@ -1,0 +1,703 @@
+paths:
+  C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw: {}
+os:
+  freertos10_xilinx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\ThirdParty\bsp\freertos10_xilinx_v1_18
+  standalone:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\bsp\standalone_v9_4
+driver:
+  aiefal:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aiefal_v1_9
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aiefal_v1_8
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aiefal_v1_7
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aiefal_v1_6
+  aienginev2:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aienginev2_v3_8
+  audio_formatter:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\audio_formatter_v1_3
+  avbuf:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\avbuf_v2_6
+  axicdma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axicdma_v4_15
+  axidma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axidma_v9_20
+  axiethernet:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axiethernet_v5_18
+  axipcie:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axipcie_v3_4
+  axipmon:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axipmon_v6_13
+  axis_switch:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axis_switch_v1_7
+  axivdma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\axivdma_v6_16
+  bram:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\bram_v4_13
+  can:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\can_v3_11
+  canfd:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\canfd_v2_11
+  canps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\canps_v3_11
+  cframe:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\cframe_v1_9
+  cfupmc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\cfupmc_v1_9
+  clk_wiz:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\clk_wiz_v1_10
+  clockps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\clockps_v1_6
+  common:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\common_v1_4
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\common_v1_3
+  coresightps_dcc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\coresightps_dcc_v1_13
+  csi2tx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\csi2tx_v1_5
+  csi2txss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\csi2txss_v1_8
+  csi:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\csi_v1_8
+  csudma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\csudma_v1_18
+  dcsub:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dcsub
+  ddrcpsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\ddrcpsu_v1_8
+  devcfg:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\devcfg_v3_9
+  dfeccf:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfeccf_v1_9
+  dfeequ:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfeequ_v1_6
+  dfemix:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfemix_v1_7
+  dfeofdm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfeofdm_v1_5
+  dfeprach:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfeprach_v1_8
+  dfxasm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dfxasm_v1_2
+  dmaps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dmaps_v2_11
+  dp12:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp12_v7_6
+  dp12rxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp12rxss_v4_8
+  dp12txss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp12txss_v5_8
+  dp14:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp14_v7_11
+  dp14rxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp14rxss_v8_4
+  dp14txss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp14txss_v6_14
+  dp21:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp21_v2_5
+  dp21rxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp21rxss_v1_5
+  dp21txss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dp21txss_v2_6
+  dpdma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dpdma_v1_6
+  dphy:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dphy_v1_8
+  dppsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dppsu_v1_7
+  dsi2rx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dsi2rx_v1_0
+  dsi:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dsi_v1_5
+  dsirxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dsirxss_v1_1
+  dsitxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dsitxss_v2_6
+  dual_splitter:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\dual_splitter_v1_3
+  emaclite:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\emaclite_v4_12
+  emacps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\emacps_v3_23
+  emc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\emc_v4_5
+  gpio:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\gpio_v4_12
+  gpiops:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\gpiops_v3_14
+  hdcp1x:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp1x_v4_9
+  hdcp22_cipher_dp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_cipher_dp_v2_2
+  hdcp22_cipher:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_cipher_v1_4
+  hdcp22_common:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_common_v2_3
+  hdcp22_mmult:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_mmult_v1_5
+  hdcp22_rng:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_rng_v1_5
+  hdcp22_rx_dp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_rx_dp_v3_1
+  hdcp22_rx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_rx_v3_2
+  hdcp22_tx_dp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_tx_dp_v3_2
+  hdcp22_tx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hdcp22_tx_v3_1
+  hwicap:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\hwicap_v11_7
+  i2srx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\i2srx_v2_4
+  i2stx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\i2stx_v2_4
+  i3c:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\i3c_v1_2
+  i3cpsx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\i3cpsx_v1_6
+  iic:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\iic_v3_14
+  iicps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\iicps_v3_22
+  intc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\intc_v3_21
+  iomodule:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\iomodule_v2_19
+  ipipsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\ipipsu_v2_18
+  llfifo:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\llfifo_v6_0
+  mbox:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mbox_v4_9
+  mcdma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mcdma_v1_13
+  mipi_rx_phy:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mipi_rx_phy_v1_1
+  mipi_tx_phy:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mipi_tx_phy_v1_0
+  mipicsiss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mipicsiss_v1_14
+  mmidp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mmidp
+  mutex:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\mutex_v4_10
+  nandps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\nandps_v2_10
+  nandpsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\nandpsu_v1_15
+  ospipsv:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\ospipsv_v1_13
+  pciepsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\pciepsu_v2_2
+  prc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\prc_v2_3
+  prd:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\prd_v2_3
+  qspips:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\qspips_v3_14
+  qspipsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\qspipsu_v1_22
+  resetps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\resetps_v1_7
+  rfdc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\rfdc_v13_0
+  rtcpsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\rtcpsu_v1_16
+  scugic:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\scugic_v5_6
+  scutimer:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\scutimer_v2_7
+  scuwdt:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\scuwdt_v2_6
+  sd_fec:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sd_fec_v1_4
+  sdi_common:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sdi_common_v1_4
+  sdiaud:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sdiaud_v2_3
+  sdps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sdps_v4_5
+  spdif:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\spdif_v1_2
+  spi:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\spi_v4_15
+  spips:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\spips_v3_13
+  srio:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\srio_v1_7
+  sysmon:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sysmon_v7_10
+  sysmonpsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sysmonpsu_v3_2
+  sysmonpsv:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\sysmonpsv_v5_2
+  tft:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\tft_v6_7
+  tmr_inject:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\tmr_inject_v1_7
+  tmr_manager:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\tmr_manager_v1_8
+  tmrctr:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\tmrctr_v4_14
+  trafgen:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\trafgen_v4_8
+  trngpsv:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\trngpsv_v1_7
+  trngpsx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\trngpsx_v1_5
+  ttcps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\ttcps_v3_22
+  uartlite:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\uartlite_v3_12
+  uartns550:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\uartns550_v3_13
+  uartps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\uartps_v3_17
+  uartpsv:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\uartpsv_v1_13
+  ufspsxc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\ufspsxc_v1_2
+  usb:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\usb_v5_7
+  usbps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\usbps_v2_10
+  usbpsu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\usbpsu_v1_18
+  v_axi4s_remap:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_axi4s_remap_v1_4
+  v_csc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_csc_v2_7
+  v_deinterlacer:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_deinterlacer_v7_4
+  v_demosaic:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_demosaic_v1_4
+  v_frmbuf_rd:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_frmbuf_rd_v5_1
+  v_frmbuf_wr:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_frmbuf_wr_v5_1
+  v_gamma_lut:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_gamma_lut_v1_5
+  v_hcresampler:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hcresampler_v3_4
+  v_hdmi_common:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmi_common_v1_9
+  v_hdmiphy1:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmiphy1_v2_11
+  v_hdmirx1:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmirx1_v1_10
+  v_hdmirx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmirx_v2_9
+  v_hdmirxss1:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmirxss1_v3_8
+  v_hdmirxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmirxss_v6_8
+  v_hdmitx1:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmitx1_v2_6
+  v_hdmitx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmitx_v2_8
+  v_hdmitxss1:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmitxss1_v3_8
+  v_hdmitxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hdmitxss_v6_7
+  v_hscaler:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_hscaler_v3_6
+  v_letterbox:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_letterbox_v2_5
+  v_mix:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_mix_v7_0
+  v_multi_scaler:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_multi_scaler_v1_5
+  v_scenechange:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_scenechange_v1_5
+  v_sdirx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_sdirx_v2_6
+  v_sdirxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_sdirxss_v3_5
+  v_sditx:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_sditx_v3_4
+  v_sditxss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_sditxss_v4_6
+  v_tpg:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_tpg_v8_6
+  v_vcresampler:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_vcresampler_v3_4
+  v_vscaler:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_vscaler_v3_4
+  v_warp_filter:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_warp_filter_v1_4
+  v_warp_init:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\v_warp_init_v1_5
+  video_common:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\video_common_v4_18
+  visp_ss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\visp_ss_v2_0
+  vphy:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\vphy_v1_18
+  vprocss:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\vprocss_v2_15
+  vtc:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\vtc_v8_7
+  wdtps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\wdtps_v3_8
+  wdttb:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\wdttb_v5_11
+  xadcps:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\xadcps_v2_7
+  xdmapcie:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\xdmapcie_v3_1
+  xxvethernet:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\xxvethernet_v1_12
+  zdma:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\zdma_v1_21
+library:
+  libmetal:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\ThirdParty\sw_services\libmetal_v2_9
+  lwip220:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\ThirdParty\sw_services\lwip220_v1_3
+  openamp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\ThirdParty\sw_services\openamp_v1_12
+  aiebaremetal:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\XilinxProcessorIPLib\drivers\aiebaremetal_v1_0
+  xilasu:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilasu
+  xilcert:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilcert_v1_5
+  xilffs:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilffs_v5_5
+  xilflash:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilflash_v4_12
+  xilfpga:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilfpga_v6_9
+  xilloader:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilloader_v2_3
+  xilmailbox:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilmailbox_v1_12
+  xilnvm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilnvm_v3_6
+  xilocp:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilocp_v1_6
+  xilpdi:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilpdi_v1_12
+  xilpki:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilpki_v2_3
+  xilplmi:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilplmi_v2_3
+  xilpm_ng:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilpm_ng
+  xilpm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilpm_v6_1
+  xilpuf:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilpuf_v2_6
+  xilrsa:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilrsa_v1_8
+  xilsecure:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilsecure_v5_6
+  xilsem:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilsem_v1_12
+  xilsfl:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilsfl_v1_2
+  xilskey:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xilskey_v7_8
+  xiltimer:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xiltimer_v2_3
+  xiltpm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_services\xiltpm_v1_1
+apps:
+  asufw:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\asufw
+  ddr_self_refresh:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\ddr_self_refresh
+  dhrystone:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\dhrystone
+  empty_application:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\empty_application
+  freertos_hello_world:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_hello_world
+  freertos_lwip_echo_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_lwip_echo_server
+  freertos_lwip_tcp_perf_client:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_lwip_tcp_perf_client
+  freertos_lwip_tcp_perf_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_lwip_tcp_perf_server
+  freertos_lwip_udp_perf_client:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_lwip_udp_perf_client
+  freertos_lwip_udp_perf_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\freertos_lwip_udp_perf_server
+  hello_world:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\hello_world
+  img_rcvry:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\img_rcvry
+  libmetal_echo_demo:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\libmetal_echo_demo
+  lwip_echo_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\lwip_echo_server
+  lwip_tcp_perf_client:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\lwip_tcp_perf_client
+  lwip_tcp_perf_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\lwip_tcp_perf_server
+  lwip_udp_perf_client:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\lwip_udp_perf_client
+  lwip_udp_perf_server:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\lwip_udp_perf_server
+  mba_fs_boot:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\mba_fs_boot
+  memory_tests:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\memory_tests
+  openamp_echo_test:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\openamp_echo_test
+  openamp_matrix_multiply:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\openamp_matrix_multiply
+  openamp_rpc_demo:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\openamp_rpc_demo
+  peripheral_tests:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\peripheral_tests
+  rsa_auth_app:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\rsa_auth_app
+  srec_bootloader:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\srec_bootloader
+  srec_spi_bootloader:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\srec_spi_bootloader
+  versal_plm:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\versal_plm
+  versal_psmfw:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\versal_psmfw
+  zynq_dram_test:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\zynq_dram_test
+  zynq_fsbl:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\zynq_fsbl
+  zynqmp_dram_test:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\zynqmp_dram_test
+  zynqmp_fsbl:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\zynqmp_fsbl
+  zynqmp_pmufw:
+    path:
+    - C:\AMDDesignTools\2025.2\Vivado\data\embeddedsw\lib\sw_apps\zynqmp_pmufw

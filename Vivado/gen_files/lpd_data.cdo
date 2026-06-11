@@ -1,0 +1,347 @@
+version 2.0
+marker 0x64 "LPD_METADATA"
+marker 0 "Xilinx ASCII NPI Deviceimage"
+marker 0x2 "fpgadrv_wrapper"
+marker 0x3 "versalaicore"
+marker 0x4 "xcvc1902-vsva2197-2MP-e-S"
+marker 0x5 "0"
+marker 0x65 "LPD_METADATA"
+marker 0x64 "LPD_INIT"
+# pwr_lpd init_start
+pm_init_node 0x4210002 0
+# pwr_lpd scan_clear
+pm_init_node 0x4210002 0x2
+# pwr_lpd lbist
+pm_init_node 0x4210002 0x4
+# pwr_lpd bisr
+pm_init_node 0x4210002 0x3
+# pwr_lpd mbist_clear
+pm_init_node 0x4210002 0x6
+# pwr_lpd houseclean_complete
+pm_init_node 0x4210002 0x8
+marker 0x65 "LPD_INIT"
+marker 0x64 "LPD_MIO_FLUSH"
+marker 0x65 "LPD_MIO_FLUSH"
+marker 0x64 "LPD_XPPU"
+marker 0x65 "LPD_XPPU"
+marker 0x64 "IPI"
+marker 0x65 "IPI"
+marker 0x64 "OCM_XMPU"
+marker 0x65 "OCM_XMPU"
+marker 0x64 "LPD_AFIFS_XMPU"
+marker 0x65 "LPD_AFIFS_XMPU"
+marker 0x64 "OCM_SLVS_XMPU"
+# VersalNet OCM SLAVES XMPU configuration go here
+marker 0x65 "OCM_SLVS_XMPU"
+marker 0x64 "OCM0_XMPU"
+marker 0x65 "OCM0_XMPU"
+marker 0x64 "OCM1_XMPU"
+marker 0x65 "OCM1_XMPU"
+marker 0x64 "XRAM_XMPU0"
+marker 0x65 "XRAM_XMPU0"
+marker 0x64 "XRAM_XMPU1"
+marker 0x65 "XRAM_XMPU1"
+marker 0x64 "XRAM_XMPU2"
+marker 0x65 "XRAM_XMPU2"
+marker 0x64 "XRAM_XMPU3"
+marker 0x65 "XRAM_XMPU3"
+marker 0x64 "LPD_DATA"
+marker 0 "UNLOCKING SLCR"
+marker 0 "LPD IOU SLCR Write protection register for IO Mux logic"
+mask_write 0xff080728 0x1 0
+marker 0 "MIO"
+marker 0 "Configures MIO Pin 0 peripheral interface mapping"
+mask_write 0xff080000 0x3fe 0x4
+marker 0 "Configures MIO Pin 1 peripheral interface mapping"
+mask_write 0xff080004 0x3fe 0x4
+marker 0 "Configures MIO Pin 2 peripheral interface mapping"
+mask_write 0xff080008 0x3fe 0x4
+marker 0 "Configures MIO Pin 3 peripheral interface mapping"
+mask_write 0xff08000c 0x3fe 0x4
+marker 0 "Configures MIO Pin 4 peripheral interface mapping"
+mask_write 0xff080010 0x3fe 0x4
+marker 0 "Configures MIO Pin 5 peripheral interface mapping"
+mask_write 0xff080014 0x3fe 0x4
+marker 0 "Configures MIO Pin 6 peripheral interface mapping"
+mask_write 0xff080018 0x3fe 0x4
+marker 0 "Configures MIO Pin 7 peripheral interface mapping"
+mask_write 0xff08001c 0x3fe 0x4
+marker 0 "Configures MIO Pin 8 peripheral interface mapping"
+mask_write 0xff080020 0x3fe 0x4
+marker 0 "Configures MIO Pin 9 peripheral interface mapping"
+mask_write 0xff080024 0x3fe 0x4
+marker 0 "Configures MIO Pin 10 peripheral interface mapping"
+mask_write 0xff080028 0x3fe 0x4
+marker 0 "Configures MIO Pin 11 peripheral interface mapping"
+mask_write 0xff08002c 0x3fe 0x4
+marker 0 "Configures MIO Pin 12 peripheral interface mapping"
+mask_write 0xff080030 0x3fe 0x4
+marker 0 "Configures MIO Pin 13 peripheral interface mapping"
+mask_write 0xff080034 0x3fe 0x4
+marker 0 "Configures MIO Pin 14 peripheral interface mapping"
+mask_write 0xff080038 0x3fe 0x4
+marker 0 "Configures MIO Pin 15 peripheral interface mapping"
+mask_write 0xff08003c 0x3fe 0x4
+marker 0 "Configures MIO Pin 16 peripheral interface mapping"
+mask_write 0xff080040 0x3fe 0x4
+marker 0 "Configures MIO Pin 17 peripheral interface mapping"
+mask_write 0xff080044 0x3fe 0x4
+marker 0 "Configures MIO Pin 18 peripheral interface mapping"
+mask_write 0xff080048 0x3fe 0x4
+marker 0 "Configures MIO Pin 19 peripheral interface mapping"
+mask_write 0xff08004c 0x3fe 0x4
+marker 0 "Configures MIO Pin 20 peripheral interface mapping"
+mask_write 0xff080050 0x3fe 0x4
+marker 0 "Configures MIO Pin 21 peripheral interface mapping"
+mask_write 0xff080054 0x3fe 0x4
+marker 0 "Configures MIO Pin 22 peripheral interface mapping"
+mask_write 0xff080058 0x3fe 0x4
+marker 0 "Configures MIO Pin 23 peripheral interface mapping"
+mask_write 0xff08005c 0x3fe 0x4
+marker 0 "Configures MIO Pin 24 peripheral interface mapping"
+mask_write 0xff080060 0x3fe 0x280
+marker 0 "Configures MIO Pin 25 peripheral interface mapping"
+mask_write 0xff080064 0x3fe 0x280
+marker 0 "bnk2_en_wk_pu"
+mask_write 0xff080114 0x3ffffff 0x3d7fd7f
+marker 0 "bnk2_en_wk_pd"
+mask_write 0xff080110 0x3ffffff 0
+marker 0 "bnk2_sel_slew"
+mask_write 0xff080120 0x3ffffff 0
+marker 0 "bnk2_sel_drv0"
+mask_write 0xff080118 0xffffffff 0xaaaaaaaa
+marker 0 "bnk2_sel_drv1"
+mask_write 0xff08011c 0xfffff 0xaaaaa
+marker 0 "bnk2_en_rx_schmitt_hyst"
+mask_write 0xff08010c 0x3ffffff 0x103f03f
+marker 0 "MIO pin Tri-state Enables, 31:0"
+mask_write 0xff080204 0x3ffffff 0xfc0fc0
+marker 0 "Select the PS MIO or PMC MIO"
+mask_write 0xff080410 0xe407 0x7
+marker 0 "LOCKING SLCR"
+marker 0 "LPD IOU SLCR Write protection register for IO Mux logic"
+mask_write 0xff080728 0x1 0x1
+marker 0 "RPLL INIT"
+marker 0 "Helper data. Values are to be looked up in a table from Data Sheet"
+mask_write 0xff5e0044 0xfe7fedef 0x7e4b0c8c
+marker 0 "BY PASS PLL"
+marker 0 "PLL Basic Control"
+mask_write 0xff5e0040 0x8 0x8
+marker 0 "UPDATE FB_DIV"
+marker 0 "PLL Basic Control"
+mask_write 0xff5e0040 0x73ff00 0x26000
+marker 0 "ASSERT RESET"
+marker 0 "PLL Basic Control"
+mask_write 0xff5e0040 0x1 0x1
+marker 0 "CLEAR ERROR STATUS AFTER RESET"
+marker 0 "PSM Error Status Register. If any of the bits in this register is 1, it could generate any of the following events: (1) PSM Correctable error routed to PMC Error Handling, (2) PSM Non-Correctable error routed to PMC Error Handling, (3) IRQ to PSM MB, (4) PS SRST. Writing a 1 to any bit will clear the request. The register is only reset by the Power-on Reset and maintains its state through a System Reset."
+write 0xffc91000 0x8000
+marker 0 "DEASSERT RESET"
+marker 0 "PLL Basic Control"
+mask_write 0xff5e0040 0x1 0
+marker 0 "CHECK PLL STATUS"
+mask_poll 0xff5e0050 0x1 0x1 0x1000 0 0x26
+marker 0 "REMOVE PLL BY PASS"
+marker 0 "PLL Basic Control"
+mask_write 0xff5e0040 0x8 0
+marker 0 "Control for a clock that will be generated in the LPD, but used in the FPD or PMC as a clock source for the peripheral clock muxes."
+mask_write 0xff5e0100 0x3ff00 0x100
+marker 0 "PS-PL SLAVE INTERFACE"
+marker 0 "Read Channel Control Register"
+mask_write 0xff9b0000 0x3 0
+marker 0 "Write Channel Control Register"
+mask_write 0xff9b0014 0x3 0
+marker 0 "afi fs SLCR control register. Do not change the bits durin"
+mask_write 0xff419000 0x300 0x200
+marker 0 "LPD CLOCK CONTROL REGISTER"
+marker 0 "This register controls the cpm_top_sw clock"
+mask_write 0xff5e015c 0x203ff07 0x2000101
+marker 0 "This register controls the lpd_top_switch clock"
+mask_write 0xff5e0104 0x603ff07 0x6000100
+marker 0 "This register controls the lpd_lsbus clock"
+mask_write 0xff5e0108 0x203ff07 0x2000400
+marker 0 "This register controls the cpu_r5 clock"
+mask_write 0xff5e010c 0x1e03ff07 0x1e000100
+marker 0 "This register controls the iou_switch clock"
+mask_write 0xff5e0114 0x203ff07 0x2000103
+marker 0 "This register controls the gem0_ref clock"
+mask_write 0xff5e0118 0xe03ff07 0xe000203
+marker 0 "This register controls the gem1_ref clock"
+mask_write 0xff5e011c 0xe03ff07 0xe000203
+marker 0 "This register controls the gem_tsu_ref clock"
+mask_write 0xff5e0120 0x203ff07 0x2000103
+marker 0 "This register controls the usb0_ref clock"
+mask_write 0xff5e0124 0x203ff07 0x2001e00
+marker 0 "This register controls the uart0_ref clock"
+mask_write 0xff5e0128 0x203ff07 0x2000600
+marker 0 "This register controls the can1_ref clock"
+mask_write 0xff5e013c 0x203ff07 0x2000501
+marker 0 "This register controls the i2c0_ref clock"
+mask_write 0xff5e0140 0x203ff07 0x2000600
+marker 0 "This register controls the i2c1_ref clock"
+mask_write 0xff5e0144 0x203ff07 0x2000600
+marker 0 "This register controls the dbg_lpd_ref clock"
+mask_write 0xff5e0148 0x203ff07 0x2000201
+marker 0 "This register controls the dbg_tstmp clock"
+mask_write 0xff5e0158 0x203ff07 0x2000201
+marker 0 "This register controls the timestamp_ref clock"
+mask_write 0xff5e014c 0x203ff07 0x2000600
+marker 0 "This register controls the psm_ref clock"
+mask_write 0xff5e0154 0x3ff07 0x201
+marker 0 "LPD_SYSMON_SAT"
+marker 0 "UNLOCK LPD SYSMON"
+marker 0 "NPI Lock Register"
+write 0xffb8000c 0xf9e8d7c6
+marker 0 "SYSMON LPD SATELLITE BASE CONFIGURATION"
+marker 0 "DMA WRITE 1"
+write 0xffb80100 0xff
+write 0xffb80104 0x1f1d77
+write 0xffb80108 0xf
+write 0xffb8010c 0x2128
+write 0xffb80110 0x2
+write 0xffb80114 0x1
+write 0xffb80124 0xdcdc2321 0x2de 0 0 0x60524 0x60 0x1bd6446 0x10624d 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+marker 0 "DMA WRITE 2"
+write 0xffb80188 0
+write 0xffb8018c 0
+write 0xffb80190 0
+write 0xffb80194 0
+write 0xffb80198 0
+write 0xffb8019c 0
+write 0xffb801a0 0
+write 0xffb80500 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0x28000000 0 0 0
+write 0xffb8011c 0xfc4
+write 0xffb80120 0xfc
+write 0xffb80118 0x4f
+marker 0 "LPD SATELLITE PCSR END SEQUENCE"
+marker 0 "GATEREG DEASSERT"
+marker 0 "Programming Mask Register"
+write 0xffb80000 0x2
+marker 0 "Programming Control Register"
+write 0xffb80004 0
+marker 0 "INITSTATE DEASSERT"
+marker 0 "Programming Mask Register"
+write 0xffb80000 0x40
+marker 0 "Programming Control Register"
+write 0xffb80004 0
+marker 0 "HOLDSTATE DE-ASSERTED AND PCOMPLETE ASSERTED IN AMS SATELLITES."
+marker 0 "Programming Mask Register"
+write 0xffb80000 0x81
+marker 0 "Programming Control Register"
+write 0xffb80004 0x1
+marker 0 "LOCK LPD SYSMON SAT"
+marker 0 "NPI Lock Register"
+write 0xffb8000c 0x1
+marker 0 "CLEAR LPD SSC BYPASS"
+marker 0 "UNLOCK PMC SYSMON"
+marker 0 "NPI Lock Register"
+write 0xf127000c 0xf9e8d7c6
+marker 0 "Description"
+mask_write 0xf1270104 0x80000 0
+marker 0 "LOCK PMC SYSMON"
+marker 0 "NPI Lock Register"
+write 0xf127000c 0x1
+marker 0 "LPD PERIPHERAL RESET RELESE"
+marker 0 "GEM0 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0308 0x1 0
+marker 0 "GEM1 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e030c 0x1 0
+marker 0 "USB RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0314 0x1 0
+marker 0 "UART0 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0318 0x1 0
+marker 0 "CAN1 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e032c 0x1 0
+marker 0 "I2C0 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0330 0x1 0
+marker 0 "I2C1 RESET RELESE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0334 0x1 0
+marker 0 "TIMESTAMP RESET RELEASE"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0348 0x1 0
+marker 0 "RESET BLOCKS"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0304 0x1 0
+marker 0 "Reset for Individual block"
+mask_write 0xff5e033c 0x1 0
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0350 0x1 0
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0354 0x1 0
+marker 0 "RELEASE LPD DEBUG RESETS"
+marker 0 "Reset for Individual block"
+mask_write 0xff5e0338 0x33 0
+marker 0 "UART BAUD RATE"
+marker 0 "UART0 BAUD RATE"
+marker 0 "Integer Baud Rate Register"
+mask_write 0xff000024 0xffff 0x36
+marker 0 "Fractional Baud Rate Register"
+mask_write 0xff000028 0x3f 0x10
+marker 0 "UART0 CONFIG"
+marker 0 "Control Register"
+mask_write 0xff000030 0x301 0x301
+marker 0 "LPD PERIPHERAL RESET RELESE"
+marker 0 "LPD MUX/DEMUX FOR HSDP"
+marker 0 "AURORA INV POLARITY AND POLARITY CHECK"
+marker 0 "Aurora control register"
+mask_write 0xff9c0008 0x3000 0x1000
+marker 0 "LPD ADMA CHANNEL TRUST ZONE SETTINGS"
+marker 0 "ADMA0 TrustZone settings"
+mask_write 0xff510060 0x1 0x1
+marker 0 "ADMA1 TrustZone settings"
+mask_write 0xff510064 0x1 0x1
+marker 0 "ADMA2 TrustZone settings"
+mask_write 0xff510068 0x1 0x1
+marker 0 "ADMA3 TrustZone settings"
+mask_write 0xff51006c 0x1 0x1
+marker 0 "ADMA4 TrustZone settings"
+mask_write 0xff510070 0x1 0x1
+marker 0 "ADMA5 TrustZone settings"
+mask_write 0xff510074 0x1 0x1
+marker 0 "ADMA6 TrustZone settings"
+mask_write 0xff510078 0x1 0x1
+marker 0 "ADMA7 TrustZone settings"
+mask_write 0xff51007c 0x1 0x1
+marker 0 "COHERENCY LPD PERIPHERALS"
+marker 0 "PASS AXIT PROT FROM PL"
+marker 0 "TIMESTAMP BASE ENABLE"
+marker 0 "Program this register to match the clock frequency of the timestamp generator, in ticks per second. For example, for a 50 MHz clock, program 0x02FAF080. This register is not accessible to the read-only programming interface."
+mask_write 0xff140020 0xffffffff 0x5f5e0a8
+marker 0 "Controls the counter increments. This register is not accessible to the read-only programming interface."
+mask_write 0xff140000 0x1 0x1
+marker 0 "GEM TSU EXTERNAL CLOCK"
+marker 0 "GPIO PROGRAMMING"
+marker 0 "DIR MODE BANK 2"
+marker 0 "Direction mode (GPIO Bank0, MIO)"
+mask_write 0xff0b0204 0x3ffffff 0
+marker 0 "OUTPUT ENABLE BANK 2"
+marker 0 "Output enable (GPIO Bank0, MIO)"
+mask_write 0xff0b0208 0x3ffffff 0
+marker 0 "MASK_DATA_1_LSW HIGH BANK [67:52]"
+marker 0 "Maskable Output Data (GPIO Bank0, MIO, Lower 16bits)"
+mask_write 0xff0b0000 0xffffffff 0xffff0000
+marker 0 "MASK_DATA_1_LSW HIGH BANK [77:68]"
+marker 0 "Maskable Output Data (GPIO Bank0, MIO, Upper 10bits)"
+mask_write 0xff0b0004 0x3ff03ff 0x3ff0000
+marker 0 "PCIE RESET"
+marker 0 "INTLPD_CONFIG"
+marker 0 "INTLPD_OCM2_AXI"
+marker 0 "This register controls the Isolation and Reset of the Slave Switch Connection Block corresponding to LPD to OCM2 AXI interface"
+mask_write 0xfe7f0000 0x8 0x8
+marker 0x65 "LPD_DATA"
+marker 0x64 "XRAM_DATA"
+marker 0x65 "XRAM_DATA"
+marker 0x64 "LPD_EM"
+marker 0x65 "LPD_EM"
+marker 0x64 "LPD_FINISH"
+# pwr_lpd init_finish
+pm_init_node 0x4210002 0x1
+marker 0x65 "LPD_FINISH"
+# End of PMC CDO
