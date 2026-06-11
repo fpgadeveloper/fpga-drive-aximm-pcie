@@ -77,3 +77,7 @@ Vivado/*.pdi
 Vivado/*.rcdo
 Vivado/*.rnpi
 Vivado/wdi_info.xml
+__pycache__/
+*.pyc
+Vivado/gen_files/
+Vivado/static_files/
