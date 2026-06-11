@@ -43,7 +43,7 @@ IS_WINDOWS = os.name == "nt"
 FAMILY = {"fpga": "microblaze", "z7": "zynq", "zu": "zynqMP", "versal": "versal"}
 
 # CRITICAL WARNING patterns to ignore (known false positives, see CLAUDE.md)
-IGNORE_CRIT = [re.compile(r"\[12-1790\]")]
+IGNORE_CRIT = [re.compile(r"12-1790")]
 
 
 def fail(msg):
@@ -289,11 +289,16 @@ def stage_xsa(ctx: Context):
     ctx.viv_logs.mkdir(exist_ok=True)
 
     log = ctx.viv_logs / f"{ctx.target}_xsa.log"
+    # Some repos' xsa.tcl takes a third synth_only arg (e.g. rpi-camera-fmc).
+    tclargs = [ctx.target, str(ctx.jobs)]
+    if "synth_only" in (ctx.viv_dir / "scripts" / "xsa.tcl").read_text(
+            encoding="utf-8", errors="replace"):
+        tclargs.append("false")
     rc = run_tool([vivado_bin, "-mode", "batch", "-notrace",
                    "-source", "scripts/xsa.tcl",
                    "-log", log.as_posix(), "-journal",
                    (ctx.viv_logs / f"{ctx.target}_xsa.jou").as_posix(),
-                   "-tclargs", ctx.target, str(ctx.jobs)],
+                   "-tclargs"] + tclargs,
                   cwd=ctx.viv_dir)
     if rc != 0 or not ctx.xsa.is_file():
         fail(f"Vivado synthesis/implementation/XSA export failed (rc={rc}). See {log}")
