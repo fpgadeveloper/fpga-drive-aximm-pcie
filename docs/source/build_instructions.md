@@ -57,12 +57,12 @@ bundled with the AMD tools):
 
 ```
 cd fpga-drive-aximm-pcie
-./build.sh --list                            # list targets and attributes
-./build.sh --target <target> --to xsa        # Vivado project + bitstream + XSA
-./build.sh --target <target> --to bootfile   # + Vitis baremetal boot image
-./build.sh --target <target> --to bootimage  # + PetaLinux image, gather zips (Linux only)
-./build.sh --target <target> --status        # show per-stage artifact state
-./build.sh --target <target> --clean         # delete generated outputs
+./build.sh list                            # list targets and attributes
+./build.sh xsa --target <target>        # Vivado project + bitstream + XSA
+./build.sh standalone --target <target>   # + Vitis baremetal boot image
+./build.sh all --target <target>  # + PetaLinux image, gather zips (Linux only)
+./build.sh status --target <target>        # show per-stage artifact state
+./build.sh clean --target <target>         # delete generated outputs
 ```
 
 Stages whose outputs already exist are skipped on re-run, so the same
@@ -82,7 +82,7 @@ but it is deprecated and will be removed at the next version update.
 Windows users will be able to build the Vivado projects and compile the standalone applications,
 however Linux is required to build the embedded Linux images (PetaLinux or Yocto). 
 The recommended way to build on Windows is the [build runner](#cross-platform-build-runner-recommended)
-run from git bash: `./build.sh --target <target> --to bootfile`. The batch-file steps below
+run from git bash: `./build.sh standalone --target <target>`. The batch-file steps below
 remain available for GUI-oriented workflows.
 
 ```{tip} If you wish to build the PetaLinux projects,

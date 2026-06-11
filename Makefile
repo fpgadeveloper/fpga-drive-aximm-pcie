@@ -31,24 +31,22 @@ help:
 	@echo '    Delete boot image files for all targets.'
 	@echo ''
 	@echo 'DEPRECATED: this Makefile now wraps ./build.sh and will be removed'
-	@echo 'at the next version update. Equivalent: ./build.sh --target <val>'
+	@echo 'at the next version update. Equivalent: ./build.sh all --target <val>'
 	@echo ''
 	@echo 'Valid targets:'
-	@$(BUILD) --labels | sed 's/^/    - /'
+	@$(BUILD) labels | sed 's/^/    - /'
 
 .PHONY: bootimage
 bootimage:
-	$(BUILD) --target $(TARGET) --to bootimage --jobs $(JOBS)
+	$(BUILD) all --target $(TARGET) --jobs $(JOBS)
 
 .PHONY: all
 all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --to bootimage --jobs $(JOBS) || exit $$?; \
-	done
+	$(BUILD) all --target all --jobs $(JOBS)
 
 .PHONY: clean
 clean:
-	$(BUILD) --target $(TARGET) --clean --to bootimage
+	$(BUILD) clean --target $(TARGET) --stage package
 
 .PHONY: clean_all
 clean_all:

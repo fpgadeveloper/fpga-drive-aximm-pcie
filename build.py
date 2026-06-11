@@ -1,30 +1,33 @@
-#!/usr/bin/env python3
-"""Cross-platform build runner for Opsero reference design repos (PROTOTYPE).
+"""Cross-platform build runner for Opsero reference design repos.
 
 Replaces the Makefile step-runner on hosts where GNU make is unavailable or
 broken (Windows/git bash), and runs the identical flow on Linux. Reads targets
-and per-design attributes straight from the repo's config/data.json -- no
-generated target lists.
+and per-design attributes straight from the repo's config/data.json.
 
-Lives at the repo root. Usage:
-  ./build.sh --target vck190_fmcp1 --to xsa     (shim finds a Python 3)
-  python build.py --target <label> --to bootimage
-  python build.py --list
-  python build.py --repo <path> ...             (run against another checkout)
+Usage (the command names the artifact you want):
+  ./build.sh list                              # all targets + attributes
+  ./build.sh project    --target <t>           # Vivado project (.xpr)
+  ./build.sh xsa        --target <t>           # Vivado XSA (synth+impl+export)
+  ./build.sh workspace  --target <t>           # Vitis workspace + app build
+  ./build.sh standalone --target <t>           # Vitis baremetal boot file
+  ./build.sh petalinux  --target <t>           # PetaLinux image (Linux only)
+  ./build.sh yocto      --target <t>           # Yocto image (Linux only)
+  ./build.sh package    --target <t>           # gather built artifacts -> bootimages/*.zip
+  ./build.sh all        --target <t>           # everything the target supports + package
+  ./build.sh status     --target <t>           # per-stage artifact state
+  ./build.sh clean      --target <t> [--stage xsa]
+  python build.py <command> ...                # same, without the shim
 
-Stages (each skipped when its output already exists, like the Makefiles):
-  xsa       Vivado: create project (build.tcl) + synth/impl/export (xsa.tcl)
-  bootfile  Vitis:  workspace (build-vitis.py) + boot image (make-boot.py)
-  petalinux PetaLinux build -- native Linux only; delegates to the tested
-            PetaLinux/Makefile flow (make is always available on Linux)
-  bootimage Gather boot artifacts into bootimages/*.zip
+--target all loops over every target (continue-on-error, per-target summary).
+Two terminals can both run './build.sh all --target all': per-target lock
+files make them cooperate, exactly like the legacy concurrent 'make all'.
 
-On Windows the petalinux stage is refused up front with a handoff command,
-and bootimage gathers whatever exists (standalone zip; petalinux zip too if
-its artifacts were copied over from a Linux build of the same checkout).
-
-Known limitations of this prototype (vs the Makefiles): no lock files, no
-*_all loops, Yocto stage not implemented.
+Each command builds what it depends on first (standalone builds the XSA if
+missing) and skips stages whose outputs already exist. 'all' covers
+xsa + standalone + petalinux + package as supported by the target; yocto is
+explicit-only since it is an alternative to petalinux. On Windows the
+petalinux/yocto/ip stages are refused up front with the Linux hand-off
+command. Run against another checkout with --repo <path>.
 """
 
 import argparse
@@ -47,9 +50,12 @@ FAMILY = {"fpga": "microblaze", "z7": "zynq", "zu": "zynqMP", "versal": "versal"
 IGNORE_CRIT = [re.compile(r"12-1790")]
 
 
+class BuildError(Exception):
+    pass
+
+
 def fail(msg):
-    print(f"\nERROR: {msg}")
-    sys.exit(1)
+    raise BuildError(msg)
 
 
 def _pid_alive(pid):
@@ -479,7 +485,7 @@ def stage_petalinux(ctx: Context):
         print(f"  PetaLinux cannot run on Windows. To finish this target, copy or")
         print(f"  clone this checkout to a Linux machine with PetaLinux Tools "
               f"{ctx.viv_ver} and run:")
-        print(f"    ./build.sh --target {ctx.target} --to bootimage")
+        print(f"    ./build.sh all --target {ctx.target}")
         return "BLOCKED (Linux required)"
     if (ctx.petl_img / "BOOT.BIN").is_file() or (ctx.petl_img / "boot.mcs").is_file():
         return "skipped (images exist)"
@@ -514,7 +520,7 @@ def stage_yocto(ctx: Context):
     if IS_WINDOWS:
         print("  Yocto cannot run on Windows. Build this target on a Linux "
               "machine:")
-        print(f"    ./build.sh --target {ctx.target} --to yocto")
+        print(f"    ./build.sh yocto --target {ctx.target}")
         return "BLOCKED (Linux required)"
     img = ctx.repo.root / "Yocto" / ctx.target / "images" / "linux"
     if (img / "BOOT.BIN").is_file() or (img / "image.ub").is_file():
@@ -604,9 +610,9 @@ def stage_bootimage(ctx: Context):
 
 
 STAGE_FUNCS = {"ip": stage_ip, "project": stage_project, "xsa": stage_xsa,
-               "workspace": stage_workspace, "bootfile": stage_bootfile,
+               "workspace": stage_workspace, "standalone": stage_bootfile,
                "petalinux": stage_petalinux, "yocto": stage_yocto,
-               "bootimage": stage_bootimage}
+               "package": stage_bootimage}
 
 
 def fmt_artifact(p: Path):
@@ -661,10 +667,10 @@ def do_clean(ctx: Context, scope):
 
     if scope in (None, "project", "xsa"):
         rm(ctx.viv_prj)
-    if scope in (None, "workspace", "bootfile"):
+    if scope in (None, "workspace", "standalone"):
         rm(ctx.vit_ws)
         rm(ctx.vit_boot)
-    if scope in (None, "bootimage"):
+    if scope in (None, "package"):
         rm(ctx.petl_zip)
         rm(ctx.bare_zip)
     for r in removed:
@@ -674,59 +680,125 @@ def do_clean(ctx: Context, scope):
     return removed
 
 
-def stages_for(goal, design):
-    if goal == "ip":
-        return ["ip"]
-    if goal == "project":
-        return ["project"]
-    if goal == "xsa":
-        return ["xsa"]
-    if goal == "workspace":
-        return ["xsa", "workspace"]
-    if goal == "bootfile":
-        return ["xsa", "bootfile"]
-    if goal == "petalinux":
-        return ["xsa", "petalinux"]
-    if goal == "yocto":
-        return ["xsa", "yocto"]
+def stages_for(command, design):
+    fixed = {"ip": ["ip"], "project": ["project"], "xsa": ["xsa"],
+             "workspace": ["xsa", "workspace"],
+             "standalone": ["xsa", "standalone"],
+             "petalinux": ["xsa", "petalinux"],
+             "yocto": ["xsa", "yocto"],
+             "package": ["package"]}
+    if command in fixed:
+        return fixed[command]
+    # 'all': everything the target supports, then gather. Yocto is excluded
+    # deliberately -- it is an alternative to petalinux, not an addition.
     order = ["xsa"]
     if design.get("baremetal", False):
-        order.append("bootfile")
+        order.append("standalone")
     if design.get("petalinux", False):
         order.append("petalinux")
-    order.append("bootimage")
+    order.append("package")
     return order
 
 
 # --------------------------------------------------------------------------- #
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--repo", default=None,
-                    help="path to the design repo (default: this script's directory)")
-    ap.add_argument("--target", help="target label, e.g. vck190_fmcp1")
-    ap.add_argument("--to", default=None,
-                    choices=["ip", "project", "xsa", "workspace", "bootfile",
-                             "petalinux", "yocto", "bootimage"],
-                    help="final stage to build (default: bootimage); with "
-                         "--clean, limits cleaning to that stage's outputs")
-    ap.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
-    ap.add_argument("--list", action="store_true", help="list targets and exit")
-    ap.add_argument("--labels", action="store_true",
-                    help="print one target label per line (for scripting) and exit")
-    ap.add_argument("--status", action="store_true",
-                    help="show per-stage artifact state for --target and exit")
-    ap.add_argument("--clean", action="store_true",
-                    help="delete generated outputs for --target (scope with --to); "
-                         "the PetaLinux project dir is never touched")
-    args = ap.parse_args()
+BUILD_COMMANDS = ["ip", "project", "xsa", "workspace", "standalone",
+                  "petalinux", "yocto", "package", "all"]
 
+
+def run_target(repo, target, command, jobs):
+    """Build one target. Returns a list of (stage, result) or raises BuildError."""
+    design = repo.design(target)
+    ctx = Context(repo, target, jobs)
+    print(f"\n=== {repo.prj_name} / {target} ({ctx.family}) -> {command} ===")
+    print(f"    host: {'Windows' if IS_WINDOWS else 'Linux'} | "
+          f"Vivado required: {ctx.viv_ver} | jobs: {jobs}")
+    if design.get("license", False):
+        print("    NOTE: this target requires the Vivado Enterprise edition "
+              "(paid license); it cannot be built with the free Standard "
+              "edition.")
+    if design.get("ip_license", False):
+        print("    NOTE: this design uses separately-licensed IP core(s); "
+              "bitstream generation requires the IP license (an evaluation "
+              "license works for testing).")
+    lock = BuildLock(repo.root, target)
+    if not lock.acquire():
+        return [("(all)", "locked -- skipped")]
+    summary = []
+    try:
+        for name in stages_for(command, design):
+            print(f"\n--- stage: {name} ---")
+            result = STAGE_FUNCS[name](ctx)
+            print(f"--- stage {name}: {result} ---")
+            summary.append((name, result))
+    finally:
+        lock.release()
+    return summary
+
+
+def warn_submodules(repo):
+    gm = repo.root / ".gitmodules"
+    if not gm.is_file():
+        return
+    empty = []
+    for m in re.finditer(r"path\s*=\s*(\S+)", gm.read_text(encoding="utf-8")):
+        sub = repo.root / m.group(1)
+        if not sub.is_dir() or not any(sub.iterdir()):
+            empty.append(m.group(1))
+    if empty:
+        print(f"WARNING: git submodule(s) not initialised: {', '.join(empty)} "
+              f"-- some targets need them. If a build fails, run: "
+              f"git submodule update --init")
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="Opsero reference design build runner",
+        epilog="Run '%(prog)s <command> --help' for command options.")
+    sub = ap.add_subparsers(dest="command", required=True, metavar="command")
+
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--repo", default=None,
+                        help="path to the design repo (default: this script's directory)")
+    targ = argparse.ArgumentParser(add_help=False)
+    targ.add_argument("--target", required=True,
+                      help="target label from 'list', or 'all' for every target")
+
+    helps = {
+        "ip": "generate HLS IP (only repos with an IP pre-stage; Linux only)",
+        "project": "create the Vivado project (.xpr)",
+        "xsa": "build the Vivado XSA (synth + impl + export)",
+        "workspace": "create the Vitis workspace and build the app",
+        "standalone": "build the Vitis baremetal boot file (BOOT.BIN / .bit)",
+        "petalinux": "build the PetaLinux image (Linux only)",
+        "yocto": "build the Yocto image (Linux only)",
+        "package": "gather built artifacts into bootimages/*.zip",
+        "all": "build everything the target supports, then package",
+    }
+    for cmd in BUILD_COMMANDS:
+        sp = sub.add_parser(cmd, parents=[common, targ], help=helps[cmd])
+        sp.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
+
+    sub.add_parser("list", parents=[common], help="list targets and attributes")
+    sub.add_parser("labels", parents=[common],
+                   help="print one target label per line (for scripting)")
+    sub.add_parser("status", parents=[common, targ],
+                   help="show per-stage artifact state")
+    cp = sub.add_parser("clean", parents=[common, targ],
+                        help="delete generated outputs (PetaLinux project dir "
+                             "is never touched)")
+    cp.add_argument("--stage", default=None,
+                    choices=["project", "xsa", "workspace", "standalone", "package"],
+                    help="limit cleaning to one stage's outputs (default: all)")
+
+    args = ap.parse_args()
     repo = Repo(Path(args.repo) if args.repo else Path(__file__).absolute().parent)
-    if args.labels:
+
+    if args.command == "labels":
         for d in repo.data["designs"]:
             print(d["label"])
         return
-    if args.list:
+    if args.command == "list":
         print(f"{repo.prj_name} targets:")
         for d in repo.data["designs"]:
             flags = [k for k in ("baremetal", "petalinux", "yocto") if d.get(k)]
@@ -737,61 +809,48 @@ def main():
                   f"({', '.join(flags)}){lic}")
         return
 
-    if not args.target:
-        ap.error("--target is required (or use --list)")
-    design = repo.design(args.target)
-    if not design:
-        fail(f"unknown target '{args.target}'. Valid: {', '.join(repo.labels())}")
+    if args.target == "all":
+        targets = repo.labels()
+    else:
+        if not repo.design(args.target):
+            print(f"ERROR: unknown target '{args.target}'. "
+                  f"Valid: {', '.join(repo.labels())}")
+            sys.exit(1)
+        targets = [args.target]
 
-    ctx = Context(repo, args.target, args.jobs)
-    if args.status:
-        print_status(ctx)
+    if args.command == "status":
+        for t in targets:
+            print_status(Context(repo, t, 8))
         return
-    if args.clean:
-        print(f"=== clean: {args.target} (scope: {args.to or 'all'}) ===")
-        do_clean(ctx, args.to)
+    if args.command == "clean":
+        for t in targets:
+            print(f"=== clean: {t} (scope: {args.stage or 'all'}) ===")
+            do_clean(Context(repo, t, 8), args.stage)
         return
 
-    goal = args.to or "bootimage"
-    gm = repo.root / ".gitmodules"
-    if gm.is_file():
-        empty = []
-        for m in re.finditer(r"path\s*=\s*(\S+)", gm.read_text(encoding="utf-8")):
-            sub = repo.root / m.group(1)
-            if not sub.is_dir() or not any(sub.iterdir()):
-                empty.append(m.group(1))
-        if empty:
-            print(f"    WARNING: git submodule(s) not initialised: "
-                  f"{', '.join(empty)} -- some targets need them. If this "
-                  f"build fails, run: git submodule update --init")
-    print(f"=== {repo.prj_name} / {args.target} ({ctx.family}) -> {goal} ===")
-    print(f"    host: {'Windows' if IS_WINDOWS else 'Linux'} | "
-          f"Vivado required: {ctx.viv_ver} | jobs: {args.jobs}")
-    if design.get("license", False):
-        print("    NOTE: this target requires the Vivado Enterprise edition "
-              "(paid license); it cannot be built with the free Standard "
-              "edition.")
-    if design.get("ip_license", False):
-        print("    NOTE: this design uses separately-licensed IP core(s); "
-              "bitstream generation requires the IP license (an evaluation "
-              "license works for testing).")
+    warn_submodules(repo)
+    results = {}
+    for t in targets:
+        try:
+            results[t] = (True, run_target(repo, t, args.command, args.jobs))
+        except BuildError as e:
+            print(f"\nERROR: {e}")
+            results[t] = (False, [("(failed)", str(e).splitlines()[0])])
+            if len(targets) == 1:
+                sys.exit(1)
+            print(f"--- continuing with remaining targets ---")
 
-    lock = BuildLock(repo.root, args.target)
-    if not lock.acquire():
-        return
-    summary = []
-    try:
-        for name in stages_for(goal, design):
-            print(f"\n--- stage: {name} ---")
-            result = STAGE_FUNCS[name](ctx)
-            print(f"--- stage {name}: {result} ---")
-            summary.append((name, result))
-    finally:
-        lock.release()
-
-    print(f"\n=== summary: {args.target} ===")
-    for name, result in summary:
-        print(f"  {name:<10} {result}")
+    print(f"\n=== summary ({args.command}) ===")
+    failed = 0
+    for t, (ok, summary) in results.items():
+        if len(targets) > 1:
+            print(f"  {t}: {'OK' if ok else 'FAILED'}")
+        for name, result in summary:
+            print(f"    {name:<10} {result}")
+        failed += 0 if ok else 1
+    if failed:
+        print(f"\n{failed}/{len(targets)} target(s) failed")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

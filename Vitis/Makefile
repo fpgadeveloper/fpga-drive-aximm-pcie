@@ -28,32 +28,28 @@ help:
 	@echo '    Delete the workspace and boot files.'
 	@echo ''
 	@echo 'DEPRECATED: this Makefile now wraps ../build.sh and will be removed'
-	@echo 'at the next version update. Equivalent: ../build.sh --target <val> --to bootfile'
+	@echo 'at the next version update. Equivalent: ../build.sh standalone --target <val>'
 	@echo ''
 	@echo 'Valid targets:'
-	@$(BUILD) --labels | sed 's/^/    - /'
+	@$(BUILD) labels | sed 's/^/    - /'
 
 .PHONY: workspace
 workspace:
-	$(BUILD) --target $(TARGET) --to workspace --jobs $(JOBS)
+	$(BUILD) workspace --target $(TARGET) --jobs $(JOBS)
 
 .PHONY: bootfile
 bootfile:
-	$(BUILD) --target $(TARGET) --to bootfile --jobs $(JOBS)
+	$(BUILD) standalone --target $(TARGET) --jobs $(JOBS)
 
 .PHONY: all
 all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --to bootfile --jobs $(JOBS) || exit $$?; \
-	done
+	$(BUILD) standalone --target all --jobs $(JOBS)
 
 .PHONY: clean
 clean:
-	$(BUILD) --target $(TARGET) --clean --to bootfile
+	$(BUILD) clean --target $(TARGET) --stage standalone
 
 .PHONY: clean_all
 clean_all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --clean --to bootfile; \
-	done
+	$(BUILD) clean --target all --stage standalone
 	rm -rf boot .Xil RemoteSystemsTempFiles

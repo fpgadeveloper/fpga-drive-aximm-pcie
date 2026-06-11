@@ -29,45 +29,39 @@ help:
 	@echo '    Same as above but for all targets.'
 	@echo ''
 	@echo 'DEPRECATED: this Makefile now wraps ../build.sh and will be removed'
-	@echo 'at the next version update. Equivalent: ../build.sh --target <val> --to xsa'
+	@echo 'at the next version update. Equivalent: ../build.sh xsa --target <val>'
 	@echo ''
 	@echo 'Valid targets:'
-	@$(BUILD) --labels | sed 's/^/    - /'
+	@$(BUILD) labels | sed 's/^/    - /'
 
 .PHONY: xsa
 xsa:
-	$(BUILD) --target $(TARGET) --to xsa --jobs $(JOBS)
+	$(BUILD) xsa --target $(TARGET) --jobs $(JOBS)
 
 .PHONY: project
 project:
-	$(BUILD) --target $(TARGET) --to project
+	$(BUILD) project --target $(TARGET)
+
+.PHONY: ip
+ip:
+	$(BUILD) ip --target $(TARGET)
 
 .PHONY: all
 all: xsa_all
 
 .PHONY: xsa_all
 xsa_all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --to xsa --jobs $(JOBS) || exit $$?; \
-	done
+	$(BUILD) xsa --target all --jobs $(JOBS)
 
 .PHONY: project_all
 project_all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --to project || exit $$?; \
-	done
+	$(BUILD) project --target all
 
 .PHONY: clean
 clean:
-	$(BUILD) --target $(TARGET) --clean --to xsa
+	$(BUILD) clean --target $(TARGET) --stage xsa
 
 .PHONY: clean_all
 clean_all:
-	@for targ in $$($(BUILD) --labels); do \
-		$(BUILD) --target $$targ --clean --to xsa; \
-	done
+	$(BUILD) clean --target all --stage xsa
 	rm -rf .Xil vivado*.log vivado*.jou logs
-
-.PHONY: ip
-ip:
-	$(BUILD) --target $(TARGET) --to ip

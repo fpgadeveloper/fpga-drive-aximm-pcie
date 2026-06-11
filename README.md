@@ -192,11 +192,11 @@ with the AMD tools):
 
 ```
 cd fpga-drive-aximm-pcie
-./build.sh --list                          # list targets and their attributes
-./build.sh --target uzev --to bootfile     # Vivado XSA + Vitis BOOT.BIN (baremetal)
-./build.sh --target uzev --to bootimage    # full chain incl. PetaLinux (Linux only)
-./build.sh --target uzev --status          # per-stage artifact state
-./build.sh --target uzev --clean           # delete generated outputs
+./build.sh list                          # list targets and their attributes
+./build.sh standalone --target uzev     # Vivado XSA + Vitis BOOT.BIN (baremetal)
+./build.sh all --target uzev    # full chain incl. PetaLinux (Linux only)
+./build.sh status --target uzev          # per-stage artifact state
+./build.sh clean --target uzev           # delete generated outputs
 ```
 
 Stages whose outputs already exist are skipped automatically. On Windows
