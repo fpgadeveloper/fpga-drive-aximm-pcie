@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -394,6 +395,18 @@ def stage_bootfile(ctx: Context):
     return "built"
 
 
+def find_petalinux_settings(ver):
+    home = Path.home()
+    roots = [home / "petalinux", home / "PetaLinux", Path("/tools/petalinux"),
+             Path("/opt/petalinux"), Path("/opt/pkg/petalinux"),
+             Path("/tools/Xilinx/PetaLinux")]
+    for root in roots:
+        for cand in (root / ver / "settings.sh", root / "settings.sh"):
+            if cand.is_file():
+                return cand
+    return None
+
+
 def stage_petalinux(ctx: Context):
     if not ctx.design.get("petalinux", False):
         return "skipped (target has no PetaLinux flow)"
@@ -407,11 +420,24 @@ def stage_petalinux(ctx: Context):
     if (ctx.petl_img / "BOOT.BIN").is_file() or (ctx.petl_img / "boot.mcs").is_file():
         return "skipped (images exist)"
     # Delegate to the tested Makefile flow -- make always exists on Linux.
-    rc = run_tool(["make", "-C", str(ctx.repo.root / "PetaLinux"),
-                   "petalinux", f"TARGET={ctx.target}", f"JOBS={ctx.jobs}"],
-                  cwd=ctx.repo.root)
-    if rc != 0:
-        fail(f"PetaLinux build failed (rc={rc}). Is settings.sh sourced?")
+    cmd = ["make", "-C", str(ctx.repo.root / "PetaLinux"),
+           "petalinux", f"TARGET={ctx.target}", f"JOBS={ctx.jobs}"]
+    if not os.environ.get("PETALINUX"):
+        settings = find_petalinux_settings(ctx.viv_ver)
+        if not settings:
+            fail(f"PetaLinux {ctx.viv_ver} settings.sh not found -- install "
+                 f"PetaLinux Tools or source settings.sh before running.")
+        rc = run_tool(["bash", "-c",
+                       f'source "{settings}" >/dev/null && ' + shlex.join(cmd)],
+                      cwd=ctx.repo.root)
+    else:
+        rc = run_tool(cmd, cwd=ctx.repo.root)
+    # The PetaLinux Makefile can exit 0 without producing images (e.g. bad
+    # environment) -- verify like every other stage.
+    boot_ok = (ctx.petl_img / "BOOT.BIN").is_file() or (ctx.petl_img / "boot.mcs").is_file()
+    if rc != 0 or not boot_ok:
+        fail(f"PetaLinux build failed (rc={rc}; boot artifact "
+             f"{'ok' if boot_ok else 'MISSING in ' + str(ctx.petl_img)}).")
     return "built"
 
 
@@ -622,6 +648,17 @@ def main():
         return
 
     goal = args.to or "bootimage"
+    gm = repo.root / ".gitmodules"
+    if gm.is_file():
+        empty = []
+        for m in re.finditer(r"path\s*=\s*(\S+)", gm.read_text(encoding="utf-8")):
+            sub = repo.root / m.group(1)
+            if not sub.is_dir() or not any(sub.iterdir()):
+                empty.append(m.group(1))
+        if empty:
+            print(f"    WARNING: git submodule(s) not initialised: "
+                  f"{', '.join(empty)} -- some targets need them. If this "
+                  f"build fails, run: git submodule update --init")
     print(f"=== {repo.prj_name} / {args.target} ({ctx.family}) -> {goal} ===")
     print(f"    host: {'Windows' if IS_WINDOWS else 'Linux'} | "
           f"Vivado required: {ctx.viv_ver} | jobs: {args.jobs}")
