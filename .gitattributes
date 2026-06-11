@@ -1,3 +1,4 @@
 # Shell/python entry points must keep LF endings on all platforms
 build.sh text eol=lf
 build.py text eol=lf
+build.bat text eol=crlf

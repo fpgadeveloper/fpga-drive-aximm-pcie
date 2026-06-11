@@ -24,10 +24,11 @@ files make them cooperate, exactly like the legacy concurrent 'make all'.
 
 Each command builds what it depends on first (standalone builds the XSA if
 missing) and skips stages whose outputs already exist. 'all' covers
-xsa + standalone + petalinux + package as supported by the target; yocto is
-explicit-only since it is an alternative to petalinux. On Windows the
+xsa + standalone + petalinux + yocto + package as supported by the target
+(this release builds both Linux flows; PetaLinux is dropped at the next
+version update). On Windows the
 petalinux/yocto/ip stages are refused up front with the Linux hand-off
-command. Run against another checkout with --repo <path>.
+command.
 """
 
 import argparse
@@ -272,9 +273,10 @@ def check_versal_path(ctx: Context):
         if longest >= 260:
             fail(f"project path is too long for Versal PLM generation on Windows\n"
                  f"  (would reach ~{longest} chars; the limit is 260, and the PLM\n"
-                 f"  build tools do not support long paths). Map a short drive:\n"
-                 f"    subst W: \"{ctx.repo.root.parent}\"\n"
-                 f"  then re-run with --repo W:/{ctx.repo.root.name}")
+                 f"  build tools do not support long paths). Map the repo to a\n"
+                 f"  short drive and re-run the same command from there:\n"
+                 f"    subst W: \"{ctx.repo.root}\"\n"
+                 f"    cd /w/    (or W:\\ in Command Prompt)")
 
 
 def vivado_exe(ctx: Context):
@@ -417,9 +419,9 @@ def stage_workspace(ctx: Context):
         if longest >= 260:
             fail(f"workspace path is too long for the Vitis BSP build on Windows\n"
                  f"  (would reach ~{longest} chars; the limit is 260). Map the repo\n"
-                 f"  root itself to a short drive:\n"
+                 f"  root to a short drive and re-run the same command from there:\n"
                  f"    subst U: \"{ctx.repo.root}\"\n"
-                 f"  then re-run with --repo U:/")
+                 f"    cd /u/    (or U:\\ in Command Prompt)")
 
     # vitis.bat exits 0 even on failure, so trust artifacts, not exit codes.
     xpfm = (ctx.vit_ws / f"{ctx.target}_platform" / "export"
@@ -689,13 +691,16 @@ def stages_for(command, design):
              "package": ["package"]}
     if command in fixed:
         return fixed[command]
-    # 'all': everything the target supports, then gather. Yocto is excluded
-    # deliberately -- it is an alternative to petalinux, not an addition.
+    # 'all': everything the target supports, then gather. Both Linux flows
+    # are built when supported: this release supports PetaLinux and Yocto
+    # side by side (PetaLinux is dropped at the next version update).
     order = ["xsa"]
     if design.get("baremetal", False):
         order.append("standalone")
     if design.get("petalinux", False):
         order.append("petalinux")
+    if design.get("yocto", False):
+        order.append("yocto")
     order.append("package")
     return order
 
@@ -704,6 +709,127 @@ def stages_for(command, design):
 
 BUILD_COMMANDS = ["ip", "project", "xsa", "workspace", "standalone",
                   "petalinux", "yocto", "package", "all"]
+
+COMMAND_HELP = {
+    "list": "list targets and attributes",
+    "labels": "print one target label per line (for scripting)",
+    "ip": "generate HLS IP (only repos with an IP pre-stage; Linux only)",
+    "project": "create the Vivado project (.xpr)",
+    "xsa": "build the Vivado XSA (synth + impl + export)",
+    "workspace": "create the Vitis workspace and build the app",
+    "standalone": "build the Vitis baremetal boot file (BOOT.BIN / .bit)",
+    "petalinux": "build the PetaLinux image (Linux only)",
+    "yocto": "build the Yocto image (Linux only)",
+    "package": "gather built artifacts into bootimages/*.zip",
+    "all": "build everything the target supports (incl. yocto), then package",
+    "release": "build 'all' for every target, then zip Vitis/boot (repos with release_name)",
+    "status": "show per-stage artifact state",
+    "clean": "delete generated outputs (--stage to limit; PetaLinux dir never touched)",
+}
+
+
+def shim_name():
+    """How the user invoked us, for example lines in help output."""
+    return os.environ.get("BUILD_SHIM") or "python build.py"
+
+
+# Commands that only make sense for targets with a given data.json flag.
+COMMAND_CAPABILITY = {"standalone": "baremetal", "workspace": "baremetal",
+                      "petalinux": "petalinux", "yocto": "yocto"}
+
+
+def capable_designs(repo, flag=None):
+    return [d for d in repo.data["designs"] if not flag or d.get(flag)]
+
+
+def example_target(repo, flag=None):
+    designs = capable_designs(repo, flag) or repo.data["designs"]
+    for d in designs:
+        if d.get("publish", True) and not d.get("license"):
+            return d["label"]
+    for d in designs:
+        if not d.get("license"):
+            return d["label"]
+    return designs[0]["label"]
+
+
+def print_targets(repo, out=None, flag=None, cmd=None):
+    out = out or sys.stdout
+    labels = [d["label"] for d in capable_designs(repo, flag)]
+    what = f"Valid targets for '{cmd}'" if flag and cmd else "Valid targets"
+    print(f"{what} ({len(labels)}):", file=out)
+    line = "  "
+    for lab in labels:
+        if len(line) + len(lab) > 78:
+            print(line.rstrip(", "), file=out)
+            line = "  "
+        line += lab + ", "
+    if line.strip():
+        print(line.rstrip(", "), file=out)
+
+
+class FriendlyParser(argparse.ArgumentParser):
+    """argparse parser whose missing/invalid-argument error also lists the
+    valid targets and a worked example (the usage line comes first, as
+    standard)."""
+    repo = None
+
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        print(f"{self.prog}: error: {message}", file=sys.stderr)
+        repo = FriendlyParser.repo
+        if repo is not None and "--target" in message:
+            cmd = self.prog.split()[-1]
+            flag = COMMAND_CAPABILITY.get(cmd)
+            if flag and not capable_designs(repo, flag):
+                print(file=sys.stderr)
+                print(f"This repo has no targets that support '{cmd}'.",
+                      file=sys.stderr)
+                sys.exit(2)
+            if IS_WINDOWS and cmd in ("petalinux", "yocto"):
+                ex = example_target(repo, flag)
+                print(file=sys.stderr)
+                print(f"Note: '{cmd}' requires a native Linux machine -- it "
+                      f"cannot run on Windows.", file=sys.stderr)
+                print(f"On this Windows machine you can build the supported "
+                      f"parts instead:", file=sys.stderr)
+                print(f"  {shim_name()} xsa --target <target>", file=sys.stderr)
+                print(f"  {shim_name()} all --target <target>", file=sys.stderr)
+                print(file=sys.stderr)
+                print_targets(repo, out=sys.stderr, flag=flag, cmd=cmd)
+                print(file=sys.stderr)
+                print(f"Example (on Linux):  ./build.sh {cmd} --target {ex}",
+                      file=sys.stderr)
+                sys.exit(2)
+            print(file=sys.stderr)
+            print_targets(repo, out=sys.stderr, flag=flag, cmd=cmd)
+            print(file=sys.stderr)
+            print(f"Example:  {self.prog} --target "
+                  f"{example_target(repo, flag)}", file=sys.stderr)
+        sys.exit(2)
+
+
+def print_overview(repo):
+    shim = shim_name()
+    print(f"{repo.prj_name} -- Opsero reference design build runner")
+    print()
+    print(f"Usage: {shim} <command> [--target <label>] [options]")
+    print()
+    print("Commands:")
+    for cmd in ["list", "labels"] + BUILD_COMMANDS + ["release", "status", "clean"]:
+        print(f"  {cmd:<11} {COMMAND_HELP[cmd]}")
+    print()
+    print_targets(repo)
+    ex = example_target(repo)
+    print()
+    print("Examples:")
+    print(f"  {shim} list")
+    print(f"  {shim} xsa --target {ex}")
+    print(f"  {shim} standalone --target {ex}")
+    print(f"  {shim} all --target {ex}")
+    print(f"  {shim} all --target all")
+    print()
+    print(f"Run '{shim} <command> --help' for command options.")
 
 
 def run_target(repo, target, command, jobs):
@@ -755,36 +881,34 @@ def main():
     ap = argparse.ArgumentParser(
         description="Opsero reference design build runner",
         epilog="Run '%(prog)s <command> --help' for command options.")
-    sub = ap.add_subparsers(dest="command", required=True, metavar="command")
+    repo = Repo(Path(__file__).absolute().parent)
+    FriendlyParser.repo = repo
+    sub = ap.add_subparsers(dest="command", required=False, metavar="command",
+                            parser_class=FriendlyParser)
 
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--repo", default=None,
-                        help="path to the design repo (default: this script's directory)")
     targ = argparse.ArgumentParser(add_help=False)
     targ.add_argument("--target", required=True,
                       help="target label from 'list', or 'all' for every target")
 
-    helps = {
-        "ip": "generate HLS IP (only repos with an IP pre-stage; Linux only)",
-        "project": "create the Vivado project (.xpr)",
-        "xsa": "build the Vivado XSA (synth + impl + export)",
-        "workspace": "create the Vitis workspace and build the app",
-        "standalone": "build the Vitis baremetal boot file (BOOT.BIN / .bit)",
-        "petalinux": "build the PetaLinux image (Linux only)",
-        "yocto": "build the Yocto image (Linux only)",
-        "package": "gather built artifacts into bootimages/*.zip",
-        "all": "build everything the target supports, then package",
-    }
+    shim = shim_name()
     for cmd in BUILD_COMMANDS:
-        sp = sub.add_parser(cmd, parents=[common, targ], help=helps[cmd])
+        sp = sub.add_parser(cmd, parents=[targ], prog=f"{shim} {cmd}",
+                            help=COMMAND_HELP[cmd])
         sp.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
 
-    sub.add_parser("list", parents=[common], help="list targets and attributes")
-    sub.add_parser("labels", parents=[common],
+    rp = sub.add_parser("release", prog=f"{shim} release",
+                        help="build 'all' for every target, then zip Vitis/boot "
+                             "into <release_name>.zip (repos with release_name "
+                             "in data.json)")
+    rp.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
+
+    sub.add_parser("list", prog=f"{shim} list",
+                   help="list targets and attributes")
+    sub.add_parser("labels", prog=f"{shim} labels",
                    help="print one target label per line (for scripting)")
-    sub.add_parser("status", parents=[common, targ],
+    sub.add_parser("status", parents=[targ], prog=f"{shim} status",
                    help="show per-stage artifact state")
-    cp = sub.add_parser("clean", parents=[common, targ],
+    cp = sub.add_parser("clean", parents=[targ], prog=f"{shim} clean",
                         help="delete generated outputs (PetaLinux project dir "
                              "is never touched)")
     cp.add_argument("--stage", default=None,
@@ -792,7 +916,28 @@ def main():
                     help="limit cleaning to one stage's outputs (default: all)")
 
     args = ap.parse_args()
-    repo = Repo(Path(args.repo) if args.repo else Path(__file__).absolute().parent)
+
+    if args.command is None:
+        print_overview(repo)
+        return
+
+    # Explicitly requested Linux-only flows are refused BEFORE any work is
+    # done -- don't spend 40 minutes on an XSA when the requested artifact
+    # cannot be produced on this host. (Inside 'all', the petalinux/yocto
+    # stages report BLOCKED and the rest still builds -- that is the point
+    # of 'all' on Windows.)
+    if IS_WINDOWS and args.command in ("petalinux", "yocto"):
+        shim = shim_name()
+        print(f"'{args.command}' requires a native Linux machine -- nothing "
+              f"was built.")
+        print(f"On this Windows machine you can:")
+        print(f"  {shim} xsa --target {args.target}         "
+              f"# build the hardware half now")
+        print(f"  {shim} all --target {args.target}         "
+              f"# build everything Windows supports")
+        print(f"Then on a Linux machine, in the same checkout:")
+        print(f"  ./build.sh {args.command} --target {args.target}")
+        sys.exit(2)
 
     if args.command == "labels":
         for d in repo.data["designs"]:
@@ -807,6 +952,34 @@ def main():
                 lic += "  [IP license]"
             print(f"  {d['label']:<16} {FAMILY.get(d['group'], d['group']):<11} "
                   f"({', '.join(flags)}){lic}")
+        return
+
+    if args.command == "release":
+        rel_name = repo.data.get("release_name")
+        if not rel_name:
+            print("ERROR: this repo has no 'release_name' in config/data.json "
+                  "-- the release command is not available here.")
+            sys.exit(1)
+        warn_submodules(repo)
+        failures = []
+        for t in repo.labels():
+            try:
+                run_target(repo, t, "all", args.jobs)
+            except BuildError as e:
+                print(f"\nERROR: {e}")
+                failures.append(t)
+        if failures:
+            print(f"\nrelease aborted: {len(failures)} target(s) failed: "
+                  f"{', '.join(failures)}")
+            sys.exit(1)
+        boot = repo.root / "Vitis" / "boot"
+        shutil.copyfile(repo.root / "README.md", boot / "README.md")
+        rel_zip = repo.root / f"{rel_name}.zip"
+        entries = [(f, f.relative_to(boot).as_posix())
+                   for f in sorted(boot.rglob("*")) if f.is_file()]
+        _zip_tree(rel_zip, entries)
+        print(f"\n=== release written: {rel_zip} "
+              f"({rel_zip.stat().st_size:,} bytes, {len(entries)} files) ===")
         return
 
     if args.target == "all":
@@ -854,4 +1027,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BuildError as e:
+        print(f"\nERROR: {e}")
+        sys.exit(1)

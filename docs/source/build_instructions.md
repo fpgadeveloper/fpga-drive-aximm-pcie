@@ -19,6 +19,9 @@ Others can be built with the Vivado ML Standard Edition **without a license**. T
 following section contains a column specifying which designs require a license, and which can be built without a 
 license.
 
+Additionally, some designs use IP cores that are licensed separately from the Vivado edition itself (for example: TEMAC, XXV Ethernet, HDMI). The **IP License** column in the tables below indicates the designs that require such a license to generate a bitstream; evaluation licenses are generally available from AMD for testing.
+
+
 ## Target designs
 
 This repo contains several designs that target the various supported development boards and their
@@ -35,9 +38,9 @@ the FMC connector on which to connect the mezzanine card.
     {% if designs_in_group | length > 0 %}
 ### {{ group.name }} designs
 
-| Target board        | Target design     | M.2 Slot 1<br>PCIe Lanes  | M.2 Slot 2<br>PCIe Lanes  | FMC Slot    | Vivado<br> Edition |
-|---------------------|-------------------|---------------------------|---------------------------|-------------|-----|
-{% for design in data.designs %}{% if design.group == group.label and design.publish %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.lanes[0] }} | {{ design.lanes[1] | default("-") }} | {{ design.connector }} | {{ "Enterprise" if design.license else "Standard 🆓" }} |
+| Target board        | Target design     | M.2 Slot 1<br>PCIe Lanes  | M.2 Slot 2<br>PCIe Lanes  | FMC Slot    | Vivado<br> Edition | IP<br>License |
+|---------------------|-------------------|---------------------------|---------------------------|-------------|-----|-----|
+{% for design in data.designs %}{% if design.group == group.label and design.publish %}| [{{ design.board }}]({{ design.link }}) | `{{ design.label }}` | {{ design.lanes[0] }} | {{ design.lanes[1] | default("-") }} | {{ design.connector }} | {{ "Enterprise" if design.license else "Standard 🆓" }} | {{ "Required" if design.ip_license else "-" }} |
 {% endif %}{% endfor %}
 {% endif %}
 {% endfor %}
@@ -65,6 +68,10 @@ cd fpga-drive-aximm-pcie
 ./build.sh clean --target <target>         # delete generated outputs
 ```
 
+On Windows you can also run the same commands **without git bash**, from
+Command Prompt or PowerShell, using `build.bat` (e.g. `build.bat xsa
+--target <target>`).
+
 Stages whose outputs already exist are skipped on re-run, so the same
 command continues an interrupted build. On Windows, the PetaLinux and Yocto
 stages are refused up front with the exact Linux hand-off command. For
@@ -82,36 +89,12 @@ but it is deprecated and will be removed at the next version update.
 Windows users will be able to build the Vivado projects and compile the standalone applications,
 however Linux is required to build the embedded Linux images (PetaLinux or Yocto). 
 The recommended way to build on Windows is the [build runner](#cross-platform-build-runner-recommended)
-run from git bash: `./build.sh standalone --target <target>`. The batch-file steps below
-remain available for GUI-oriented workflows.
+run from git bash: `./build.sh standalone --target <target>`.
 
 ```{tip} If you wish to build the PetaLinux projects,
 we recommend that you build the entire project (including the Vivado project) on a machine (either 
 physical or virtual) running one of the [supported Linux distributions].
 ```
-
-### Build Vivado project in Windows
-
-1. Download the repo as a zip file and extract the files to a directory
-   on your hard drive --OR-- clone the repo to your hard drive
-2. Open Windows Explorer, browse to the repo files on your hard drive.
-3. In the `Vivado` directory, double click on the `build-vivado.bat` batch file.
-   You will be prompted to select a target design to build. You will find the project in
-   the folder `Vivado/<target>`.
-4. Run Vivado and open the project that was just created.
-5. Click Generate bitstream.
-6. When the bitstream is successfully generated, select **File->Export->Export Hardware**.
-   In the window that opens, tick **Include bitstream** and use the default name and location
-   for the XSA file.
-
-### Build Vitis workspace in Windows
-
-Before running these steps, you must first build and export the Vivado project as described above.
-
-1. Return to Windows Explorer and browse to the Vitis directory in the repo.
-2. Double click the `build-vitis.bat` batch file. You will be prompted to select a target design.
-   A Vitis workspace with hardware platform and software application will be created for the
-   selected target design. You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
 
 ## Linux users
 

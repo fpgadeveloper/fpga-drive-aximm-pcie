@@ -8,10 +8,11 @@
 #   3. the Python bundled with the AMD/Xilinx tools (any machine that can
 #      build the designs has one)
 #
-# Usage: ./build.sh --target <label> --to <xsa|bootfile|petalinux|bootimage>
-#        ./build.sh --list
+# Usage: ./build.sh <command> [--target <label>]   e.g. ./build.sh xsa --target uzev
+#        ./build.sh                                  (overview + valid targets)
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export BUILD_SHIM="./build.sh"
 
 works() { "$@" -c 'import sys; sys.exit(0 if sys.version_info[0] == 3 else 1)' >/dev/null 2>&1; }
 

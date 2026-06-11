@@ -184,46 +184,63 @@ source <path-to-petalinux>/2025.2/settings.sh          # for the PetaLinux flow
 source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh   # for the Yocto flow
 ```
 
-### Build runner (recommended, Windows + Linux)
+### Cross-platform build runner
 
-All build steps are driven by `build.py` at the repo root; the `build.sh`
-shim locates a suitable Python 3 automatically (including the one bundled
-with the AMD tools):
+All builds are driven by `build.py` at the repo root, on both Windows
+(git bash) and Linux. The `build.sh` shim finds a suitable Python 3
+automatically (including the one bundled with the AMD tools). Source the
+AMD tools first, pick a target label from `./build.sh list`, then use the
+command for the thing you want to build — each command builds whatever it
+depends on automatically, and skips anything that is already built.
+On Windows without git bash, run the same commands from Command Prompt
+or PowerShell using `build.bat` (e.g. `build.bat xsa --target <target>`).
 
-```
-cd fpga-drive-aximm-pcie
-./build.sh list                          # list targets and their attributes
-./build.sh standalone --target uzev     # Vivado XSA + Vitis BOOT.BIN (baremetal)
-./build.sh all --target uzev    # full chain incl. PetaLinux (Linux only)
-./build.sh status --target uzev          # per-stage artifact state
-./build.sh clean --target uzev           # delete generated outputs
-```
-
-Stages whose outputs already exist are skipped automatically. On Windows
-(git bash) the Vivado and Vitis baremetal stages run natively; PetaLinux and
-Yocto require a Linux machine — the runner refuses those stages up front and
-prints the exact hand-off command. For Versal targets on Windows, keep the
-repo at a short path; the runner checks the 260-character path limit before
-building and explains the `subst` workaround if needed.
-
-The Yocto / EDF flow is unchanged (Linux only):
+#### Build the Vivado project (bitstream + XSA)
 
 ```
-cd fpga-drive-aximm-pcie/Yocto
-make yocto TARGET=uzev
+./build.sh xsa --target <target>
 ```
 
-### Legacy make flow (deprecated)
+#### Build the standalone application
 
-The previous `make` interface still works on Linux and now wraps `build.sh`
-(e.g. `cd Vivado && make xsa TARGET=uzev`, `cd Vitis && make workspace
-TARGET=uzev`, `cd PetaLinux && make petalinux TARGET=uzev`). **The make
-wrappers will be removed at the next version update** — please migrate to
-`./build.sh`.
+Builds the Vitis workspace and the baremetal boot file (`BOOT.BIN` or
+bit file, depending on the device family):
 
-More comprehensive build instructions can be found in the user guide:
-* [For Windows users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#windows-users)
-* [For Linux users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#linux-users)
+```
+./build.sh standalone --target <target>
+```
+
+#### Build PetaLinux (Linux only)
+
+```
+./build.sh petalinux --target <target>
+```
+
+Note: this release supports both PetaLinux and Yocto; PetaLinux will be
+dropped in favor of the Yocto flow at the next version update.
+
+#### Build Yocto (Linux only)
+
+```
+./build.sh yocto --target <target>
+```
+
+#### Build everything
+
+Builds all of the above that the target supports, then gathers the boot
+images into `bootimages/*.zip`:
+
+```
+./build.sh all --target <target>
+./build.sh all --target all          # every target in the repo
+```
+
+Also available: `status`, `clean`, `workspace`, `project` — see
+`./build.sh --help`. On Windows, the PetaLinux and Yocto stages require a
+Linux machine; the runner says so and prints the hand-off command. The
+legacy `make` interface still works on Linux (each Makefile now wraps
+`build.sh`) but is deprecated and will be removed at the next version
+update.
 
 ## Troubleshooting
 
