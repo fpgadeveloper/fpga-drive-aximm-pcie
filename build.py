@@ -214,19 +214,32 @@ def vivado_exe(ctx: Context):
     return vivado / "bin" / ("vivado.bat" if IS_WINDOWS else "vivado")
 
 
+def ip_flow(ctx: Context):
+    """Some repos generate HLS IP before the Vivado project can be created:
+    rpi-camera-fmc / zynqmp-hailo-ai use Vivado/ip/Makefile (per-target),
+    ethernet-fmc-max-throughput uses HLS/Makefile (all targets).
+    Returns (dir, make_args) or (None, None)."""
+    cand = ctx.viv_dir / "ip"
+    if (cand / "Makefile").is_file():
+        return cand, ["ip", f"TARGET={ctx.target}"]
+    cand = ctx.repo.root / "HLS"
+    if (cand / "Makefile").is_file():
+        return cand, ["all"]
+    return None, None
+
+
 def has_ip_flow(ctx: Context):
-    """Some repos (rpi-camera-fmc, zynqmp-hailo-ai) generate HLS IP before
-    the Vivado project can be created (Vivado/ip/Makefile)."""
-    return (ctx.viv_dir / "ip" / "Makefile").is_file()
+    return ip_flow(ctx)[0] is not None
 
 
 def stage_ip(ctx: Context):
-    if not has_ip_flow(ctx):
+    ip_dir, make_args = ip_flow(ctx)
+    if not ip_dir:
         return "skipped (repo has no IP pre-stage)"
     if IS_WINDOWS:
-        fail("this design generates HLS IP before the Vivado build "
-             "(Vivado/ip), a make-driven stage that currently requires "
-             "Linux. Build this target on a Linux machine.")
+        fail(f"this design generates HLS IP before the Vivado build "
+             f"({ip_dir.name}/), a make-driven stage that currently requires "
+             f"Linux. Build this target on a Linux machine.")
     vivado = find_tool("Vivado", ctx.viv_ver)
     vitis = find_tool("Vitis", ctx.viv_ver)
     env = {}
@@ -237,11 +250,11 @@ def stage_ip(ctx: Context):
     if vitis:
         bins.append(str(vitis / "bin"))
     env["PATH"] = os.pathsep.join(bins + [os.environ.get("PATH", "")])
-    # The ip Makefile skips work itself when its ip_done.txt exists.
-    rc = run_tool(["make", "-C", str(ctx.viv_dir / "ip"), "ip",
-                   f"TARGET={ctx.target}"], cwd=ctx.viv_dir, extra_env=env)
+    # The ip/HLS Makefiles skip work themselves when their outputs exist.
+    rc = run_tool(["make", "-C", str(ip_dir)] + make_args,
+                  cwd=ctx.repo.root, extra_env=env)
     if rc != 0:
-        fail(f"IP generation failed (rc={rc}). See Vivado/ip output above.")
+        fail(f"IP generation failed (rc={rc}). See {ip_dir.name}/ output above.")
     return "built"
 
 
