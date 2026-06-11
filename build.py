@@ -214,9 +214,42 @@ def vivado_exe(ctx: Context):
     return vivado / "bin" / ("vivado.bat" if IS_WINDOWS else "vivado")
 
 
+def has_ip_flow(ctx: Context):
+    """Some repos (rpi-camera-fmc, zynqmp-hailo-ai) generate HLS IP before
+    the Vivado project can be created (Vivado/ip/Makefile)."""
+    return (ctx.viv_dir / "ip" / "Makefile").is_file()
+
+
+def stage_ip(ctx: Context):
+    if not has_ip_flow(ctx):
+        return "skipped (repo has no IP pre-stage)"
+    if IS_WINDOWS:
+        fail("this design generates HLS IP before the Vivado build "
+             "(Vivado/ip), a make-driven stage that currently requires "
+             "Linux. Build this target on a Linux machine.")
+    vivado = find_tool("Vivado", ctx.viv_ver)
+    vitis = find_tool("Vitis", ctx.viv_ver)
+    env = {}
+    bins = []
+    if vivado:
+        env["XILINX_VIVADO"] = str(vivado)
+        bins.append(str(vivado / "bin"))
+    if vitis:
+        bins.append(str(vitis / "bin"))
+    env["PATH"] = os.pathsep.join(bins + [os.environ.get("PATH", "")])
+    # The ip Makefile skips work itself when its ip_done.txt exists.
+    rc = run_tool(["make", "-C", str(ctx.viv_dir / "ip"), "ip",
+                   f"TARGET={ctx.target}"], cwd=ctx.viv_dir, extra_env=env)
+    if rc != 0:
+        fail(f"IP generation failed (rc={rc}). See Vivado/ip output above.")
+    return "built"
+
+
 def stage_project(ctx: Context):
     if ctx.xpr.is_file():
         return "skipped (project exists)"
+    if has_ip_flow(ctx):
+        stage_ip(ctx)
     check_versal_path(ctx)
     exe = vivado_exe(ctx)
     ctx.viv_logs.mkdir(exist_ok=True)
@@ -430,7 +463,7 @@ def stage_bootimage(ctx: Context):
     return "; ".join(results) if results else "nothing to gather"
 
 
-STAGE_FUNCS = {"project": stage_project, "xsa": stage_xsa,
+STAGE_FUNCS = {"ip": stage_ip, "project": stage_project, "xsa": stage_xsa,
                "workspace": stage_workspace, "bootfile": stage_bootfile,
                "petalinux": stage_petalinux, "bootimage": stage_bootimage}
 
@@ -498,6 +531,8 @@ def do_clean(ctx: Context, scope):
 
 
 def stages_for(goal, design):
+    if goal == "ip":
+        return ["ip"]
     if goal == "project":
         return ["project"]
     if goal == "xsa":
@@ -525,7 +560,7 @@ def main():
                     help="path to the design repo (default: this script's directory)")
     ap.add_argument("--target", help="target label, e.g. vck190_fmcp1")
     ap.add_argument("--to", default=None,
-                    choices=["project", "xsa", "workspace", "bootfile", "petalinux", "bootimage"],
+                    choices=["ip", "project", "xsa", "workspace", "bootfile", "petalinux", "bootimage"],
                     help="final stage to build (default: bootimage); with "
                          "--clean, limits cleaning to that stage's outputs")
     ap.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")

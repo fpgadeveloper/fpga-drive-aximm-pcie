@@ -67,3 +67,7 @@ clean_all:
 		$(BUILD) --target $$targ --clean --to xsa; \
 	done
 	rm -rf .Xil vivado*.log vivado*.jou logs
+
+.PHONY: ip
+ip:
+	$(BUILD) --target $(TARGET) --to ip
