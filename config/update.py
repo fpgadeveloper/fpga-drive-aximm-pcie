@@ -26,6 +26,8 @@ def create_tables(data):
     to_emoji = {True: ":white_check_mark:", False: ":x:"}
     # License dict
     to_edition = {True: "Enterprise", False: "Standard :free:"}
+    # IP license dict (separately-licensed IP cores, e.g. TEMAC/XXV/HDMI/MRMAC)
+    to_ip = {True: "Required", False: "-"}
     # Determine which groups actually have designs
     used_groups = []
     for group in data['groups']:
@@ -41,8 +43,8 @@ def create_tables(data):
     for group in used_groups:
         tables.append('### {} designs'.format(group['name']))
         tables.append('')
-        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |')
-        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |')
+        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|')
         for design in data['designs']:
             if not design['publish']:
                 continue
@@ -60,6 +62,7 @@ def create_tables(data):
                 cols.append('{0}'.format(to_emoji[design['petalinux']]).ljust(11))
                 cols.append('{0}'.format(to_emoji[design.get('yocto', False)]).ljust(11))
                 cols.append('{0}'.format(to_edition[design['license']]).ljust(5))
+                cols.append('{0}'.format(to_ip[design.get('ip_license', False)]).ljust(5))
                 tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']
         tables.append('')
