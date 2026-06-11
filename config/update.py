@@ -200,9 +200,12 @@ petalinux_targets = get_petalinux_targets(data)
 update_file(petalinux_makefile,petalinux_targets)
 
 # Update the Yocto makefile
-yocto_makefile = '../Yocto/Makefile'
-yocto_targets = get_yocto_targets(data)
-update_file(yocto_makefile,yocto_targets)
+# The Yocto Makefile is now a thin wrapper around build.sh; build.py reads
+# the target list, BD_NAME and port configs from data.json at runtime, so
+# the Makefile no longer contains a generated target list.
+#yocto_makefile = '../Yocto/Makefile'
+#yocto_targets = get_yocto_targets(data)
+#update_file(yocto_makefile,yocto_targets)
 
 # Update the gitignore
 gitignore = '../.gitignore'

@@ -41,10 +41,11 @@ sudo apt-get install repo gawk wget git diffstat unzip texinfo gcc \
     python3-subunit zstd liblz4-tool file locales libacl1 bmap-tools
 ```
 
-Plus Vivado 2025.2 (used to produce the XSA this flow consumes).
-**Vitis 2025.2 must also be sourced** in the shell that runs `make`, because
-`sdtgen`/`xsct` (used to turn the XSA into a System Device Tree) ship with
-Vitis, not Vivado, in 2025.2:
+Plus Vivado 2025.2 (used to produce the XSA this flow consumes) and Vitis
+2025.2 — `sdtgen`/`xsct` (used to turn the XSA into a System Device Tree)
+ship with Vitis, not Vivado, in 2025.2. The build runner locates and sources
+the Vitis environment itself; sourcing it manually is only needed when
+running the `scripts/` engine by hand:
 
 ```
 source <xilinx-install>/2025.2/Vitis/settings64.sh
@@ -52,15 +53,24 @@ source <xilinx-install>/2025.2/Vitis/settings64.sh
 
 ## Build
 
+Yocto images are built with the cross-platform build runner at the repo root
+(this stage requires a native Linux machine; on Windows the runner refuses
+it up front and prints the hand-off command):
+
 ```
-cd Yocto
-make yocto TARGET=zcu106_hpc0      # or any target listed by `make help`
+./build.sh yocto --target zcu106_hpc0    # or any target from `./build.sh list`
 ```
+
+The runner builds the Vivado XSA first if one isn't already present, then
+sequences the four scripts in `scripts/` — the engine of the flow
+(init-workspace, configure-build, build-image, package-output). The legacy
+`cd Yocto && make yocto TARGET=<target>` still works on Linux (the Makefile
+is now a thin wrapper around `build.sh`) but is deprecated.
 
 The first build for a target:
 
-1. Builds the Vivado project and exports the XSA (via `../Vivado/Makefile`)
-   if one isn't already present.
+1. Builds the Vivado project and exports the XSA if one isn't already
+   present.
 2. Initializes a manifest workspace under `Yocto/<TARGET>/` with
    `repo init -u https://github.com/Xilinx/yocto-manifests.git -b rel-v2025.2 -m default-edf.xml`
    and `repo sync` (≈5 GB of git history).
@@ -80,7 +90,8 @@ The first build for a target:
 Subsequent builds skip `repo sync`. To force a re-config (e.g. after editing
 `bsp/<board>/conf/local.conf.append`), remove `Yocto/<TARGET>/configdone.txt`.
 
-`make all` builds every target; `make status_all` reports which are built.
+`./build.sh yocto --target all` builds every target; `./build.sh status --target all`
+reports which are built.
 
 ## Per-board fixups (`system-user.dtsi`)
 
@@ -251,7 +262,7 @@ than from-scratch.
 
 ```
 Yocto/
-  Makefile                  driver, mirrors PetaLinux/Makefile conventions
+  Makefile                  deprecated thin wrapper around ../build.sh
   README.md                 this file
   .gitignore                excludes per-target workspaces + local state
   offline.txt               (optional, gitignored) path to an extracted sstate mirror

@@ -29,6 +29,10 @@
 #   $3 BSP dir         (e.g. <repo>/Yocto/bsp/zcu104)
 #   $4 XSA file        (absolute path)
 #   $5 SSTATE_PATH     (may be empty if no offline cache)
+#   $6 BD_NAME         (block-design name from the Makefile; used as the
+#                       machine-name prefix so it is repo-specific)
+#   $7 PORT_CFG_DIR    (optional per-target overlay layer dir, e.g.
+#                       <repo>/Yocto/bsp/port-configs/ports-0123; empty = none)
 
 set -euo pipefail
 
@@ -37,6 +41,8 @@ TARGET="$2"
 BSP_DIR="$3"
 XSA="$4"
 SSTATE_PATH="${5:-}"
+BD_NAME="${6:-design}"
+PORT_CFG_DIR="${7:-}"
 
 SETUP="$WORKSPACE/edf-init-build-env"
 
@@ -74,9 +80,25 @@ if ! grep -qsF "$META_USER_DIR" "$CONF_DIR/bblayers.conf"; then
     echo "[configure-build] bblayers.conf += $META_USER_DIR"
     {
         echo ""
-        echo "# Added by fpga-drive-aximm-pcie Yocto/scripts/configure-build.sh"
+        echo "# Added by Yocto/scripts/configure-build.sh"
         echo "BBLAYERS += \"$META_USER_DIR\""
     } >> "$CONF_DIR/bblayers.conf"
+fi
+
+# Optional per-target overlay layer (e.g. an Ethernet port-config layer that
+# adds a port-config.dtsi to the device-tree recipe). Added alongside the board
+# meta-user layer so both bbappends apply. No-op when PORT_CFG_DIR is empty or
+# has no meta-user — keeps this script universal for repos with no overlays.
+if [ -n "$PORT_CFG_DIR" ] && [ -d "$PORT_CFG_DIR/meta-user" ]; then
+    OVERLAY_DIR="$PORT_CFG_DIR/meta-user"
+    if ! grep -qsF "$OVERLAY_DIR" "$CONF_DIR/bblayers.conf"; then
+        echo "[configure-build] bblayers.conf += $OVERLAY_DIR (overlay)"
+        {
+            echo ""
+            echo "# Overlay layer added by Yocto/scripts/configure-build.sh"
+            echo "BBLAYERS += \"$OVERLAY_DIR\""
+        } >> "$CONF_DIR/bblayers.conf"
+    fi
 fi
 
 # ---- helper: emit SSTATE_MIRRORS / SOURCE_MIRROR_URL lines for offline.txt ---
@@ -139,7 +161,7 @@ fi
 # bitbake is available (we sourced edf-init-build-env) so the tool builds its
 # own native helpers (kconfig-frontends-native, esw-conf-native, lopper) and
 # fetches/processes the SDT itself.
-MACHINE_NAME="fpgadrv-${TARGET}"
+MACHINE_NAME="${BD_NAME}-${TARGET}"
 GMC="$WORKSPACE/sources/meta-xilinx/gen-machine-conf/gen-machineconf"
 if [ ! -x "$GMC" ]; then
     echo "ERROR: gen-machineconf not found at $GMC" >&2
@@ -159,8 +181,8 @@ fi
 
 # ---- 3. local.conf: select the generated MACHINE + BSP overrides + sstate ---
 LOCAL_APPEND="$BSP_DIR/conf/local.conf.append"
-MARK_BEGIN="# >>> fpga-drive-aximm-pcie: BEGIN appended local.conf (do not edit) >>>"
-MARK_END="# <<< fpga-drive-aximm-pcie: END appended local.conf <<<"
+MARK_BEGIN="# >>> EDF Yocto build: BEGIN appended local.conf (do not edit) >>>"
+MARK_END="# <<< EDF Yocto build: END appended local.conf <<<"
 
 # Strip any previously appended block so this script is idempotent.
 if grep -qF "$MARK_BEGIN" "$CONF_DIR/local.conf"; then

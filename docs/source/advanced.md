@@ -441,7 +441,7 @@ and four scripts under `Yocto/scripts/`:
 | `package-output.sh`  | gather the flashable artifacts into `images/linux/` (≈ `petalinux-package`) |
 
 The step-by-step build instructions are in
-[build_instructions](build_instructions.md#build-yocto-project-in-linux)
+[build_instructions](build_instructions.md#build-yocto)
 and in `Yocto/README.md`; this section covers how the per-board
 customization is organised.
 

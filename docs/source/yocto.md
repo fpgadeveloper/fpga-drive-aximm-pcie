@@ -34,7 +34,7 @@ are advised to use a Linux virtual machine to build the Yocto projects.
    ```
 3. Build the Yocto image for your target platform by running the following commands, replacing
    `<target>` with one of the target design labels listed in the
-   [build instructions](build_instructions.md#build-yocto-project-in-linux):
+   [build instructions](build_instructions.md#build-yocto):
    ```
    cd Yocto
    make yocto TARGET=<target>

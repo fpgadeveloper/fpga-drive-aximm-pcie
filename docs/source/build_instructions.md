@@ -51,161 +51,115 @@ Notes:
    FREE edition which can be used without a license. Vivado *Enterprise* Edition requires
    a license however a 30-day evaluation license is available from the AMD Xilinx Licensing site.
    
-## Cross-platform build runner (recommended)
+## Cross-platform build runner
 
-The designs are built with the `build.py` runner at the repo root — a single
-interface that works on both Windows (git bash) and Linux. The `build.sh`
-shim locates a suitable Python 3 automatically (including the interpreter
-bundled with the AMD tools):
+All builds are driven by the `build.py` runner at the root of the repository,
+on **both Windows and Linux** — the build instructions are the same for the
+two operating systems. Each command builds whatever it depends on
+automatically, skips anything that is already built, and locates the AMD
+tools itself, so there is no need to source the settings scripts beforehand.
+
+On Linux and on Windows (git bash), commands are run with the `build.sh`
+shim, which finds a suitable Python 3 automatically (including the
+interpreter bundled with the AMD tools). Windows users who prefer not to
+use git bash can run the same commands from Command Prompt or PowerShell
+using `build.bat` instead — the commands and arguments are otherwise
+identical, for example `build.bat xsa --target <target>`.
+
+This repository uses git submodules: clone it with `--recurse-submodules`,
+or run `git submodule update --init` in an existing clone, before building.
+
+To see the available targets and the state of a build:
 
 ```
-cd fpga-drive-aximm-pcie
-./build.sh list                            # list targets and attributes
-./build.sh xsa --target <target>        # Vivado project + bitstream + XSA
-./build.sh standalone --target <target>   # + Vitis baremetal boot image
-./build.sh all --target <target>  # + PetaLinux image, gather zips (Linux only)
-./build.sh status --target <target>        # show per-stage artifact state
-./build.sh clean --target <target>         # delete generated outputs
+./build.sh list                       # list the targets and their attributes
+./build.sh status --target <target>   # show the per-stage artifact state
+./build.sh clean --target <target>    # delete a target's generated outputs
 ```
 
-On Windows you can also run the same commands **without git bash**, from
-Command Prompt or PowerShell, using `build.bat` (e.g. `build.bat xsa
---target <target>`).
-
-Stages whose outputs already exist are skipped on re-run, so the same
-command continues an interrupted build. On Windows, the PetaLinux and Yocto
-stages are refused up front with the exact Linux hand-off command. For
-Versal targets on Windows, the runner verifies that the project path fits
-within the 260-character Windows path limit *before* building, and explains
-the `subst` workaround if it does not.
-
-```{attention} The `make` interface described in the sections below still
-works on Linux — each Makefile is now a thin wrapper around `build.sh` —
-but it is deprecated and will be removed at the next version update.
+```{note} The embedded Linux images (PetaLinux and Yocto) can only be built on a
+native Linux machine; everything else builds on Windows too. On Windows, the
+runner refuses the Linux-only stages up front and prints the exact command
+to run on the Linux machine. For Versal targets on Windows, the runner also
+verifies that the project path fits within the 260-character Windows path
+limit before building, and explains the `subst` workaround if it does not.
 ```
 
-## Windows users
-
-Windows users will be able to build the Vivado projects and compile the standalone applications,
-however Linux is required to build the embedded Linux images (PetaLinux or Yocto). 
-The recommended way to build on Windows is the [build runner](#cross-platform-build-runner-recommended)
-run from git bash: `./build.sh standalone --target <target>`.
-
-```{tip} If you wish to build the PetaLinux projects,
-we recommend that you build the entire project (including the Vivado project) on a machine (either 
-physical or virtual) running one of the [supported Linux distributions].
+```{attention} The legacy `make` interface described in previous versions of
+this documentation still works on Linux — each Makefile is now a thin
+wrapper around `build.sh` — but it is deprecated and will be removed at the
+next version update.
 ```
 
-## Linux users
+### Build Vivado project
 
-These projects can be built using a machine (either physical or virtual) with one of the 
-[supported Linux distributions].
+This single command creates the Vivado project, generates the bitstream and
+exports the hardware to an XSA file:
 
-An embedded Linux image can be built with either of two flows: **PetaLinux** or the
-**Yocto / EDF** flow (AMD's Embedded Development Framework, the announced successor to
-PetaLinux). Both are driven by a single `make` command and produce an equivalent image — see
-[build PetaLinux](#build-petalinux-project-in-linux) or
-[build Yocto](#build-yocto-project-in-linux) below.
-
-```{attention} The PetaLinux flow for this repository is being retired. Version 2025.2 is
-the last tool release for which we will support PetaLinux; from the next tool version onward,
-Linux images will be built with the Yocto / EDF flow only. New work should use the Yocto flow.
+```
+./build.sh xsa --target <target>
 ```
 
-```{tip} The build steps can be completed in the order shown below, or
-you can go directly to the Linux build instructions
-([PetaLinux](#build-petalinux-project-in-linux) or [Yocto](#build-yocto-project-in-linux))
-to build the Vivado and Linux projects with a single command.
+Valid targets are:
+{% for design in data.designs if design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
+
+If you want the Vivado project and block design without generating a
+bitstream — for example, to explore or modify the design in the Vivado GUI —
+run `./build.sh project --target <target>` instead, then open the project
+from `Vivado/<target>/`.
+
+### Build Vitis workspace
+
+This creates the Vitis workspace and compiles the standalone application,
+producing the baremetal boot file (`BOOT.BIN` or bit file, depending on the
+device family). The Vivado XSA is built first if it does not already exist:
+
+```
+./build.sh standalone --target <target>
 ```
 
-### Build Vivado project in Linux
+Valid targets for the standalone application are:
+{% for design in data.designs if design.baremetal and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
 
-1. Open a command terminal and launch the setup script for Vivado:
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
-   ```
-2. Clone the Git repository and `cd` into the `Vivado` folder of the repo:
-   ```
-   git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
-   cd fpga-drive-aximm-pcie/Vivado
-   ```
-3. Run make to create the Vivado project for the target board. You must replace `<target>` with a valid
-   target (alternatively, skip to step 5):
-   ```
-   make project TARGET=<target>
-   ```
-   Valid target labels are:
-   {% for design in data.designs if design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
-   That will create the Vivado project and block design without generating a bitstream or exporting to XSA.
-4. Open the generated project in the Vivado GUI and click **Generate Bitstream**. Once the build is
-   complete, select **File->Export->Export Hardware** and be sure to tick **Include bitstream** and use
-   the default name and location for the XSA file.
-5. Alternatively, you can create the Vivado project, generate the bitstream and export to XSA (steps 3 and 4),
-   all from a single command:
-   ```
-   make xsa TARGET=<target>
-   ```
-   
-### Build Vitis workspace in Linux
+The workspace is created in `Vitis/<target>_workspace` and the boot files
+are gathered in `Vitis/boot/<target>/`.
 
-The following steps are required if you wish to build and run the [standalone application](stand_alone). You can
-skip to the following section if you instead want to use PetaLinux. You are not required to have built the
-Vivado design before following these steps, as the Makefile triggers the Vivado build for the corresponding
-design if it has not already been done.
+### Build PetaLinux
 
-1. Launch the setup scripts for Vitis:
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh
-   ```
-2. To build the Vitis workspace, `cd` to the Vitis directory in the repo,
-   then run make to create the Vitis workspace and compile the standalone application:
-   ```
-   cd fpga-drive-aximm-pcie/Vitis
-   make workspace TARGET=<target>
-   ```
-   Valid target labels for the workspaces are:
-   {% for design in data.designs if design.publish %}{% if design.baremetal %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endif %}{% endfor %}
-   You will find the Vitis workspace in the folder `Vitis/<target>_workspace`.
+```{attention} The PetaLinux flow for this repository is being retired.
+Version 2025.2 is the last tool release for which we will support PetaLinux;
+from the next tool version onward, Linux images will be built with the
+Yocto / EDF flow only. New work should use the Yocto flow.
+```
 
-### Build PetaLinux project in Linux
+The PetaLinux build requires a native Linux machine (one of the [supported
+Linux distributions]) with PetaLinux Tools 2025.2 installed. The runner
+locates and sources the PetaLinux `settings.sh` itself, and builds the
+Vivado XSA first if it does not already exist:
 
-These steps will build the PetaLinux project for the target design. You are not required to have built the
-Vivado design before following these steps, as the Makefile triggers the Vivado build for the corresponding
-design if it has not already been done.
+```
+./build.sh petalinux --target <target>
+```
 
-1. Launch the setup script for Vivado (only if you skipped the Vivado build steps above):
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
-   ```
-2. Launch PetaLinux by sourcing the `settings.sh` bash script, eg:
-   ```
-   source <path-to-petalinux-install>/2025.2/settings.sh
-   ```
-3. Build the PetaLinux project for your specific target platform by running the following
-   command, replacing `<target>` with a valid value from below:
-   ```
-   cd PetaLinux
-   make petalinux TARGET=<target>
-   ```
-   Valid target labels for PetaLinux projects are:
-   {% for design in data.designs if design.petalinux and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
-   Note that if you skipped the Vivado build steps above, the Makefile will first generate and
-   build the Vivado project, and then build the PetaLinux project.
+Valid targets for PetaLinux are:
+{% for design in data.designs if design.petalinux and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
 
-### PetaLinux offline build
+The output products are written to `PetaLinux/<target>/images/linux/`.
 
-If you need to build the PetaLinux projects offline (without an internet connection), you can
-follow these instructions.
+#### PetaLinux offline build
 
-1. Download the sstate-cache artefacts from the Xilinx downloads site (the same page where you downloaded
-   PetaLinux tools). There are four of them:
+If you need to build the PetaLinux projects offline (without an internet
+connection), you can follow these instructions.
+
+1. Download the sstate-cache artefacts from the Xilinx downloads site (the
+   same page where you downloaded PetaLinux tools). There are four of them:
    * aarch64 sstate-cache (for ZynqMP designs)
    * arm sstate-cache (for Zynq designs)
    * microblaze sstate-cache (for Microblaze designs)
    * Downloads (for all designs)
-2. Extract the contents of those files to a single location on your hard drive, for this example
-   we'll say `/home/user/petalinux-sstate`. That should leave you with the following directory 
-   structure:
+2. Extract the contents of those files to a single location on your hard
+   drive, for this example we'll say `/home/user/petalinux-sstate`. That
+   should leave you with the following directory structure:
    ```
    /home/user/petalinux-sstate
                              +---  aarch64
@@ -213,55 +167,49 @@ follow these instructions.
                              +---  downloads
                              +---  microblaze
    ```
-3. Create a text file called `offline.txt` in the `PetaLinux` directory of the project repository. The file should contain
-   a single line of text specifying the path where you extracted the sstate-cache files. In this example, the contents of 
-   the file would be:
+3. Create a text file called `offline.txt` in the `PetaLinux` directory of
+   the project repository. The file should contain a single line of text
+   specifying the path where you extracted the sstate-cache files. In this
+   example, the contents of the file would be:
    ```
    /home/user/petalinux-sstate
    ```
-   It is important that the file contain only one line and that the path is written with NO TRAILING 
-   FORWARD SLASH.
+   It is important that the file contain only one line and that the path is
+   written with NO TRAILING FORWARD SLASH.
 
-Now when you use `make` to build the PetaLinux projects, they will be configured for offline build.
+The PetaLinux builds will then be configured for offline build.
 
-### Build Yocto project in Linux
+### Build Yocto
 
-These steps build the Yocto / EDF image for the target design, using AMD's recommended
-`gen-machineconf` `parse-sdt` flow. As with PetaLinux, you are not required to have built the
-Vivado design first — the Makefile triggers the Vivado build for the corresponding design if it
-has not already been done.
+This builds the Yocto / EDF image (AMD's Embedded Development Framework,
+the announced successor to PetaLinux) using AMD's recommended
+`gen-machineconf` / `parse-sdt` flow. It requires a native Linux machine
+with [Google's `repo` tool](https://gerrit.googlesource.com/git-repo/) on
+the `PATH`; the `xsct`/`sdtgen` tools come from Vitis, which the runner
+locates and sources itself. The Vivado XSA is built first if it does not
+already exist:
 
-You will need [Google's `repo` tool](https://gerrit.googlesource.com/git-repo/) on your `PATH`.
+```
+./build.sh yocto --target <target>
+```
 
-1. Launch the setup script for Vivado (only if you skipped the Vivado build steps above):
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
-   ```
-2. Launch the setup script for Vitis. The Yocto flow uses `xsct`/`sdtgen` (which ship with Vitis,
-   not PetaLinux) to generate a System Device Tree from the XSA:
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh
-   ```
-3. Build the Yocto image for your target by running the following command, replacing `<target>`
-   with a valid value from below:
-   ```
-   cd Yocto
-   make yocto TARGET=<target>
-   ```
-   Valid target labels for Yocto builds are:
-   {% for design in data.designs if design.yocto and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
-   The first build of a target runs `repo sync` (several GB of git history) and bitbake from
-   scratch, so it takes a while; subsequent builds are incremental. The output products
-   (`BOOT.BIN`, the kernel, `boot.scr`, `system.dtb`, `rootfs.wic.xz`) are gathered into
-   `Yocto/<target>/images/linux/`.
+Valid targets for Yocto are:
+{% for design in data.designs if design.yocto and design.publish %} `{{ design.label }}`{{ ", " if not loop.last else "." }} {% endfor %}
 
-### Yocto offline build
+The first build of a target runs `repo sync` (several GB of git history)
+and bitbake from scratch, so it takes a while; subsequent builds are
+incremental. The output products (`BOOT.BIN`, the kernel, `boot.scr`,
+`system.dtb`, `rootfs.wic.xz`) are gathered into
+`Yocto/<target>/images/linux/`.
 
-To build the Yocto projects offline (or simply faster), point the build at a locally extracted
-AMD sstate-cache mirror.
+#### Yocto offline build
 
-1. Download the sstate-cache artefacts from the Xilinx downloads site and extract them to a single
-   location, for example `/home/user/yocto-sstate`, leaving the following directory structure:
+To build the Yocto projects offline (or simply faster), point the build at
+a locally extracted AMD sstate-cache mirror.
+
+1. Download the sstate-cache artefacts from the Xilinx downloads site and
+   extract them to a single location, for example `/home/user/yocto-sstate`,
+   leaving the following directory structure:
    ```
    /home/user/yocto-sstate
                           +---  aarch64       (Zynq UltraScale+ and Versal)
@@ -269,14 +217,28 @@ AMD sstate-cache mirror.
                           +---  microblaze    (PMU/PLM firmware)
                           +---  downloads
    ```
-2. Create a text file called `offline.txt` in the `Yocto` directory of the repository containing a
-   single line with that path, written with NO TRAILING FORWARD SLASH:
+2. Create a text file called `offline.txt` in the `Yocto` directory of the
+   repository containing a single line with that path, written with NO
+   TRAILING FORWARD SLASH:
    ```
    /home/user/yocto-sstate
    ```
 
-`make yocto` will then auto-detect which architecture sub-directories are present and configure
-the build to use the mirror.
+The Yocto build will then auto-detect which architecture sub-directories
+are present and configure the build to use the mirror.
+
+### Build everything
+
+This builds everything that the target supports — the Vivado project and XSA,
+the standalone application, the PetaLinux image and the Yocto image — and
+gathers the boot images into `bootimages/*.zip`:
+
+```
+./build.sh all --target <target>
+./build.sh all --target all      # every target in the repo
+```
+
+On Windows, `all` builds everything that the host can build and reports the
+Linux-only stages as `BLOCKED` rather than failing.
 
 [supported Linux distributions]: https://docs.amd.com/r/en-US/ug1144-petalinux-tools-reference-guide/Setting-Up-Your-Environment
-

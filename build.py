@@ -6,6 +6,7 @@ and per-design attributes straight from the repo's config/data.json.
 
 Usage (the command names the artifact you want):
   ./build.sh list                              # all targets + attributes
+  ./build.sh ip         --target <t>           # HLS IP (repos with an IP pre-stage)
   ./build.sh project    --target <t>           # Vivado project (.xpr)
   ./build.sh xsa        --target <t>           # Vivado XSA (synth+impl+export)
   ./build.sh workspace  --target <t>           # Vitis workspace + app build
@@ -27,8 +28,8 @@ missing) and skips stages whose outputs already exist. 'all' covers
 xsa + standalone + petalinux + yocto + package as supported by the target
 (this release builds both Linux flows; PetaLinux is dropped at the next
 version update). On Windows the
-petalinux/yocto/ip stages are refused up front with the Linux hand-off
-command.
+petalinux/yocto stages are refused up front with the Linux hand-off
+command; everything else, including HLS IP generation, runs on both hosts.
 """
 
 import argparse
@@ -287,17 +288,36 @@ def vivado_exe(ctx: Context):
     return vivado / "bin" / ("vivado.bat" if IS_WINDOWS else "vivado")
 
 
+# --------------------------------------------------------------------------- #
+# IP generation pre-stage
+# --------------------------------------------------------------------------- #
+# Some repos generate IP (today: Vitis HLS cores) before the Vivado project
+# can be created. Two layouts exist:
+#   per-board   Vivado/ip/get_part.tcl + <core>/run_hls.tcl -- the device
+#               part is looked up from the board files; outputs land in
+#               Vivado/ip/build/<board>/ (rpi-camera-fmc, zynqmp-hailo-ai)
+#   fixed-part  HLS/<core>/<core>.tcl with hard-coded parts; outputs land in
+#               HLS/<core>/proj_<core>/<solution>/ (ethernet-fmc-max-
+#               throughput and several prod-test repos)
+# A Vivado/ip directory holding only a checked-in component.xml is
+# pre-packaged RTL IP: consumed directly via ip_repo_paths, nothing to
+# generate, no flow reported here.
+
+
+def hls_cores(hls_dir: Path):
+    """Fixed-part HLS core dirs, each laid out as <core>/<core>.tcl."""
+    return sorted(d for d in hls_dir.iterdir()
+                  if d.is_dir() and (d / f"{d.name}.tcl").is_file())
+
+
 def ip_flow(ctx: Context):
-    """Some repos generate HLS IP before the Vivado project can be created:
-    rpi-camera-fmc / zynqmp-hailo-ai use Vivado/ip/Makefile (per-target),
-    ethernet-fmc-max-throughput uses HLS/Makefile (all targets).
-    Returns (dir, make_args) or (None, None)."""
+    """Return ('board', Vivado/ip) | ('cores', HLS) | (None, None)."""
     cand = ctx.viv_dir / "ip"
-    if (cand / "Makefile").is_file():
-        return cand, ["ip", f"TARGET={ctx.target}"]
+    if (cand / "get_part.tcl").is_file():
+        return "board", cand
     cand = ctx.repo.root / "HLS"
-    if (cand / "Makefile").is_file():
-        return cand, ["all"]
+    if cand.is_dir() and hls_cores(cand):
+        return "cores", cand
     return None, None
 
 
@@ -305,30 +325,93 @@ def has_ip_flow(ctx: Context):
     return ip_flow(ctx)[0] is not None
 
 
-def stage_ip(ctx: Context):
-    ip_dir, make_args = ip_flow(ctx)
-    if not ip_dir:
-        return "skipped (repo has no IP pre-stage)"
-    if IS_WINDOWS:
-        fail(f"this design generates HLS IP before the Vivado build "
-             f"({ip_dir.name}/), a make-driven stage that currently requires "
-             f"Linux. Build this target on a Linux machine.")
-    vivado = find_tool("Vivado", ctx.viv_ver)
+def hls_tools(ctx: Context):
+    """vitis-run executable + env (tool bins on PATH, XILINX_VIVADO set)."""
     vitis = find_tool("Vitis", ctx.viv_ver)
+    if not vitis:
+        fail(f"Vitis {ctx.viv_ver} not found (required for HLS IP generation).")
+    exe = vitis / "bin" / ("vitis-run.bat" if IS_WINDOWS else "vitis-run")
+    vivado = find_tool("Vivado", ctx.viv_ver)
     env = {}
-    bins = []
+    bins = [str(vitis / "bin")]
     if vivado:
         env["XILINX_VIVADO"] = str(vivado)
         bins.append(str(vivado / "bin"))
-    if vitis:
-        bins.append(str(vitis / "bin"))
     env["PATH"] = os.pathsep.join(bins + [os.environ.get("PATH", "")])
-    # The ip/HLS Makefiles skip work themselves when their outputs exist.
-    rc = run_tool(["make", "-C", str(ip_dir)] + make_args,
-                  cwd=ctx.repo.root, extra_env=env)
-    if rc != 0:
-        fail(f"IP generation failed (rc={rc}). See {ip_dir.name}/ output above.")
-    return "built"
+    return exe, env
+
+
+def core_built(core: Path):
+    """A core is built when every solution its Tcl creates has exported IP.
+    Artifact check, not exit codes: the .bat tool wrappers exit 0 on failure
+    on Windows."""
+    solutions = (core / f"{core.name}.tcl").read_text(
+        encoding="utf-8", errors="replace").count("open_solution") or 1
+    exported = len(list(core.glob(f"proj_{core.name}/*/impl/ip/component.xml")))
+    return exported >= solutions
+
+
+def check_hls_submodules(ctx: Context, tcl: Path):
+    """run_hls.tcl scripts pull sources from submodules/ (e.g. Vitis_Libraries)."""
+    text = tcl.read_text(encoding="utf-8", errors="replace")
+    for name in set(re.findall(r"submodules/([\w.-]+)", text)):
+        sub = ctx.repo.root / "submodules" / name
+        if not sub.is_dir() or not any(sub.iterdir()):
+            fail(f"the HLS sources need the '{name}' submodule, which is not "
+                 f"initialised. Run:\n  git submodule update --init")
+
+
+def stage_ip(ctx: Context):
+    kind, ip_dir = ip_flow(ctx)
+    if not kind:
+        return "skipped (no IP generation step; bundled IP, if any, is pre-packaged)"
+    exe, env = hls_tools(ctx)
+
+    if kind == "cores":  # fixed-part cores, board-independent
+        results = []
+        for core in hls_cores(ip_dir):
+            if core_built(core):
+                results.append(f"{core.name}: exists")
+                continue
+            rc = run_tool([exe, "--mode", "hls", "--tcl", f"{core.name}.tcl"],
+                          cwd=core, extra_env=env)
+            if not core_built(core):
+                fail(f"HLS build of {core.name} failed (rc={rc}). "
+                     f"See logs in {core}.")
+            results.append(f"{core.name}: built")
+        return "; ".join(results)
+
+    # per-board flow
+    board, url = ctx.design["boardname"], ctx.design["url"]
+    build_dir = ip_dir / "build" / board
+    done = build_dir / "ip_done.txt"
+    if done.is_file():
+        return f"skipped (IP for board {board} exists)"
+    run_tcls = sorted(ip_dir.glob("*/run_hls.tcl"))
+    if not run_tcls:
+        fail(f"{ip_dir} has get_part.tcl but no <core>/run_hls.tcl")
+    for t in run_tcls:
+        check_hls_submodules(ctx, t)
+    if not (build_dir / "settings.tcl").is_file():
+        ctx.viv_logs.mkdir(exist_ok=True)
+        log = ctx.viv_logs / f"{ctx.target}_ip_part.log"
+        rc = run_tool([vivado_exe(ctx), "-mode", "batch", "-notrace",
+                       "-source", "get_part.tcl",
+                       "-log", log.as_posix(), "-journal",
+                       (ctx.viv_logs / f"{ctx.target}_ip_part.jou").as_posix(),
+                       "-tclargs", url, board],
+                      cwd=ip_dir)
+        if rc != 0 or not (build_dir / "settings.tcl").is_file():
+            fail(f"board part lookup failed (rc={rc}). See {log}")
+    for t in run_tcls:
+        rc = run_tool([exe, "--mode", "hls", "--tcl",
+                       f"{t.parent.name}/run_hls.tcl"],
+                      cwd=ip_dir, extra_env={**env, "BOARD_NAME": board})
+        if not list(build_dir.glob(f"{t.parent.name}*/*/impl/ip/component.xml")):
+            fail(f"HLS build of {t.parent.name} for board {board} failed "
+                 f"(rc={rc}). See logs in {build_dir}.")
+    done.write_text("IP generated by build.py\n")
+    return f"built (board {board})"
 
 
 def stage_project(ctx: Context):
@@ -513,10 +596,32 @@ def stage_petalinux(ctx: Context):
     return "built"
 
 
+def yocto_port_cfg_dir(ctx: Context):
+    """Optional per-target overlay layer (e.g. the Ethernet port-config
+    layers), derived from data.json 'lanes' the same way update.py used to
+    generate the Makefile target table. None when the repo ships no
+    Yocto/bsp/port-configs/ or the derived layer does not exist."""
+    root = ctx.repo.root / "Yocto" / "bsp" / "port-configs"
+    lanes = ctx.design.get("lanes")
+    if not root.is_dir() or not isinstance(lanes, list):
+        return None
+    length = 8 if len(lanes) > 4 else 4
+    name = "ports-" + "".join(str(i) if i in lanes else "-"
+                              for i in range(length))
+    d = root / name
+    return d if d.is_dir() else None
+
+
 def stage_yocto(ctx: Context):
+    """Drive the Yocto / EDF flow: the engine is the four shell scripts in
+    Yocto/scripts/ (init-workspace, configure-build, build-image,
+    package-output); this stage sequences them with the same done-markers and
+    freshness rules the retired Yocto/Makefile used."""
     if not ctx.design.get("yocto", False):
         return "skipped (target has no Yocto flow)"
-    if not (ctx.repo.root / "Yocto" / "Makefile").is_file():
+    ydir = ctx.repo.root / "Yocto"
+    scripts = ydir / "scripts"
+    if not (scripts / "build-image.sh").is_file():
         return ("skipped (data.json marks this target yocto but the repo "
                 "ships no Yocto flow yet)")
     if IS_WINDOWS:
@@ -524,24 +629,65 @@ def stage_yocto(ctx: Context):
               "machine:")
         print(f"    ./build.sh yocto --target {ctx.target}")
         return "BLOCKED (Linux required)"
-    img = ctx.repo.root / "Yocto" / ctx.target / "images" / "linux"
-    if (img / "BOOT.BIN").is_file() or (img / "image.ub").is_file():
+    work = ydir / ctx.target
+    img = work / "images" / "linux"
+    # Zynq-7000 produces a u-boot-wrapped uImage; ZynqMP/Versal a raw Image.
+    kernel = "uImage" if ctx.family == "zynq" else "Image"
+    products = [img / "BOOT.BIN", img / kernel,
+                img / "rootfs.tar.gz", img / "rootfs.wic.xz"]
+    if all(p.is_file() for p in products):
         return "skipped (images exist)"
-    # Delegate to the Yocto Makefile (the engine). It needs the Vitis
-    # environment for xsct/sdtgen.
+    stage_xsa(ctx)
+    # The scripts need the Vitis environment (xsct/sdtgen) and Google's
+    # `repo` tool on PATH.
     vitis = find_tool("Vitis", ctx.viv_ver)
     if not vitis:
         fail(f"Vitis {ctx.viv_ver} not found (the Yocto flow needs xsct/sdtgen).")
-    cmd = ["make", "-C", str(ctx.repo.root / "Yocto"),
-           "yocto", f"TARGET={ctx.target}", f"JOBS={ctx.jobs}"]
-    rc = run_tool(["bash", "-c",
-                   f'source "{vitis / "settings64.sh"}" >/dev/null && '
-                   + shlex.join(cmd)],
-                  cwd=ctx.repo.root)
-    produced = [f.name for f in img.glob("*")] if img.is_dir() else []
-    if rc != 0 or not produced:
-        fail(f"Yocto build failed (rc={rc}; images dir "
-             f"{'empty' if not produced else 'ok'}: {img}).")
+
+    def sh(script, args, what):
+        cmd = (f'source "{vitis / "settings64.sh"}" >/dev/null && '
+               + shlex.join([str(scripts / script)] + [str(a) for a in args]))
+        rc = run_tool(["bash", "-c", cmd], cwd=ydir)
+        if rc != 0:
+            fail(f"Yocto {what} failed (rc={rc}) for {ctx.target}.")
+
+    # 1. Manifest workspace (repo init + sync, ~5 GB on first run). The EDF
+    #    manifest drops edf-init-build-env at the workspace root when done.
+    if not (work / "edf-init-build-env").is_file():
+        sh("init-workspace.sh",
+           [work, "https://github.com/Xilinx/yocto-manifests.git",
+            f"rel-v{ctx.viv_ver}", "default-edf.xml"], "workspace init")
+    # 2. Hardware handoff: the XSA is all the Yocto build consumes.
+    hw_xsa = work / "hw" / ctx.xsa.name
+    if not hw_xsa.is_file() or hw_xsa.stat().st_mtime < ctx.xsa.stat().st_mtime:
+        hw_xsa.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ctx.xsa, hw_xsa)
+    # 3. Configure (sdtgen + gen-machineconf parse-sdt + BSP/overlay/sstate).
+    #    Re-run when the XSA or the board conf is newer than the done-marker.
+    board = ctx.target.split("_")[0]
+    bsp = ydir / "bsp" / board
+    conf_append = bsp / "conf" / "local.conf.append"
+    done = work / "configdone.txt"
+    offline = ydir / "offline.txt"
+    sstate = ""
+    if offline.is_file():
+        sstate = offline.read_text(encoding="utf-8").splitlines()[0].strip()
+    deps = [p for p in (hw_xsa, conf_append) if p.is_file()]
+    if not done.is_file() or any(done.stat().st_mtime < p.stat().st_mtime
+                                 for p in deps):
+        sh("configure-build.sh",
+           [work, ctx.target, bsp, hw_xsa, sstate, ctx.repo.bd_name,
+            yocto_port_cfg_dir(ctx) or ""], "configure")
+        done.write_text("configured by build.py\n")
+    # 4. bitbake (always re-run while products are missing; it is incremental).
+    sh("build-image.sh", [work, "edf-linux-disk-image", ctx.jobs],
+       "bitbake build")
+    # 5. Gather the deploy outputs into images/linux/.
+    sh("package-output.sh", [work, img], "packaging")
+    missing = [p.name for p in products if not p.is_file()]
+    if missing:
+        fail(f"Yocto build completed but products are missing in {img}: "
+             f"{', '.join(missing)}")
     return "built"
 
 
@@ -635,6 +781,13 @@ def print_status(ctx: Context):
         ("vitis workspace", ctx.vit_ws),
         ("bootfile", ctx.boot_file),
     ]
+    kind, ip_dir = ip_flow(ctx)
+    if kind == "cores":
+        rows[:0] = [(f"ip ({c.name})", c / f"proj_{c.name}")
+                    for c in hls_cores(ip_dir)]
+    elif kind == "board":
+        rows.insert(0, ("ip", ip_dir / "build" / ctx.design["boardname"]
+                        / "ip_done.txt"))
     if ctx.family == "microblaze":
         rows.append(("petalinux mcs", ctx.petl_img / "boot.mcs"))
     else:
@@ -653,9 +806,12 @@ def print_status(ctx: Context):
 
 
 def do_clean(ctx: Context, scope):
-    """scope None = everything; 'project'/'xsa' = Vivado project;
-    'bootfile' = Vitis workspace + boot dir; 'bootimage' = the zips.
-    The PetaLinux project dir is never touched (expensive to rebuild;
+    """scope None = everything except generated IP and the Yocto workspace;
+    'ip' = generated HLS IP (explicit only -- shared between targets);
+    'yocto' = the per-target Yocto workspace (explicit only -- ~100 GB and
+    hours to rebuild); 'project'/'xsa' = Vivado project;
+    'workspace'/'standalone' = Vitis workspace + boot dir; 'package' = the
+    zips. The PetaLinux project dir is never touched (expensive to rebuild;
     clean it with make -C PetaLinux clean TARGET=... on Linux)."""
     removed = []
 
@@ -667,6 +823,23 @@ def do_clean(ctx: Context, scope):
             p.unlink()
             removed.append(str(p))
 
+    if scope == "ip":
+        # Only on explicit request: generated IP is shared between targets
+        # (fixed-part cores serve every target; per-board outputs serve all
+        # targets on the same board), so a target's default clean keeps it.
+        kind, ip_dir = ip_flow(ctx)
+        if kind == "cores":
+            for core in hls_cores(ip_dir):
+                rm(core / f"proj_{core.name}")
+                for log in core.glob("*.log"):
+                    rm(log)
+            for log in ip_dir.glob("*.log"):
+                rm(log)
+        elif kind == "board":
+            rm(ip_dir / "build" / ctx.design["boardname"])
+    if scope == "yocto":
+        # Only on explicit request: the workspace is huge and expensive.
+        rm(ctx.repo.root / "Yocto" / ctx.target)
     if scope in (None, "project", "xsa"):
         rm(ctx.viv_prj)
     if scope in (None, "workspace", "standalone"):
@@ -713,7 +886,7 @@ BUILD_COMMANDS = ["ip", "project", "xsa", "workspace", "standalone",
 COMMAND_HELP = {
     "list": "list targets and attributes",
     "labels": "print one target label per line (for scripting)",
-    "ip": "generate HLS IP (only repos with an IP pre-stage; Linux only)",
+    "ip": "generate the design's HLS IP (only repos with an IP pre-stage)",
     "project": "create the Vivado project (.xpr)",
     "xsa": "build the Vivado XSA (synth + impl + export)",
     "workspace": "create the Vitis workspace and build the app",
@@ -912,8 +1085,11 @@ def main():
                         help="delete generated outputs (PetaLinux project dir "
                              "is never touched)")
     cp.add_argument("--stage", default=None,
-                    choices=["project", "xsa", "workspace", "standalone", "package"],
-                    help="limit cleaning to one stage's outputs (default: all)")
+                    choices=["ip", "project", "xsa", "workspace", "standalone",
+                             "yocto", "package"],
+                    help="limit cleaning to one stage's outputs (default: all; "
+                         "generated IP and the Yocto workspace are only "
+                         "removed with an explicit --stage)")
 
     args = ap.parse_args()
 
