@@ -195,9 +195,7 @@ def scan_critical_warnings(log: Path):
 VERSAL_PLM_PATH_TAIL = 185
 
 
-def stage_xsa(ctx: Context):
-    if ctx.xsa.is_file():
-        return "skipped (XSA exists)"
+def check_versal_path(ctx: Context):
     if IS_WINDOWS and ctx.family == "versal":
         longest = len(ctx.viv_prj.as_posix()) + VERSAL_PLM_PATH_TAIL
         if longest >= 260:
@@ -206,28 +204,46 @@ def stage_xsa(ctx: Context):
                  f"  build tools do not support long paths). Map a short drive:\n"
                  f"    subst W: \"{ctx.repo.root.parent}\"\n"
                  f"  then re-run with --repo W:/{ctx.repo.root.name}")
+
+
+def vivado_exe(ctx: Context):
     vivado = find_tool("Vivado", ctx.viv_ver)
     if not vivado:
         fail(f"Vivado {ctx.viv_ver} not found (required by this repo). "
              f"Searched standard install roots and XILINX_VIVADO.")
-    vivado_exe = vivado / "bin" / ("vivado.bat" if IS_WINDOWS else "vivado")
+    return vivado / "bin" / ("vivado.bat" if IS_WINDOWS else "vivado")
+
+
+def stage_project(ctx: Context):
+    if ctx.xpr.is_file():
+        return "skipped (project exists)"
+    check_versal_path(ctx)
+    exe = vivado_exe(ctx)
+    ctx.viv_logs.mkdir(exist_ok=True)
+    log = ctx.viv_logs / f"{ctx.target}_xpr.log"
+    rc = run_tool([exe, "-mode", "batch", "-notrace",
+                   "-source", "scripts/build.tcl",
+                   "-log", log.as_posix(), "-journal",
+                   (ctx.viv_logs / f"{ctx.target}_xpr.jou").as_posix(),
+                   "-tclargs", ctx.target],
+                  cwd=ctx.viv_dir)
+    # build.tcl 'return's (exit 0) on its version check, so rc alone is
+    # not enough -- the project file must actually exist.
+    if rc != 0 or not ctx.xpr.is_file():
+        fail(f"Vivado project creation failed (rc={rc}). See {log}")
+    return "built"
+
+
+def stage_xsa(ctx: Context):
+    if ctx.xsa.is_file():
+        return "skipped (XSA exists)"
+    check_versal_path(ctx)
+    stage_project(ctx)
+    vivado_bin = vivado_exe(ctx)
     ctx.viv_logs.mkdir(exist_ok=True)
 
-    if not ctx.xpr.is_file():
-        log = ctx.viv_logs / f"{ctx.target}_xpr.log"
-        rc = run_tool([vivado_exe, "-mode", "batch", "-notrace",
-                       "-source", "scripts/build.tcl",
-                       "-log", log.as_posix(), "-journal",
-                       (ctx.viv_logs / f"{ctx.target}_xpr.jou").as_posix(),
-                       "-tclargs", ctx.target],
-                      cwd=ctx.viv_dir)
-        # build.tcl 'return's (exit 0) on its version check, so rc alone is
-        # not enough -- the project file must actually exist.
-        if rc != 0 or not ctx.xpr.is_file():
-            fail(f"Vivado project creation failed (rc={rc}). See {log}")
-
     log = ctx.viv_logs / f"{ctx.target}_xsa.log"
-    rc = run_tool([vivado_exe, "-mode", "batch", "-notrace",
+    rc = run_tool([vivado_bin, "-mode", "batch", "-notrace",
                    "-source", "scripts/xsa.tcl",
                    "-log", log.as_posix(), "-journal",
                    (ctx.viv_logs / f"{ctx.target}_xsa.jou").as_posix(),
@@ -248,9 +264,8 @@ def stage_xsa(ctx: Context):
 VITIS_BSP_PATH_TAIL = 203
 
 
-def stage_bootfile(ctx: Context):
-    if not ctx.design.get("baremetal", False):
-        return "skipped (no baremetal app for this target)"
+def vitis_tools(ctx: Context):
+    """Locate Vitis and build the PATH env make-boot.py needs for bootgen."""
     vitis = find_tool("Vitis", ctx.viv_ver)
     if not vitis:
         fail(f"Vitis {ctx.viv_ver} not found (required by this repo).")
@@ -260,6 +275,13 @@ def stage_bootfile(ctx: Context):
     vivado = find_tool("Vivado", ctx.viv_ver)
     tool_bins = [str(vitis / "bin")] + ([str(vivado / "bin")] if vivado else [])
     tool_env = {"PATH": os.pathsep.join(tool_bins + [os.environ.get("PATH", "")])}
+    return vitis_exe, tool_env
+
+
+def stage_workspace(ctx: Context):
+    if not ctx.design.get("baremetal", False):
+        return "skipped (no baremetal app for this target)"
+    vitis_exe, tool_env = vitis_tools(ctx)
 
     if IS_WINDOWS:
         longest = len(ctx.vit_ws.as_posix()) + VITIS_BSP_PATH_TAIL + len(ctx.target)
@@ -287,9 +309,18 @@ def stage_bootfile(ctx: Context):
                  f"xpfm={'ok' if xpfm.is_file() else 'MISSING'}, "
                  f"app elf={'ok' if ctx.app_elf.is_file() else 'MISSING'}). "
                  f"Workspace removed; check the output above.")
+        return "built"
     elif not xpfm.is_file() or not ctx.app_elf.is_file():
         fail(f"Existing workspace {ctx.vit_ws} is incomplete (platform or app "
              f"missing). Delete it and re-run.")
+    return "skipped (workspace exists)"
+
+
+def stage_bootfile(ctx: Context):
+    if not ctx.design.get("baremetal", False):
+        return "skipped (no baremetal app for this target)"
+    stage_workspace(ctx)
+    vitis_exe, tool_env = vitis_tools(ctx)
 
     if (ctx.boot_file.is_file() and ctx.app_elf.is_file()
             and ctx.boot_file.stat().st_mtime >= ctx.app_elf.stat().st_mtime):
@@ -387,13 +418,80 @@ def stage_bootimage(ctx: Context):
     return "; ".join(results) if results else "nothing to gather"
 
 
-STAGE_FUNCS = {"xsa": stage_xsa, "bootfile": stage_bootfile,
+STAGE_FUNCS = {"project": stage_project, "xsa": stage_xsa,
+               "workspace": stage_workspace, "bootfile": stage_bootfile,
                "petalinux": stage_petalinux, "bootimage": stage_bootimage}
 
 
+def fmt_artifact(p: Path):
+    if p.is_file():
+        import datetime
+        mt = datetime.datetime.fromtimestamp(p.stat().st_mtime)
+        return f"OK      {p.stat().st_size:>12,} B  {mt:%Y-%m-%d %H:%M}"
+    if p.is_dir():
+        return "OK      (directory)"
+    return "missing"
+
+
+def print_status(ctx: Context):
+    print(f"=== status: {ctx.target} ({ctx.family}) ===")
+    rows = [
+        ("project", ctx.xpr),
+        ("xsa", ctx.xsa),
+        ("vitis workspace", ctx.vit_ws),
+        ("bootfile", ctx.boot_file),
+    ]
+    if ctx.family == "microblaze":
+        rows.append(("petalinux mcs", ctx.petl_img / "boot.mcs"))
+    else:
+        rows.append(("petalinux boot", ctx.petl_img / "BOOT.BIN"))
+        rows.append(("petalinux image", ctx.petl_img / "image.ub"))
+    if ctx.design.get("baremetal", False):
+        rows.append(("standalone zip", ctx.bare_zip))
+    if ctx.design.get("petalinux", False):
+        rows.append(("petalinux zip", ctx.petl_zip))
+    width = max(len(n) for n, _ in rows)
+    for name, p in rows:
+        print(f"  {name:<{width}}  {fmt_artifact(p):<42}  {p}")
+
+
+def do_clean(ctx: Context, scope):
+    """scope None = everything; 'project'/'xsa' = Vivado project;
+    'bootfile' = Vitis workspace + boot dir; 'bootimage' = the zips.
+    The PetaLinux project dir is never touched (expensive to rebuild;
+    clean it with make -C PetaLinux clean TARGET=... on Linux)."""
+    removed = []
+
+    def rm(p: Path):
+        if p.is_dir():
+            shutil.rmtree(p)
+            removed.append(f"{p}{os.sep}")
+        elif p.exists():
+            p.unlink()
+            removed.append(str(p))
+
+    if scope in (None, "project", "xsa"):
+        rm(ctx.viv_prj)
+    if scope in (None, "workspace", "bootfile"):
+        rm(ctx.vit_ws)
+        rm(ctx.vit_boot)
+    if scope in (None, "bootimage"):
+        rm(ctx.petl_zip)
+        rm(ctx.bare_zip)
+    for r in removed:
+        print(f"  removed {r}")
+    if not removed:
+        print("  nothing to remove")
+    return removed
+
+
 def stages_for(goal, design):
+    if goal == "project":
+        return ["project"]
     if goal == "xsa":
         return ["xsa"]
+    if goal == "workspace":
+        return ["xsa", "workspace"]
     if goal == "bootfile":
         return ["xsa", "bootfile"]
     if goal == "petalinux":
@@ -414,14 +512,26 @@ def main():
     ap.add_argument("--repo", default=None,
                     help="path to the design repo (default: this script's directory)")
     ap.add_argument("--target", help="target label, e.g. vck190_fmcp1")
-    ap.add_argument("--to", default="bootimage",
-                    choices=["xsa", "bootfile", "petalinux", "bootimage"],
-                    help="final stage to build (default: bootimage)")
+    ap.add_argument("--to", default=None,
+                    choices=["project", "xsa", "workspace", "bootfile", "petalinux", "bootimage"],
+                    help="final stage to build (default: bootimage); with "
+                         "--clean, limits cleaning to that stage's outputs")
     ap.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
     ap.add_argument("--list", action="store_true", help="list targets and exit")
+    ap.add_argument("--labels", action="store_true",
+                    help="print one target label per line (for scripting) and exit")
+    ap.add_argument("--status", action="store_true",
+                    help="show per-stage artifact state for --target and exit")
+    ap.add_argument("--clean", action="store_true",
+                    help="delete generated outputs for --target (scope with --to); "
+                         "the PetaLinux project dir is never touched")
     args = ap.parse_args()
 
     repo = Repo(Path(args.repo) if args.repo else Path(__file__).absolute().parent)
+    if args.labels:
+        for d in repo.data["designs"]:
+            print(d["label"])
+        return
     if args.list:
         print(f"{repo.prj_name} targets:")
         for d in repo.data["designs"]:
@@ -438,7 +548,16 @@ def main():
         fail(f"unknown target '{args.target}'. Valid: {', '.join(repo.labels())}")
 
     ctx = Context(repo, args.target, args.jobs)
-    print(f"=== {repo.prj_name} / {args.target} ({ctx.family}) -> {args.to} ===")
+    if args.status:
+        print_status(ctx)
+        return
+    if args.clean:
+        print(f"=== clean: {args.target} (scope: {args.to or 'all'}) ===")
+        do_clean(ctx, args.to)
+        return
+
+    goal = args.to or "bootimage"
+    print(f"=== {repo.prj_name} / {args.target} ({ctx.family}) -> {goal} ===")
     print(f"    host: {'Windows' if IS_WINDOWS else 'Linux'} | "
           f"Vivado required: {ctx.viv_ver} | jobs: {args.jobs}")
     if design.get("license", False):
@@ -446,7 +565,7 @@ def main():
               "generation needs a valid license.")
 
     summary = []
-    for name in stages_for(args.to, design):
+    for name in stages_for(goal, design):
         print(f"\n--- stage: {name} ---")
         result = STAGE_FUNCS[name](ctx)
         print(f"--- stage {name}: {result} ---")

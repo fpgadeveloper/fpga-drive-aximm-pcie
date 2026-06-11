@@ -48,10 +48,42 @@ Notes:
    FREE edition which can be used without a license. Vivado *Enterprise* Edition requires
    a license however a 30-day evaluation license is available from the AMD Xilinx Licensing site.
    
+## Cross-platform build runner (recommended)
+
+The designs are built with the `build.py` runner at the repo root — a single
+interface that works on both Windows (git bash) and Linux. The `build.sh`
+shim locates a suitable Python 3 automatically (including the interpreter
+bundled with the AMD tools):
+
+```
+cd fpga-drive-aximm-pcie
+./build.sh --list                            # list targets and attributes
+./build.sh --target <target> --to xsa        # Vivado project + bitstream + XSA
+./build.sh --target <target> --to bootfile   # + Vitis baremetal boot image
+./build.sh --target <target> --to bootimage  # + PetaLinux image, gather zips (Linux only)
+./build.sh --target <target> --status        # show per-stage artifact state
+./build.sh --target <target> --clean         # delete generated outputs
+```
+
+Stages whose outputs already exist are skipped on re-run, so the same
+command continues an interrupted build. On Windows, the PetaLinux and Yocto
+stages are refused up front with the exact Linux hand-off command. For
+Versal targets on Windows, the runner verifies that the project path fits
+within the 260-character Windows path limit *before* building, and explains
+the `subst` workaround if it does not.
+
+```{attention} The `make` interface described in the sections below still
+works on Linux — each Makefile is now a thin wrapper around `build.sh` —
+but it is deprecated and will be removed at the next version update.
+```
+
 ## Windows users
 
 Windows users will be able to build the Vivado projects and compile the standalone applications,
 however Linux is required to build the embedded Linux images (PetaLinux or Yocto). 
+The recommended way to build on Windows is the [build runner](#cross-platform-build-runner-recommended)
+run from git bash: `./build.sh --target <target> --to bootfile`. The batch-file steps below
+remain available for GUI-oriented workflows.
 
 ```{tip} If you wish to build the PetaLinux projects,
 we recommend that you build the entire project (including the Vivado project) on a machine (either 

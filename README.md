@@ -184,30 +184,42 @@ source <path-to-petalinux>/2025.2/settings.sh          # for the PetaLinux flow
 source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh   # for the Yocto flow
 ```
 
-To build the standalone PCIe enumeration test application (Vivado project and Vitis workspace):
+### Build runner (recommended, Windows + Linux)
+
+All build steps are driven by `build.py` at the repo root; the `build.sh`
+shim locates a suitable Python 3 automatically (including the one bundled
+with the AMD tools):
 
 ```
-cd fpga-drive-aximm-pcie/Vitis
-make workspace TARGET=uzev
+cd fpga-drive-aximm-pcie
+./build.sh --list                          # list targets and their attributes
+./build.sh --target uzev --to bootfile     # Vivado XSA + Vitis BOOT.BIN (baremetal)
+./build.sh --target uzev --to bootimage    # full chain incl. PetaLinux (Linux only)
+./build.sh --target uzev --status          # per-stage artifact state
+./build.sh --target uzev --clean           # delete generated outputs
 ```
 
-Build a Linux image — either flow builds the Vivado project first if needed.
+Stages whose outputs already exist are skipped automatically. On Windows
+(git bash) the Vivado and Vitis baremetal stages run natively; PetaLinux and
+Yocto require a Linux machine — the runner refuses those stages up front and
+prints the exact hand-off command. For Versal targets on Windows, keep the
+repo at a short path; the runner checks the 260-character path limit before
+building and explains the `subst` workaround if needed.
 
-PetaLinux flow:
-
-```
-cd fpga-drive-aximm-pcie/PetaLinux
-make petalinux TARGET=uzev
-```
-
-Yocto / EDF flow:
+The Yocto / EDF flow is unchanged (Linux only):
 
 ```
 cd fpga-drive-aximm-pcie/Yocto
 make yocto TARGET=uzev
 ```
 
-Run `make help` in either directory to list the supported targets.
+### Legacy make flow (deprecated)
+
+The previous `make` interface still works on Linux and now wraps `build.sh`
+(e.g. `cd Vivado && make xsa TARGET=uzev`, `cd Vitis && make workspace
+TARGET=uzev`, `cd PetaLinux && make petalinux TARGET=uzev`). **The make
+wrappers will be removed at the next version update** — please migrate to
+`./build.sh`.
 
 More comprehensive build instructions can be found in the user guide:
 * [For Windows users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#windows-users)
