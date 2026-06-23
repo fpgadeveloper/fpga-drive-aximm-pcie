@@ -1,10 +1,11 @@
 # Yocto
 
 The Yocto / EDF flow (AMD's Embedded Development Framework) is the announced successor to
-PetaLinux. It can be built for these reference designs using the Makefile in the `Yocto`
-directory of the repository.
+PetaLinux. It can be built for these reference designs with the cross-platform `build.py`
+runner at the root of the repository.
 
-```{note} For 2025.2 both the PetaLinux and Yocto flows are supported and produce an equivalent
+```{note}
+For 2025.2 both the PetaLinux and Yocto flows are supported and produce an equivalent
 image. From the next tool version onward, the PetaLinux flow for this repository will be retired
 and Yocto will be the only supported flow — see [build instructions](build_instructions).
 ```
@@ -16,31 +17,30 @@ To build the Yocto projects you will need a physical or virtual machine running 
 `xsct`/`sdtgen` (which ship with Vitis) to generate a System Device Tree from the Vivado XSA. You
 also need [Google's repo tool](https://gerrit.googlesource.com/git-repo/) on your `PATH`.
 
-```{attention} You cannot build the Yocto projects in the Windows operating system. Windows users
+```{attention}
+You cannot build the Yocto projects in the Windows operating system. Windows users
 are advised to use a Linux virtual machine to build the Yocto projects.
 ```
 
 ## How to build
 
-1. From a command terminal, clone the Git repository and `cd` into it:
+The build runner locates and sources the Vivado and Vitis settings itself, so there is no
+need to source them by hand; you only need [Google's repo tool](https://gerrit.googlesource.com/git-repo/)
+on your `PATH` (see Requirements above).
+
+1. From a command terminal, clone the Git repository (with its submodules) and `cd` into it:
    ```
-   git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
+   git clone --recurse-submodules https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
    cd fpga-drive-aximm-pcie
    ```
-2. Source the Vivado and Vitis setup scripts:
-   ```
-   source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
-   source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh
-   ```
-3. Build the Yocto image for your target platform by running the following commands, replacing
+2. Build the Yocto image for your target by running the following command, replacing
    `<target>` with one of the target design labels listed in the
-   [build instructions](build_instructions.md#build-yocto-project-in-linux):
+   [build instructions](build_instructions.md#build-yocto):
    ```
-   cd Yocto
-   make yocto TARGET=<target>
+   ./build.sh yocto --target <target>
    ```
 
-The last command launches the corresponding Vivado build if that project has not already been
+This command launches the corresponding Vivado build if that project has not already been
 built and its hardware exported. The first build of a target downloads several GB of sources
 (`repo sync`) and runs bitbake from scratch, so it takes a while; subsequent builds are
 incremental. The output products are gathered into `Yocto/<target>/images/linux/`:
@@ -63,7 +63,8 @@ UltraScale+ — copy `BOOT.BIN` onto the first FAT partition.
 
 ### Prepare the SD card
 
-```{warning} Flashing writes directly to a raw block device and cannot be undone. Be absolutely
+```{warning}
+Flashing writes directly to a raw block device and cannot be undone. Be absolutely
 certain you have identified the SD card's device node before running the commands below — if you
 use the wrong device you risk destroying data on one of your hard drives.
 ```
@@ -111,7 +112,8 @@ use the wrong device you risk destroying data on one of your hard drives.
    sync
    sudo umount /mnt/sd_esp && sudo rmdir /mnt/sd_esp
    ```
-   ```{note} On Versal, skip this step. The Versal wic places `BOOT.BIN` (and `boot.scr`) onto the
+   ```{note}
+   On Versal, skip this step. The Versal wic places `BOOT.BIN` (and `boot.scr`) onto the
    `esp` automatically, so the flashed card boots with no manual copy.
    ```
 

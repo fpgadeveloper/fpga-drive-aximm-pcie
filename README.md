@@ -46,50 +46,50 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 <!-- updater start -->
 ### FPGA designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
-| [KC705]               | `kc705_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [KC705]               | `kc705_lpc`     | 1     | -     | LPC         | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [KCU105]              | `kcu105_hpc`    | 4     | 4     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [KCU105]              | `kcu105_lpc`    | 1     | -     | LPC         | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [VC707]               | `vc707_hpc1`    | 4     | -     | HPC1        | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [VC707]               | `vc707_hpc2`    | 4     | -     | HPC2        | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [VC709]               | `vc709_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise |
-| [VCU118]              | `vcu118`        | 4     | 4     | FMCP        | :white_check_mark: | :x:         | :x:         | Enterprise |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|
+| [KC705]               | `kc705_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [KC705]               | `kc705_lpc`     | 1     | -     | LPC         | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [KCU105]              | `kcu105_hpc`    | 4     | 4     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [KCU105]              | `kcu105_lpc`    | 1     | -     | LPC         | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [VC707]               | `vc707_hpc1`    | 4     | -     | HPC1        | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [VC707]               | `vc707_hpc2`    | 4     | -     | HPC2        | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [VC709]               | `vc709_hpc`     | 4     | -     | HPC         | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
+| [VCU118]              | `vcu118`        | 4     | 4     | FMCP        | :white_check_mark: | :x:         | :x:         | Enterprise | -     |
 
 ### Zynq-7000 designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
-| [PicoZed 7015]        | `pz_7015`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [PicoZed 7030]        | `pz_7030`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [ZC706]               | `zc706_hpc`     | 4     | -     | HPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [ZC706]               | `zc706_lpc`     | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|
+| [PicoZed 7015]        | `pz_7015`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [PicoZed 7030]        | `pz_7030`       | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [ZC706]               | `zc706_hpc`     | 4     | -     | HPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [ZC706]               | `zc706_lpc`     | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
 
 ### Zynq UltraScale+ designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
-| [UltraZed-EV Carrier] | `uzev`          | 4     | 4     | HPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [ZCU104]              | `zcu104`        | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [ZCU106]              | `zcu106_hpc0`   | 4     | 4     | HPC0        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [ZCU106]              | `zcu106_hpc1`   | 1     | -     | HPC1        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: |
-| [ZCU111]              | `zcu111`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [ZCU208]              | `zcu208`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [ZCU216]              | `zcu216`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|
+| [UltraZed-EV Carrier] | `uzev`          | 4     | 4     | HPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [ZCU104]              | `zcu104`        | 1     | -     | LPC         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [ZCU106]              | `zcu106_hpc0`   | 4     | 4     | HPC0        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [ZCU106]              | `zcu106_hpc1`   | 1     | -     | HPC1        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Standard :free: | -     |
+| [ZCU111]              | `zcu111`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [ZCU208]              | `zcu208`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [ZCU216]              | `zcu216`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
 
 ### Versal designs
 
-| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |
-|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|
-| [VCK190]              | `vck190_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VCK190]              | `vck190_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VHK158]              | `vhk158`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VMK180]              | `vmk180_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VMK180]              | `vmk180_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VEK280]              | `vek280`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VPK120]              | `vpk120`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
-| [VPK180]              | `vpk180`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise |
+| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |
+|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|
+| [VCK190]              | `vck190_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VCK190]              | `vck190_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VHK158]              | `vhk158`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VMK180]              | `vmk180_fmcp1`  | 4     | 4     | FMCP1       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VMK180]              | `vmk180_fmcp2`  | 4     | 4     | FMCP2       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VEK280]              | `vek280`        | 4     | 4     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VPK120]              | `vpk120`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
+| [VPK180]              | `vpk180`        | 4     | -     | FMCP        | :white_check_mark: | :white_check_mark: | :white_check_mark: | Enterprise | -     |
 
 [KC705]: https://www.xilinx.com/kc705
 [KCU105]: https://www.xilinx.com/kcu105
@@ -112,18 +112,6 @@ require a license to generate a bitstream with the AMD Xilinx tools.
 [VPK120]: https://www.xilinx.com/vpk120
 [VPK180]: https://www.xilinx.com/vpk180
 <!-- updater end -->
-
-### AUBoard board files
-
-The board definition files for the AUBoard are not currently included in the AMD Xilinx Board Store.
-To enable Vivado to recognize this board, the required board files have been included in this
-repository as a Git submodule (`submodules/avnet-bdf`), which is a fork of
-[Avnet's BDF repository](https://github.com/Avnet/bdf). When cloning this repo, use the `--recursive`
-flag to ensure the board files are downloaded:
-
-```
-git clone --recursive <repo-url>
-```
 
 Notes:
 
@@ -170,74 +158,76 @@ with the bundled tools.
 
 ## Build instructions
 
-Clone the repo:
+Clone the repo and change into its directory:
 ```
-git clone https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
-```
-
-Source the AMD tools. All flows need Vivado; the PetaLinux flow needs the PetaLinux
-settings, and the Yocto flow needs the Vitis settings (for `xsct`/`sdtgen`):
-
-```
-source <path-to-xilinx-tools>/2025.2/Vivado/settings64.sh
-source <path-to-petalinux>/2025.2/settings.sh          # for the PetaLinux flow
-source <path-to-xilinx-tools>/2025.2/Vitis/settings64.sh   # for the Yocto flow
+git clone --recursive https://github.com/fpgadeveloper/fpga-drive-aximm-pcie.git
+cd fpga-drive-aximm-pcie
 ```
 
-To build the standalone PCIe enumeration test application (Vivado project and Vitis workspace):
+### Cross-platform build runner
+
+All builds are driven by `build.py` at the repo root, on both Windows
+(git bash) and Linux. The `build.sh` / `build.bat` shim finds a suitable
+Python 3 automatically (including the one bundled with the AMD tools).
+Pick a target design label from the tables above (or run `./build.sh
+list`), then run the build command for the stage(s) you want — each
+command builds whatever it depends on automatically and skips anything
+already built. On Windows without git bash, run the same commands from
+Command Prompt or PowerShell using `build.bat` (e.g. `build.bat xsa
+--target <target>`).
+
+You don't need to source the AMD tools first — the build runner finds
+Vivado, Vitis and PetaLinux automatically in their standard install
+locations and sets up the environment each stage needs. If your tools
+are installed somewhere non-standard and the runner can't find them,
+source the tool settings yourself before running the build.
+
+#### Build the Vivado project (bitstream + XSA)
 
 ```
-cd fpga-drive-aximm-pcie/Vitis
-make workspace TARGET=uzev
+./build.sh xsa --target <target>
 ```
 
-Build a Linux image — either flow builds the Vivado project first if needed.
+#### Build the standalone application
 
-PetaLinux flow:
-
-```
-cd fpga-drive-aximm-pcie/PetaLinux
-make petalinux TARGET=uzev
-```
-
-Yocto / EDF flow:
+Builds the Vitis workspace and the baremetal boot file (`BOOT.BIN` or
+bit file, depending on the device family):
 
 ```
-cd fpga-drive-aximm-pcie/Yocto
-make yocto TARGET=uzev
+./build.sh standalone --target <target>
 ```
 
-Run `make help` in either directory to list the supported targets.
-
-More comprehensive build instructions can be found in the user guide:
-* [For Windows users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#windows-users)
-* [For Linux users](https://refdesign.fpgadrive.com/en/latest/build_instructions.html#linux-users)
-
-## Troubleshooting
-
-### PetaLinux build fails with `bitbake petalinux-image-minimal failed` and sstate fetch errors
-
-If a `make petalinux TARGET=<board>` run ends with errors like
+#### Build PetaLinux (Linux only)
 
 ```
-ERROR: <package>-<ver>-r0 do_..._setscene: Fetcher failure: Unable to find file file://.../sstate:...
-[ERROR] Command bitbake petalinux-image-minimal failed
+./build.sh petalinux --target <target>
 ```
 
-the actual build is not broken. These `_setscene` errors come from
-bitbake trying to pull prebuilt artifacts from the public Xilinx
-sstate-cache mirror, which occasionally returns 404 for individual
-packages. Bitbake falls back to building those packages locally and
-succeeds, but still exits non-zero because of the failed fetches —
-so the Makefile stops before the `petalinux-package` step that
-produces `BOOT.BIN`.
+Note: this release supports both PetaLinux and Yocto; PetaLinux will be
+dropped in favor of the Yocto flow at the next version update.
 
-**Fix: just re-run the same command.** The second attempt finds the
-missing packages in the local sstate cache (populated by the first
-run) and completes cleanly, producing `BOOT.BIN`. The reference
-design itself is fine; this is a transient issue with the public
-mirror.
+#### Build Yocto (Linux only)
 
+```
+./build.sh yocto --target <target>
+```
+
+#### Build everything
+
+Builds all of the above that the target supports, then gathers the boot
+images into `bootimages/*.zip`:
+
+```
+./build.sh all --target <target>
+./build.sh all --target all          # every target in the repo
+```
+
+Also available: `status`, `clean`, `project` — see
+`./build.sh --help`. On Windows, the PetaLinux and Yocto stages require a
+Linux machine; the runner says so and prints the hand-off command. The
+legacy `make` interface still works on Linux (each Makefile now wraps
+`build.sh`) but is deprecated and will be removed at the next version
+update.
 
 ## Contribute
 

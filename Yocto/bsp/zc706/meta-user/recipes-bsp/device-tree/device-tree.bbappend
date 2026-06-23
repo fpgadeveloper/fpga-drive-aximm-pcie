@@ -17,8 +17,11 @@
 # IMPORTANT: only apply system-user.dtsi to the Linux (APU) device tree. The
 # FSBL domain device-tree (the -cortexa9-fsbl multiconfig) doesn't define the
 # SoC peripheral labels the overrides reference, so #including it there makes
-# dtc fail with "Label or path ... not found". The Linux domain DTS is the only
-# CONFIG_DTFILE whose name contains "linux".
+# dtc fail with "Label or path ... not found". Only the Linux-domain DTS basename
+# contains "linux" (...-cortexaN-linux.dts); match on os.path.basename, NOT the
+# full CONFIG_DTFILE path -- the path can itself contain "linux" (e.g. a parent
+# dir like .../oa-win-linux-flow/...) and would wrongly pull these overrides into
+# every domain (FSBL/PMU), breaking those baremetal builds.
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-EXTRA_DT_INCLUDE_FILES:append = "${@' system-user.dtsi' if 'linux' in (d.getVar('CONFIG_DTFILE') or '') else ''}"
+EXTRA_DT_INCLUDE_FILES:append = "${@' system-user.dtsi' if 'linux' in os.path.basename(d.getVar('CONFIG_DTFILE') or '') else ''}"

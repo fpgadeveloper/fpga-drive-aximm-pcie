@@ -4,7 +4,7 @@ This section is intended for users who want to modify the reference
 designs — adding IP to the block design, changing constraints, modifying
 the standalone application, or adding packages or drivers to the embedded
 Linux build (PetaLinux or Yocto). It describes how the repository is laid
-out, how the Make-driven build flow works, how the Vitis, PetaLinux, and
+out, how the build flow works, how the Vitis, PetaLinux, and
 Yocto / EDF sides are organised, and what modifications have been added on
 top of the stock AMD BSPs.
 
@@ -16,7 +16,9 @@ it.
 
 ```
 .
-├── Makefile                   <- Top-level build entry point
+├── build.py                   <- Cross-platform build runner (the build logic)
+├── build.sh / build.bat       <- Shims that invoke build.py (Linux/git bash, Windows)
+├── Makefile                   <- Deprecated thin wrapper around build.sh (removed next version)
 ├── README.md
 ├── config/                    <- Source-of-truth design metadata and auto-generation
 │   ├── data.json
@@ -24,17 +26,14 @@ it.
 ├── docs/                      <- This documentation (Sphinx + Read the Docs)
 ├── EmbeddedSw/                <- Vendored AMD BSP libraries used by the Vitis build
 ├── PetaLinux/
-│   ├── Makefile               <- PetaLinux build orchestration
 │   └── bsp/                   <- Per-board BSP fragments
 │       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
 ├── Yocto/
-│   ├── Makefile               <- Yocto / EDF build orchestration
 │   ├── scripts/               <- init-workspace / configure-build / build-image / package-output
 │   └── bsp/                   <- Per-board meta-user layers
 │       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
 ├── submodules/                <- Vendor board definition files (BDFs)
 ├── Vivado/
-│   ├── Makefile               <- Vivado build orchestration
 │   ├── scripts/
 │   │   ├── build.tcl          <- Project creation + block design assembly
 │   │   └── xsa.tcl            <- Synthesis, implementation, XSA export
@@ -48,7 +47,6 @@ it.
 │       └── constraints/
 │           └── <target>.xdc   <- One XDC per target (pin assignments, timing)
 └── Vitis/
-    ├── Makefile               <- Vitis workspace + boot-image orchestration
     ├── py/
     │   ├── args.json          <- Repo-specific Vitis flow configuration
     │   ├── build-vitis.py     <- Universal Vitis Python build driver
@@ -69,8 +67,8 @@ to factor out into a separate per-port-config fragment.
 
 ## Target naming
 
-A `TARGET` is the canonical handle for a single design and is the only
-parameter passed through the build flow. It encodes the board and, for
+A *target label* is the canonical handle for a single design and is passed
+to every build command via `--target`. It encodes the board and, for
 boards with multiple FMC connectors, the connector:
 
 ```
@@ -79,86 +77,81 @@ boards with multiple FMC connectors, the connector:
 
 Examples: `uzev`, `vck190_fmcp1`, `zcu106_hpc0`, `kc705_hpc`,
 `zc706_lpc`. The first underscore-delimited token is taken as the
-*target board* and is what `PetaLinux/Makefile` and `Yocto/Makefile` use
-to select the BSP under `PetaLinux/bsp/<board>/` or `Yocto/bsp/<board>/`
-respectively. Boards with multiple connectors therefore share a BSP — for
-example `zcu106_hpc0` and `zcu106_hpc1` both use `…/bsp/zcu106/`.
+*target board* and is what the build runner uses to select the BSP under
+`PetaLinux/bsp/<board>/` or `Yocto/bsp/<board>/` respectively. Boards with
+multiple connectors therefore share a BSP — for example `zcu106_hpc0` and
+`zcu106_hpc1` both use `…/bsp/zcu106/`.
 
-The complete list of valid targets is in the `UPDATER START` block of
-each Makefile and is generated from `config/data.json` (see below).
+The complete list of valid targets comes from `config/data.json`; run
+`./build.sh list` (or `./build.sh labels` for one per line) to print it.
 
 ## `config/data.json` and `config/update.py`
 
 `config/data.json` is the canonical source of truth for the set of
 supported designs and their per-target metadata (board name, processor
-family, FMC connector, baremetal-vs-PetaLinux support, etc.).
+family, FMC connector, baremetal-vs-PetaLinux support, etc.). The
+`build.py` runner reads it directly at runtime, so the target list is
+never hand-maintained.
+
 `config/update.py` reads `data.json` and regenerates the auto-managed
-sections of the four Makefiles, the top-level `README.md`, and
-`.gitignore` — the sections delimited by `UPDATER START` /
-`UPDATER END` comment markers.
+documentation and metadata that is *not* read at runtime: the target
+tables in the top-level `README.md`, the `.gitignore`, and the per-board
+sections still embedded in `PetaLinux/Makefile` — each delimited by
+`UPDATER START` / `UPDATER END` comment markers.
 
 When adding or modifying a target, edit `data.json` and re-run
 `update.py`. Do not hand-edit content between the `UPDATER START` /
 `UPDATER END` markers; it will be overwritten on the next regeneration.
 
-## Make-driven build flow
+## Build runner
 
-There are five Makefiles in the repository, each scoped to a stage of
-the build:
+All build stages are driven by the cross-platform `build.py` runner at the
+root of the repository, invoked through the `build.sh` shim on Linux / git
+bash or `build.bat` on Windows (identical arguments). It reads the target
+list and per-target attributes straight from `config/data.json`, builds
+whatever a requested stage depends on automatically, skips anything already
+built, and locates and sources the AMD tools itself — so there is no need to
+source the Vivado / Vitis / PetaLinux settings scripts beforehand.
 
-| Makefile              | Scope                                                                                          |
-|-----------------------|------------------------------------------------------------------------------------------------|
-| `./Makefile`          | Top-level orchestration; assembles boot-image zips for one or all targets.                     |
-| `./Vivado/Makefile`   | Creates the Vivado project, runs synthesis and implementation, exports the XSA.                |
-| `./Vitis/Makefile`    | Creates the Vitis workspace and platform from the XSA, builds the standalone application, packages BOOT.BIN/.mcs. |
-| `./PetaLinux/Makefile`| Creates the PetaLinux project from the XSA, applies BSP overlays, builds, packages.            |
-| `./Yocto/Makefile`    | Creates the Yocto / EDF workspace, generates a custom MACHINE from the XSA (`gen-machineconf parse-sdt`), applies the meta-user BSP, builds with bitbake, packages. |
+The build is organised into stages, each available as a sub-command:
 
-Each target is flagged in the top-level Makefile as either
-`baremetal_only` (Vitis only — all the MicroBlaze targets, since
-PetaLinux is not supported on these designs) or `both` (Vitis +
-PetaLinux). A `make bootimage TARGET=<t>` invocation at the top level
-cascades:
+| Command      | Stage                                                                                          |
+|--------------|------------------------------------------------------------------------------------------------|
+| `project`    | Create the Vivado project (`.xpr`) and block design.                                           |
+| `xsa`        | Synthesise, implement and export the hardware (`.xsa`).                                         |
+| `standalone` | Create the Vitis workspace, build the baremetal app, package `BOOT.BIN` / `.mcs`.              |
+| `petalinux`  | Create the PetaLinux project from the XSA, apply the BSP overlays, build and package.          |
+| `yocto`      | Generate a custom MACHINE from the XSA (`gen-machineconf parse-sdt`), apply the meta-user BSP, build with bitbake and package. |
+| `package`    | Gather the built boot artifacts into `bootimages/*.zip`.                                        |
+| `all`        | Build every stage the target supports, then `package`.                                         |
 
-```
-make bootimage TARGET=t
-  -> Vitis side (always):
-       Vitis/Makefile workspace TARGET=t -> bootfile TARGET=t
-         -> ensures Vivado XSA exists
-              Vivado/Makefile xsa TARGET=t
-                -> vivado -mode batch -source scripts/build.tcl   (creates project)
-                -> vivado -mode batch -source scripts/xsa.tcl     (synth, impl, XSA export)
-         -> vitis -source py/build-vitis.py  ... (creates platform + app, builds)
-         -> python3 py/make-boot.py          ... (packages BOOT.BIN / .mcs)
-  -> PetaLinux side (if target is "both"):
-       PetaLinux/Makefile petalinux TARGET=t
-         -> petalinux-create --template <zynq|zynqMP|versal> --name t
-         -> petalinux-config --get-hw-description <XSA>
-         -> copy bsp/<board>/project-spec/* into the project
-         -> petalinux-config --silentconfig
-         -> petalinux-build
-         -> petalinux-package boot ...
-  -> zip the resulting boot files into bootimages/
-```
+Run `./build.sh list` to see the targets and their attributes, `./build.sh
+status --target <t>` for per-stage artifact state, and `./build.sh --help`
+for the full command list.
 
-The Yocto / EDF flow is driven independently of the top-level `bootimage`
-cascade above, from `Yocto/Makefile`:
+Each target is flagged in `config/data.json` for the stages it supports —
+the MicroBlaze targets are baremetal-only (no PetaLinux/Yocto), the rest
+support the embedded-Linux flows as well. Because each stage builds its
+prerequisites first, a single `./build.sh all --target <t>` cascades the
+whole pipeline:
 
 ```
-make -C Yocto yocto TARGET=t
-  -> init-workspace.sh   : repo init + repo sync of the AMD yocto-manifests (rel-v2025.2)
-  -> ensures the Vivado XSA exists (Vivado/Makefile xsa TARGET=t)
-  -> configure-build.sh  : xsct/sdtgen generates a System Device Tree from the XSA,
-                           then `gen-machineconf parse-sdt` produces a custom MACHINE
-                           (fpgadrv-t) and adds the bsp/<board>/meta-user layer
-  -> build-image.sh      : bitbake edf-linux-disk-image
-  -> package-output.sh   : gather BOOT.BIN / kernel / boot.scr / system.dtb /
-                           rootfs.wic.xz into Yocto/t/images/linux/
+./build.sh all --target t
+  -> xsa         : vivado creates the project (build.tcl), then synth/impl/XSA export (xsa.tcl)
+  -> standalone  : vitis builds the platform + app, packages BOOT.BIN / .mcs
+  -> petalinux   : petalinux-create -> -config --get-hw-description <XSA>
+                   -> copy bsp/<board>/project-spec/* -> petalinux-build -> petalinux-package
+     yocto       : init-workspace (repo sync) -> configure-build (SDT + gen-machineconf parse-sdt)
+                   -> build-image (bitbake edf-linux-disk-image) -> package-output
+  -> package     : zip the boot files into bootimages/
 ```
 
-Per-target lock files (`.<target>.lock` in each Makefile's directory)
-prevent two concurrent builds of the same target from clobbering each
-other.
+Build a single stage on its own with `./build.sh <stage> --target <t>`; the
+runner still builds any missing prerequisite stages first.
+
+Per-target lock files (`.<target>.lock` at the repository root) prevent two
+concurrent builds of the same target from clobbering each other — so two
+terminals can safely both run `./build.sh all --target all`.
 
 ## Vivado side
 
@@ -197,10 +190,10 @@ self-contained.
 
 * `Vivado/scripts/build.tcl` creates the Vivado project, adds the
   target's XDC, sources the appropriate `bd_*.tcl`, and validates the
-  block design. Invoked via `make project TARGET=<t>`.
+  block design. Invoked via `./build.sh project --target <t>`.
 * `Vivado/scripts/xsa.tcl` opens the existing project, runs synthesis
   and implementation, exports the XSA, and writes the bitstream into
-  the implementation run directory. Invoked via `make xsa TARGET=<t>`.
+  the implementation run directory. Invoked via `./build.sh xsa --target <t>`.
 
 Both scripts check `XILINX_VIVADO` to confirm the installed Vivado
 version matches the `version_required` constant at the top of the
@@ -216,16 +209,16 @@ wrap the additions in the appropriate per-board conditional block.
 
 Once the script is edited, delete any existing per-target Vivado
 project directory (`rm -rf Vivado/<target>`) and re-run the Vivado
-build through the Makefile:
+build:
 
 ```
-make -C Vivado xsa TARGET=<target>
+./build.sh xsa --target <target>
 ```
 
 This re-creates the project, sources the modified BD script, runs
 `validate_bd_design`, synthesises, implements, and re-exports the XSA.
 Downstream Vitis / PetaLinux / boot-image steps will pick up the new
-XSA on the next `make` at the top level.
+XSA on the next build.
 
 ### Adding or modifying constraints
 
@@ -247,7 +240,6 @@ and its `xdmapcie_rc_enumerate_example.c`.
 
 ```
 Vitis/
-├── Makefile
 ├── py/
 │   ├── args.json
 │   ├── build-vitis.py        <- Universal Vitis Python build driver
@@ -302,10 +294,10 @@ the universal `build-vitis.py` driver. The key fields are:
 
 ### Modifying the standalone application
 
-Edit `Vitis/common/src/*.c` directly. The next `make -C Vitis bootfile
-TARGET=<t>` rebuilds the application against the existing platform; if
+Edit `Vitis/common/src/*.c` directly. The next `./build.sh standalone
+--target <t>` rebuilds the application against the existing platform; if
 you've changed the hardware (XSA) you'll need a fresh workspace
-(`make -C Vitis clean TARGET=<t>` first).
+(`./build.sh clean --target <t> --stage standalone` first).
 
 If a new target uses a different PCIe IP than the family default, add
 an entry to `src_overrides` in `args.json` rather than branching the
@@ -325,7 +317,8 @@ board-specific patches.
 The mapping from target to board BSP is by first-token match: a target
 `zcu106_hpc0` uses `PetaLinux/bsp/zcu106/`, a target `zc706_lpc` uses
 `PetaLinux/bsp/zc706/`, and so on. The valid (target, board, template)
-tuples are listed in `PetaLinux/Makefile`'s `UPDATER` block.
+tuples are defined in `config/data.json` (and surfaced by
+`./build.sh list`).
 
 There is no port-config overlay in this repository.
 
@@ -430,8 +423,8 @@ platform header; patches are listed in `SRC_URI:append` in
 
 The Yocto / EDF flow builds an embedded Linux image with AMD's Embedded
 Development Framework — the announced successor to PetaLinux — using the
-`gen-machineconf parse-sdt` flow. It is orchestrated by `Yocto/Makefile`
-and four scripts under `Yocto/scripts/`:
+`gen-machineconf parse-sdt` flow. It is driven by the build runner
+(`./build.sh yocto`) and four scripts under `Yocto/scripts/`:
 
 | Script               | Role (rough PetaLinux analogue)                                          |
 |----------------------|--------------------------------------------------------------------------|
@@ -441,7 +434,7 @@ and four scripts under `Yocto/scripts/`:
 | `package-output.sh`  | gather the flashable artifacts into `images/linux/` (≈ `petalinux-package`) |
 
 The step-by-step build instructions are in
-[build_instructions](build_instructions.md#build-yocto-project-in-linux)
+[build_instructions](build_instructions.md#build-yocto)
 and in `Yocto/README.md`; this section covers how the per-board
 customization is organised.
 

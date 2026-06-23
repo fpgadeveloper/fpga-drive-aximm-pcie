@@ -130,6 +130,27 @@ def _find_modules(xml_bytes):
             out.append((inst, vlnv))
     return out
 
+def _select_app_microblaze(candidates):
+    """Pick the *application* MicroBlaze, not a DDR4-MIG calibration core.
+    On UltraScale DDR4 boards the MIG instantiates a second MicroBlaze inside a
+    MicroBlaze-MCS sub-block (…/u_ddr_cal_riu/mcs0/inst/microblaze_I) that ships
+    in its own '*_microblaze_mcs.hwh'; the application core lives in the top
+    block-design .hwh and is conventionally 'microblaze_0'. updatemem's -proc
+    must name the application core, so prefer it structurally (not from the MCS
+    sub-block) and by the conventional name. `candidates` is a list of
+    (instance, source_hwh) for every MicroBlaze module found in the XSA."""
+    if not candidates:
+        return "microblaze_0"
+    # Drop cores that come from a MicroBlaze-MCS sub-block (MIG calibration).
+    app = [inst for inst, hwh in candidates if "_mcs" not in hwh.lower()]
+    cands = app or [inst for inst, _ in candidates]
+    # Prefer the conventional app-core name, then any numeric-suffixed core.
+    cands.sort(key=lambda n: (
+        n.split("/")[-1] != "microblaze_0",
+        re.fullmatch(r"microblaze_\d+", n.split("/")[-1]) is None,
+    ))
+    return cands[0]
+
 def detect_arch_and_cpu_from_xsa(xsa_path):
     """
     Returns:
@@ -139,18 +160,21 @@ def detect_arch_and_cpu_from_xsa(xsa_path):
     if not zipfile.is_zipfile(xsa_path):
         return None, None
     modules = []
+    mb_candidates = []  # (instance, source_hwh) for every MicroBlaze core found
     with zipfile.ZipFile(xsa_path, "r") as z:
         for name in z.namelist():
             if name.lower().endswith(".hwh"):
                 try:
-                    modules += _find_modules(z.read(name))
+                    found = _find_modules(z.read(name))
                 except KeyError:
-                    pass
+                    continue
+                modules += found
+                mb_candidates += [(inst, name) for inst, vlnv in found
+                                  if "microblaze" in vlnv]
     vlnvs = [v for _, v in modules]
     has = {k: any(h in v for v in vlnvs) for k, h in CPU_VLNV_HINTS.items()}
     if has["microblaze"]:
-        mb_inst = next((n for n, v in modules if "microblaze" in v), "microblaze_0")
-        return "microblaze", mb_inst
+        return "microblaze", _select_app_microblaze(mb_candidates)
     if has["versal_cips"]:
         core = "a72-0" if any("a72" in v for _, v in modules) else ("r5-0" if any("r5" in v for _, v in modules) else "a72-0")
         return "versal", core
@@ -180,12 +204,24 @@ def make_mb_bit(impl_dir, bd_name, elf_path, mb_proc_name, out_bit, combine):
             die(f"ELF not found: {elf_path}")
         cmd = ["updatemem", "-force", "-meminfo", mmi, "-data", elf_path, "-bit", bit, "-proc", f"{bd_name}_i/{mb_proc_name}", "-out", out_bit]
         note("Running: " + " ".join(cmd))
+        # updatemem's Vivado/Tcl wrapper can print an ERROR and "update_mem
+        # failed" yet still exit 0, so the return code alone is not trustworthy.
+        # Remove any stale output first, capture the output to scan for errors,
+        # and confirm the bit was actually written before declaring success.
+        if os.path.isfile(out_bit):
+            os.remove(out_bit)
         try:
-            subprocess.check_call(cmd)
+            r = subprocess.run(cmd, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, text=True)
         except FileNotFoundError:
             die("updatemem not found. Source Vivado/Vitis settings64.sh")
-        except subprocess.CalledProcessError as e:
-            die(f"updatemem failed with code {e.returncode}")
+        sys.stdout.write(r.stdout)
+        sys.stdout.flush()
+        if (r.returncode != 0 or "update_mem failed" in r.stdout
+                or re.search(r"\bERROR:\s*\[Updatemem", r.stdout)
+                or not os.path.isfile(out_bit)):
+            die(f"updatemem failed to embed ELF into {out_bit} "
+                f"(rc={r.returncode}); see updatemem output above")
         note(f"Created bit with embedded ELF: {out_bit}")
     else:
         shutil.copy2(bit, out_bit)
@@ -235,7 +271,10 @@ def bootgen_arch_token(arch):
     return {"zynq":"zynq", "zynqmp":"zynqmp", "versal":"versal"}[arch]
 
 def run_bootgen(arch, bif_path, out_bin):
-    cmd = ["bootgen", "-arch", bootgen_arch_token(arch), "-image", bif_path, "-o", out_bin, "-w", "on"]
+    # shutil.which finds bootgen.bat on Windows (PATHEXT); a bare "bootgen"
+    # in subprocess only resolves to .exe there, which doesn't exist.
+    bootgen = shutil.which("bootgen") or "bootgen"
+    cmd = [bootgen, "-arch", bootgen_arch_token(arch), "-image", bif_path, "-o", out_bin, "-w", "on"]
     note("Running: " + " ".join(cmd))
     try:
         subprocess.check_call(cmd)

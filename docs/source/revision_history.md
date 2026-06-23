@@ -4,7 +4,7 @@
 
 * Added a Yocto / EDF build flow (`Yocto/`) — AMD's Embedded Development
   Framework, the successor to PetaLinux — driven by a single
-  `make yocto TARGET=<board>` command via the `gen-machineconf parse-sdt`
+  `./build.sh yocto --target <board>` command via the `gen-machineconf parse-sdt`
   flow, covering the Zynq-7000, Zynq UltraScale+ and Versal targets. The
   PetaLinux flow for this repository will be retired after 2025.2.
 * Bumped Vivado, Vitis and PetaLinux requirement to 2025.2

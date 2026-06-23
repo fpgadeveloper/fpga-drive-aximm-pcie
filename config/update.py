@@ -26,6 +26,8 @@ def create_tables(data):
     to_emoji = {True: ":white_check_mark:", False: ":x:"}
     # License dict
     to_edition = {True: "Enterprise", False: "Standard :free:"}
+    # IP license dict (separately-licensed IP cores, e.g. TEMAC/XXV/HDMI/MRMAC)
+    to_ip = {True: "Required", False: "-"}
     # Determine which groups actually have designs
     used_groups = []
     for group in data['groups']:
@@ -41,8 +43,8 @@ def create_tables(data):
     for group in used_groups:
         tables.append('### {} designs'.format(group['name']))
         tables.append('')
-        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition |')
-        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|')
+        tables.append('| Target board          | Target design   | M2 Slot 1<br> PCIe Lanes | M2 Slot 2<br> PCIe Lanes | FMC Slot    | Standalone | PetaLinux | Yocto | Vivado<br> Edition | IP<br>License |')
+        tables.append('|-----------------------|-----------------|--------------------------|--------------------------|-------------|-------|-------|-------|-------|-------|')
         for design in data['designs']:
             if not design['publish']:
                 continue
@@ -60,6 +62,7 @@ def create_tables(data):
                 cols.append('{0}'.format(to_emoji[design['petalinux']]).ljust(11))
                 cols.append('{0}'.format(to_emoji[design.get('yocto', False)]).ljust(11))
                 cols.append('{0}'.format(to_edition[design['license']]).ljust(5))
+                cols.append('{0}'.format(to_ip[design.get('ip_license', False)]).ljust(5))
                 tables.append('| ' + ' | '.join(cols) + ' |')
                 links[design['board']] = design['link']
         tables.append('')
@@ -96,31 +99,6 @@ def update_readme(file_path,data):
                 # Write the line if not inside the updater block
                 outfile.write(line)
 
-def get_root_targets(data, args):
-    templates = {'fpga': 'microblaze', 'z7': 'zynq', 'zu': 'zynqMP', 'versal': 'versal'}
-    targets = []
-    targets.append('BD_NAME = {}'.format(data['bd_name']))
-    targets.append('PRJ_NAME = {}'.format(data.get('prj_name', data['bd_name'])))
-    combine = str(args.get('combine_bit_elf', True)).lower()
-    targets.append('COMBINE_BIT_ELF = {}'.format(combine))
-    for design in data['designs']:
-        template = templates[design['group']]
-        if design.get('petalinux') and design.get('baremetal'):
-            sw = 'both'
-        elif design.get('petalinux'):
-            sw = 'petalinux_only'
-        else:
-            sw = 'baremetal_only'
-        target = '{}_target := {} {}'.format(design['label'],template,sw)
-        targets.append(target)
-    return(targets)
-
-def get_vivado_targets(data):
-    targets = []
-    targets.append('BD_NAME = {}'.format(data['bd_name']))
-    targets += ['{}_target := 0'.format(design['label']) for design in data['designs']]
-    return(targets)
-
 def get_vivado_build_targets(data):
     templates = {'fpga': 'mb', 'z7': 'zynq', 'zu': 'zynqmp', 'versal': 'versal'}
     targets = []
@@ -155,24 +133,6 @@ def get_yocto_targets(data):
         target = '{}_target := {}'.format(design['label'],template)
         targets.append(target)
     return(targets)
-
-def get_vitis_targets(data, args):
-    templates = {'fpga': 'microblaze', 'z7': 'zynq', 'zu': 'zynqMP', 'versal': 'versal'}
-    targets = []
-    # Global settings from args.json
-    targets.append('BD_NAME = {}'.format(args['bd_name']))
-    targets.append('APP_NAME = {}'.format(args.get('app_name', 'test_app')))
-    combine = str(args.get('combine_bit_elf', True)).lower()
-    targets.append('COMBINE_BIT_ELF = {}'.format(combine))
-    # Per-target arch assignments
-    for design in data['designs']:
-        if not design['baremetal']:
-            continue
-        template = templates[design['group']]
-        target = '{}_target := {}'.format(design['label'],template)
-        targets.append(target)
-    return(targets)
-
 
 def get_ignore_paths(data):
     paths = []
@@ -226,25 +186,13 @@ file_path = '../README.md'
 # Update the main README.md file
 update_readme(file_path,data)
 
-# Update the root makefile
-root_makefile = '../Makefile'
-root_targets = get_root_targets(data, args)
-update_file(root_makefile,root_targets)
-
-# Update the Vivado makefile
-vivado_makefile = '../Vivado/Makefile'
-vivado_targets = get_vivado_targets(data)
-update_file(vivado_makefile,vivado_targets)
-
+# NOTE: the root, Vivado and Vitis Makefiles are thin wrappers around
+# build.sh and read targets from data.json at runtime -- they no longer
+# contain generated target lists.
 # Update the Vivado build.tcl
 vivado_build_tcl = '../Vivado/scripts/build.tcl'
 vivado_build_targets = get_vivado_build_targets(data)
 update_file(vivado_build_tcl,vivado_build_targets)
-
-# Update the Vitis makefile
-vitis_makefile = '../Vitis/Makefile'
-vitis_targets = get_vitis_targets(data, args)
-update_file(vitis_makefile,vitis_targets)
 
 # Update the PetaLinux makefile
 petalinux_makefile = '../PetaLinux/Makefile'
@@ -252,9 +200,12 @@ petalinux_targets = get_petalinux_targets(data)
 update_file(petalinux_makefile,petalinux_targets)
 
 # Update the Yocto makefile
-yocto_makefile = '../Yocto/Makefile'
-yocto_targets = get_yocto_targets(data)
-update_file(yocto_makefile,yocto_targets)
+# The Yocto Makefile is now a thin wrapper around build.sh; build.py reads
+# the target list, BD_NAME and port configs from data.json at runtime, so
+# the Makefile no longer contains a generated target list.
+#yocto_makefile = '../Yocto/Makefile'
+#yocto_targets = get_yocto_targets(data)
+#update_file(yocto_makefile,yocto_targets)
 
 # Update the gitignore
 gitignore = '../.gitignore'

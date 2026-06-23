@@ -21,11 +21,9 @@ Note that the repo carries lightly modified copies of these examples in
 To build the Vitis workspace and example application, you must first generate
 the Vivado project hardware design (the bitstream) and export the hardware.
 Once the bitstream is generated and exported, then you can build the
-Vitis workspace using the provided scripts. Follow the instructions appropriate for your
-operating system:
-
-* **Windows**: Follow the [build instructions for Windows users](/build_instructions.md#windows-users)
-* **Linux**: Follow the [build instructions for Linux users](/build_instructions.md#linux-users)
+Vitis workspace using the provided scripts. Follow the
+[build instructions](/build_instructions.md#build-vitis-workspace) — the
+steps are the same on Windows and Linux.
 
 ## Hardware setup
 
