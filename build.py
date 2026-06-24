@@ -650,18 +650,15 @@ def stage_petalinux(ctx: Context):
 
 
 def yocto_port_cfg_dir(ctx: Context):
-    """Optional per-target overlay layer (e.g. the Ethernet port-config
-    layers), derived from data.json 'lanes' the same way update.py used to
-    generate the Makefile target table. None when the repo ships no
-    Yocto/bsp/port-configs/ or the derived layer does not exist."""
-    root = ctx.repo.root / "Yocto" / "bsp" / "port-configs"
-    lanes = ctx.design.get("lanes")
-    if not root.is_dir() or not isinstance(lanes, list):
+    """Per-target port-config overlay layer. The overlay name is an explicit
+    data.json parameter ("portcfg") -- it is NOT derived from lanes here, since
+    the mapping is design-specific (e.g. -axieth / versal-prefixed / single-port
+    variants that lanes alone can't express). None when the design has no
+    portcfg or the named layer does not exist on disk."""
+    name = ctx.design.get("portcfg")
+    if not name:
         return None
-    length = 8 if len(lanes) > 4 else 4
-    name = "ports-" + "".join(str(i) if i in lanes else "-"
-                              for i in range(length))
-    d = root / name
+    d = ctx.repo.root / "Yocto" / "bsp" / "port-configs" / name
     return d if d.is_dir() else None
 
 
@@ -717,8 +714,14 @@ def stage_yocto(ctx: Context):
         shutil.copyfile(ctx.xsa, hw_xsa)
     # 3. Configure (sdtgen + gen-machineconf parse-sdt + BSP/overlay/sstate).
     #    Re-run when the XSA or the board conf is newer than the done-marker.
-    board = ctx.target.split("_")[0]
-    bsp = ydir / "bsp" / board
+    #    Prefer a target-specific bsp (e.g. bsp/zcu102_hpc1) over the board-level
+    #    one (bsp/zcu102) when it exists -- mirrors the PetaLinux convention where
+    #    a design variant whose hardware differs (e.g. fewer MIPI camera ports)
+    #    gets its own bsp instead of sharing the board's.
+    bsp = ydir / "bsp" / ctx.target
+    if not bsp.is_dir():
+        bsp = ydir / "bsp" / ctx.target.split("_")[0]
+    board = bsp.name
     conf_append = bsp / "conf" / "local.conf.append"
     done = work / "configdone.txt"
     offline = ydir / "offline.txt"

@@ -101,6 +101,33 @@ if [ -n "$PORT_CFG_DIR" ] && [ -d "$PORT_CFG_DIR/meta-user" ]; then
     fi
 fi
 
+# Optional extra Yocto meta-layers for THIS bsp (e.g. a third-party layer shipped
+# as a git submodule, such as meta-hailo for the ZynqMP Hailo-AI design). Declared
+# per-bsp in bsp/<board>/bblayers-extra.txt, one repo-root-relative layer path per
+# line; blank lines and # comments are ignored, and entries are added in file
+# order so a layer may depend on one listed before it. No-op when the file is
+# absent, keeping this script universal for bsps with no extra layers.
+EXTRA_LAYERS_FILE="$BSP_DIR/bblayers-extra.txt"
+if [ -f "$EXTRA_LAYERS_FILE" ]; then
+    REPO_ROOT="$(cd "$BSP_DIR/../../.." && pwd)"
+    while IFS= read -r layer || [ -n "$layer" ]; do
+        case "$layer" in ''|\#*) continue ;; esac
+        case "$layer" in /*) LAYER_DIR="$layer" ;; *) LAYER_DIR="$REPO_ROOT/$layer" ;; esac
+        if [ ! -f "$LAYER_DIR/conf/layer.conf" ]; then
+            echo "[configure-build] WARNING: extra layer '$layer' has no conf/layer.conf at $LAYER_DIR -- skipping" >&2
+            continue
+        fi
+        if ! grep -qsF "$LAYER_DIR" "$CONF_DIR/bblayers.conf"; then
+            echo "[configure-build] bblayers.conf += $LAYER_DIR (extra layer)"
+            {
+                echo ""
+                echo "# Extra layer added by Yocto/scripts/configure-build.sh (bsp/<board>/bblayers-extra.txt)"
+                echo "BBLAYERS += \"$LAYER_DIR\""
+            } >> "$CONF_DIR/bblayers.conf"
+        fi
+    done < "$EXTRA_LAYERS_FILE"
+fi
+
 # ---- helper: emit SSTATE_MIRRORS / SOURCE_MIRROR_URL lines for offline.txt ---
 # Reads $SSTATE_PATH; emits one SSTATE_MIRRORS entry per extracted arch subdir.
 emit_sstate_mirrors() {
