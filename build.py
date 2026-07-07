@@ -755,6 +755,25 @@ def _zip_tree(zip_path: Path, entries):
                 z.writestr(arc, src)
 
 
+def _tar_member_bytes(tgz: Path, member: str):
+    """One member's bytes from a .tar.gz, or None if tarball/member is missing."""
+    import tarfile
+    if not tgz.is_file():
+        return None
+    try:
+        with tarfile.open(tgz, "r:gz") as t:
+            for name in ("./" + member, member):
+                try:
+                    f = t.extractfile(name)
+                except KeyError:
+                    continue
+                if f:
+                    return f.read()
+    except (OSError, tarfile.TarError):
+        pass
+    return None
+
+
 def stage_bootimage(ctx: Context):
     results = []
 
@@ -814,10 +833,10 @@ def stage_bootimage(ctx: Context):
             results.append("yocto zip exists")
         else:
             # The EDF Yocto wic is a full SD-card image; bmaptool uses the .bmap
-            # (xzcat|dd is the fallback). On Versal the wic's ESP is pre-populated
-            # by bootimg-efi-amd (systemd-boot + BOOT.BIN), so it boots as-is. On
-            # ZynqMP/Zynq the wks stages BOOT.BIN on an ext4 partition the BootROM
-            # cannot read, so BOOT.BIN must be copied onto the first FAT32 (ESP)
+            # (xzcat|dd is the fallback). The wic's ESP does NOT carry BOOT.BIN on
+            # any family (verified 2026-07 on vck190: bootimg-efi-amd populates
+            # systemd-boot + kernel Image only, and the BootROM finds no boot image
+            # -> dead board), so BOOT.BIN must be copied onto the first FAT32 (ESP)
             # partition after flashing -- ship it alongside the wic.
             wanted = ["rootfs.wic.xz", "rootfs.wic.bmap"]
             entries = [(img / "rootfs.wic.xz", "rootfs.wic.xz"),
@@ -829,18 +848,30 @@ def stage_bootimage(ctx: Context):
                 "  bmaptool copy rootfs.wic.xz /dev/sdX\n"
                 "Without bmaptool:\n"
                 "  xzcat rootfs.wic.xz | sudo dd of=/dev/sdX bs=4M conv=fsync\n")
+            wanted.append("BOOT.BIN")
+            entries.append((img / "BOOT.BIN", "BOOT.BIN"))
+            sd_readme = flash + (
+                "\nThen copy BOOT.BIN onto the FIRST partition (p1, FAT32/ESP):\n"
+                "the wic does not carry BOOT.BIN where the BootROM can read it,\n"
+                "so the card will not boot until BOOT.BIN is on p1, e.g.:\n"
+                "  sudo mount /dev/sdX1 /mnt && sudo cp BOOT.BIN /mnt/ && sudo umount /mnt\n")
             if ctx.family == "versal":
-                sd_readme = flash + (
-                    "\nThe wic already contains BOOT.BIN on the ESP partition "
-                    "(systemd-boot); nothing else to copy.\n")
-            else:
-                wanted.append("BOOT.BIN")
-                entries.append((img / "BOOT.BIN", "BOOT.BIN"))
-                sd_readme = flash + (
-                    "\nThen copy BOOT.BIN onto the FIRST partition (p1, FAT32/ESP):\n"
-                    "the wic stages BOOT.BIN on an ext4 partition the BootROM cannot\n"
-                    "read, so the card will not boot until BOOT.BIN is on p1, e.g.:\n"
-                    "  sudo mount /dev/sdX1 /mnt && sudo cp BOOT.BIN /mnt/ && sudo umount /mnt\n")
+                # The versal wic's ESP also ships an EMPTY EFI/BOOT/ (no
+                # systemd-boot binary), so u-boot's EFI boot manager has
+                # nothing to load even once BOOT.BIN is in place (verified
+                # 2026-07 on vck190). Ship systemd-boot from the image rootfs
+                # so the user can install it alongside BOOT.BIN.
+                efi = _tar_member_bytes(
+                    img / "rootfs.tar.gz",
+                    "usr/lib/systemd/boot/efi/systemd-bootaa64.efi")
+                if efi is not None:
+                    entries.append((efi, "BOOTAA64.EFI"))
+                    sd_readme += (
+                        "\nVersal: ALSO copy BOOTAA64.EFI to EFI/BOOT/ on p1\n"
+                        "(the wic ships an empty EFI/BOOT/, so u-boot's EFI boot\n"
+                        "manager otherwise stops at the u-boot prompt), e.g.:\n"
+                        "  sudo mount /dev/sdX1 /mnt && sudo mkdir -p /mnt/EFI/BOOT \\\n"
+                        "    && sudo cp BOOTAA64.EFI /mnt/EFI/BOOT/ && sudo umount /mnt\n")
             entries.append((sd_readme, "readme.txt"))
             missing = [w for w in wanted if not (img / w).is_file()]
             if missing:
