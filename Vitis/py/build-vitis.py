@@ -182,6 +182,62 @@ def setup_embeddedsw(repo_root, workspace):
 
     return local_esw
 
+# The system device tree names the AXI PCIe root-port flag differently
+# depending on which bridge core the design instantiates:
+#
+#   axi_pcie  (Gen2) -> xlnx,port-type     = <0x1>  (added by the SDT generator
+#                                                    from CONFIG.INCLUDE_RC)
+#   axi_pcie3 (Gen3) -> xlnx,dev-port-type = <0x2>  (the core's DEV_PORT_TYPE
+#                                                    parameter, PCIe port type)
+#
+# Both cores are served by the same axipcie driver, whose axipcie.yaml can name
+# only one of the two in its "required" list -- and the field it does not name
+# is simply absent from the node, so the BSP generator writes 0 into the
+# IncludeRootComplex field of the config table. The application then aborts with
+# "Failed to initialize...AXI PCIE is configured as endpoint" even though the
+# core really is a root port. Point the yaml at the property this design's core
+# actually publishes.
+PCIE_PORT_TYPE_PROPS = [
+    ("xilinx.com:ip:axi_pcie:",  "xlnx,port-type"),
+    ("xilinx.com:ip:axi_pcie3:", "xlnx,dev-port-type"),
+]
+
+def pcie_port_type_prop(xsa_path, bd_name):
+    """SDT property carrying the root-port flag for this design's PCIe bridge.
+    Returns None for designs with no AXI PCIe bridge (xdma/qdma designs use the
+    xdmapcie driver, whose yaml is not patched)."""
+    if not zipfile.is_zipfile(xsa_path):
+        return None
+    vlnvs = []
+    with zipfile.ZipFile(xsa_path, "r") as z:
+        for name in z.namelist():
+            if name.lower() == bd_name + ".hwh":
+                try:
+                    vlnvs += [v for _, v in _find_modules(z.read(name))]
+                except KeyError:
+                    pass
+    for vlnv_prefix, prop in PCIE_PORT_TYPE_PROPS:
+        if any(v.startswith(vlnv_prefix) for v in vlnvs):
+            return prop
+    return None
+
+def set_axipcie_port_type(local_esw, prop):
+    """Rewrite the patched axipcie.yaml's port-type entry to `prop`."""
+    pattern = os.path.join(local_esw, "XilinxProcessorIPLib", "drivers",
+                           "axipcie_v*", "data", "axipcie.yaml")
+    for yaml_path in glob.glob(pattern):
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            text = f.read()
+        new_text, n = re.subn(r"(?m)^([ \t]*-[ \t]*)xlnx,(?:dev-)?port-type[ \t]*$",
+                              r"\g<1>" + prop, text)
+        if not n:
+            info(f"  WARNING: no port-type entry found in {yaml_path}")
+            continue
+        if new_text != text:
+            with open(yaml_path, "w", encoding="utf-8") as f:
+                f.write(new_text)
+        info(f"  axipcie.yaml: root-port property set to {prop}")
+
 def sync_cmake_sources(app_src):
     """Ensure CMakeLists.txt includes all .c files present in app_src.
     Template-based apps generate CMakeLists.txt at creation time, so any
@@ -507,6 +563,11 @@ def main():
         repo_root = os.path.normpath(os.path.join(cwd, ".."))
         local_esw = setup_embeddedsw(repo_root, workspace)
         if local_esw:
+            # Align the patched axipcie.yaml with the PCIe core in this design
+            # (see PCIE_PORT_TYPE_PROPS)
+            port_type_prop = pcie_port_type_prop(xsa_path, bd_name)
+            if port_type_prop:
+                set_axipcie_port_type(local_esw, port_type_prop)
             client.set_embedded_sw_repo(level='LOCAL', path=local_esw)
             info(f"Registered local embeddedsw repo: {local_esw}")
 
