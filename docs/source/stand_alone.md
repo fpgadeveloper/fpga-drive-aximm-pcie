@@ -212,11 +212,24 @@ fails to associate the IP with the axipcie driver, and the BSP is built without 
 Our modified version of `axipcie.yaml` adds `xlnx,axi-pcie3-3.0` as a compatible string so that the
 driver is correctly included in the BSP for designs that use the AXI PCIe Gen3 IP.
 
-Additionally, the YAML references `xlnx,port-type` for the root complex detection field, but the device
-tree uses `xlnx,dev-port-type`. Our patch corrects this so that the `IncludeRootComplex` field in the
-config table is populated correctly. However, the device tree value for root port designs is `2` (PCI
-Express Root Port), while the driver expects `1` (`XAXIPCIE_IS_RC`). The example application normalizes
-any non-zero value to `1` after initialization to satisfy the driver's internal assertions.
+Additionally, the YAML's `required` list names the device tree property that populates the config table's
+`IncludeRootComplex` field — the flag the example application checks to confirm the IP is a root port. The
+two IPs publish that flag under *different* property names, and the YAML can only name one of them:
+
+| PCIe IP | designs | device tree property | value for a root port |
+|---------|---------|----------------------|-----------------------|
+| `axi_pcie` (Gen2) | kc705, vc707, zc706, PicoZed | `xlnx,port-type` | `1` |
+| `axi_pcie3` (Gen3) | kcu105, vc709 | `xlnx,dev-port-type` | `2` |
+
+Whichever property the YAML names, the other IP's node does not have it, the BSP generator writes `0` into
+`IncludeRootComplex`, and the application aborts with *"Failed to initialize...AXI PCIE is configured as
+endpoint"* even though the IP really is a root port. The Vitis build script (`Vitis/py/build-vitis.py`)
+therefore inspects the XSA and sets the YAML's `required` entry to the property that this design's PCIe IP
+actually publishes, before the platform is built.
+
+Note that for the Gen3 IP the value is `2` (PCI Express Root Port), while the driver expects `1`
+(`XAXIPCIE_IS_RC`). The example application normalizes any non-zero value to `1` after initialization to
+satisfy the driver's internal assertions.
 
 ### xdmapcie driver
 

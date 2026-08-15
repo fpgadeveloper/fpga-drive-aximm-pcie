@@ -15,6 +15,11 @@
 * Vendored modified `axipcie_v3_4` and `xdmapcie_v3_1` drivers under
   `EmbeddedSw/` to fix SDT compatible-string mapping and Versal QDMA
   address-swap behaviour (see [stand_alone](stand_alone) for details)
+* Fixed the baremetal application aborting with "AXI PCIe is configured as
+  endpoint" on the AXI PCIe Gen2 designs (kc705, vc707, zc706, PicoZed):
+  the Gen2 IP publishes the root-port flag as `xlnx,port-type` while the
+  Gen3 IP publishes it as `xlnx,dev-port-type`, so the axipcie driver YAML
+  is now matched to the PCIe IP in the design (issue #41)
 * Verified the previously documented "Slave Illegal Burst" Vivado 2024.1
   issue no longer reproduces with the current 2025.2 Versal designs;
   removed the AR000036860 tactical-patch workaround note
