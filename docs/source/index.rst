@@ -15,6 +15,7 @@ This is the documentation for the reference designs for the
    :caption: User Guide
 
    description
+   design
    requirements
    supported_carriers
    supported_ssds
@@ -22,6 +23,7 @@ This is the documentation for the reference designs for the
    stand_alone
    petalinux
    yocto
+   linux_test
    advanced
    troubleshooting
    revision_history

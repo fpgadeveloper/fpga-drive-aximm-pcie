@@ -16,6 +16,7 @@ IMAGE_INSTALL:append = " \
     nfs-utils \
     pciutils \
     libdfx \
+    speed-tests \
 "
 
 # --- Hands-free boot for Versal ---------------------------------------------
@@ -32,3 +33,8 @@ IMAGE_EFI_BOOT_FILES:append = " boot.bin;BOOT.BIN boot.scr;boot.scr"
 # Make sure both artifacts are deployed before the wic is assembled.
 do_image_wic[depends] += "virtual/boot-bin:do_deploy u-boot-edf-scr:do_deploy"
 
+
+# nvme-cli for identifying/testing the NVMe SSDs on the FPGA Drive FMC (PetaLinux user-rootfsconfig; already in the pz/zc706 BSPs).
+IMAGE_INSTALL:append = " \
+    nvme-cli \
+"

@@ -30,6 +30,10 @@ extensions = [
   'myst_parser',
 ]
 
+# Generate HTML anchors for headings (h1-h4) so that links such as
+# [text](page.md#some-heading) resolve.
+myst_heading_anchors = 4
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

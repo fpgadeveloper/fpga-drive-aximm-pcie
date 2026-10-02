@@ -7,9 +7,17 @@
  * the PS config and the PL axi_pcie Gen2 Root Port from the XSA). Scoped to the
  * Linux domain by device-tree.bbappend.
  *
- * Disable PS GEM0: this reference design does not use the PS Ethernet, and the
- * pcw.dtsi emitted for these boards leaves gem0 without a phy-handle, which
- * makes 2025.x u-boot data-abort while probing it. Mirrors the PetaLinux BSP.
+ * gem0: the board Ethernet port, kept enabled so the image is reachable over
+ * the board RJ45 (this design does not otherwise use the PS Ethernet). The
+ * generated pcw.dtsi enables gem0 but describes no PHY (no phy-handle, no MDIO
+ * child); 2025.x U-Boot data-aborts probing a gem0 in that state, so the PHY
+ * is described here. This dtb is also U-Boot's control DT (BOOT.BIN loads it
+ * at 0x100000), so U-Boot sees the same description.
+ * board RJ45 = PS GEM0 on MIO16-27 (RGMII), MDIO on MIO52/53, Marvell
+ * 88E151x PHY on the PicoZed SOM at MDIO address 0, phy-mode rgmii-id (the
+ * PicoZed PetaLinux BSP heritage of this design; PS config of this design's
+ * XSA; same description as ethernet-fmc-axi-eth pz).
+ * No fixed MAC: U-Boot assigns one and passes it on.
  *
  * Kernel command line: the Zynq-7000 EDF boot.scr (meta-xilinx u-boot-xlnx-scr)
  * reads bootargs from /chosen/bootargs and only appends root=. Unlike the
@@ -41,5 +49,16 @@
 };
 
 &gem0 {
-	status = "disabled";
+	status = "okay";
+	phy-mode = "rgmii-id";
+	phy-handle = <&gem0_phy>;
+	xlnx,has-mdio = <0x1>;
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gem0_phy: phy@0 {
+			device_type = "ethernet-phy";
+			reg = <0>;
+		};
+	};
 };

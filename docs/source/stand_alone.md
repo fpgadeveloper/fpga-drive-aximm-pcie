@@ -16,47 +16,78 @@ be viewed on the [embeddedsw Github repo](https://github.com/Xilinx/embeddedsw/t
 Note that the repo carries lightly modified copies of these examples in
 `Vitis/common/src/` (see [advanced](advanced) for the modifications).
 
-## Building the Vitis workspace
+## Prerequisites
 
-To build the Vitis workspace and example application, you must first generate
-the Vivado project hardware design (the bitstream) and export the hardware.
-Once the bitstream is generated and exported, then you can build the
-Vitis workspace using the provided scripts. Follow the
-[build instructions](/build_instructions.md#build-vitis-workspace) — the
-steps are the same on Windows and Linux.
+* Vivado and Vitis 2025.2 (Windows or Linux — see [requirements](requirements)).
+* The target board with its USB-UART and USB-JTAG cables.
+* For the Zynq-7000, Zynq UltraScale+ and Versal boards: a micro-SD card, if you want to
+  boot the application from SD rather than over JTAG.
+* The [FPGA Drive FMC Gen4] or M.2 M-key Stack FMC with one or two M.2 NVMe SSDs.
+
+## Build the application
+
+Run the following from the root of the repository (`build.bat` instead of `./build.sh` in a
+plain Windows command prompt):
+
+```
+./build.sh standalone --target <target>
+```
+
+The runner builds the Vivado project and XSA first if needed, then creates the Vitis
+workspace (platform + `ssd_test` application) and packages the boot file. See the
+[build instructions](build_instructions.md#build-vitis-workspace) for the list of valid
+targets. The outputs are:
+
+| Output | Location |
+|--------|----------|
+| Vitis workspace | `Vitis/<target>_workspace/` |
+| Boot file, Zynq-7000 / Zynq UltraScale+ / Versal | `Vitis/boot/<target>/BOOT.BIN` (FSBL or PLM + bitstream/PDI + `ssd_test`) |
+| Boot file, MicroBlaze | `Vitis/boot/<target>/fpgadrv_boot.bit` (bitstream with `ssd_test` in MicroBlaze local memory) |
+| Zip of the boot files | `bootimages/fpga-drive-aximm-pcie_<target>_standalone-2025-2.zip` (after `./build.sh package` or `all`) |
 
 ## Hardware setup
 
-Before running the application, you will need to setup the hardware.
-
-1. Connect one or more SSDs to the mezzanine card and then plug it into the target board.
-   Instructions for doing this can be found in the 
+1. Connect one or more SSDs to the mezzanine card and then plug it into the FMC connector of
+   your target design. Designs with only one active slot use the slot labelled "SSD1" /
+   "SLOT 1". Instructions for doing this can be found in the
    [Getting started](https://www.fpgadrive.com/docs/fpga-drive-fmc-gen4/getting-started/) guide.
-2. To receive the UART output of this standalone application, you will need to connect the
-   USB-UART of the development board to your PC and run a console program such as 
-   [Putty].
-   * **For Microblaze designs:** The UART speed must be set to 9600.
-   * **For Zynq-7000, Zynq UltraScale+ and Versal designs:** The UART speed must be set to 115200.
-
+2. Connect the USB-UART of the development board to your PC and open a terminal program
+   such as [Putty] at **115200 baud** (8N1). This applies to all designs, including the
+   MicroBlaze designs (AXI UART Lite at 115200 baud).
+3. Connect the USB-JTAG if you are going to load the application over JTAG.
 
 ## Run the application
 
-You must have followed the build instructions before you can run the application.
+### From the SD card (Zynq-7000, Zynq UltraScale+, Versal)
 
-1. Launch the Xilinx Vitis GUI.
-2. When asked to select the workspace path, select the `Vitis/<target>_workspace` directory.
-3. Power up your hardware platform and ensure that the JTAG is connected properly.
-4. In the Vitis Explorer panel, double-click on the System project that you want to run -
-   this will reveal the application contained in the project. The System project will have 
-   the postfix "_system".
-5. Now right click on the application "ssd_test" then navigate the
-   drop down menu to **Run As->Launch on Hardware (Single Application Debug (GDB)).**.
+1. Copy `Vitis/boot/<target>/BOOT.BIN` to the first (FAT32) partition of a micro-SD card.
+2. Set the board to boot from the SD card (the switch settings are listed under
+   [Boot PetaLinux](petalinux.md#boot-petalinux); for the Versal boards, see the board's
+   user guide) and insert the card.
+3. Power up the board. The application runs immediately and prints its output to the UART.
 
-![Vitis Launch on hardware](images/vitis-launch-on-hardware.png)
+### Over JTAG — MicroBlaze designs
 
-The run configuration will first program the FPGA with the bitstream, then load and run the 
-application. You can view the UART output of the application in a console window and it should
-appear as follows:
+1. Power up the board and open the Vivado Hardware Manager (**Open Hardware Manager →
+   Open Target → Auto Connect**).
+2. **Program Device** with `Vitis/boot/<target>/fpgadrv_boot.bit`. The application is part
+   of the bitstream, so it starts as soon as the FPGA is configured.
+
+### Over JTAG — from the Vitis IDE
+
+1. Set the board to JTAG boot mode (the switch settings are listed under
+   [Boot via JTAG](petalinux.md#setup-hardware)) and power it up.
+2. Launch Vitis 2025.2 and open the workspace `Vitis/<target>_workspace`.
+3. Select the `ssd_test` application component and click **Run** (or **Debug**) in the
+   flow navigator. Vitis programs the device and loads and starts the application.
+
+## Expected output
+
+The application initializes the Root Port, waits for the link, prints the state of the
+link and then enumerates the PCIe tree: the Root Port (a Xilinx bridge, vendor ID `10EE`)
+on bus 00 and the SSD (an end point) on bus 01. With a Samsung SSD, for example, the
+end point has vendor ID `144D`. The output differs slightly with the PCIe IP used by the
+design:
 
 ### Output of XDMA designs
 
@@ -174,10 +205,15 @@ xdma_pcie: End Point has been enabled
 Successfully ran XdmaPcie rc enumerate Example
 ```
 
+If you see `Link is not up` instead, see [troubleshooting](troubleshooting).
+
 ## Changing Target Slot
 
-In designs that support two M.2 slots, you can change the target slot by modifying a define value in the
-example application. The tables below show the lines to modify and their potential values.
+The application tests one M.2 slot: SSD1 by default. In designs that support two M.2 slots,
+you can change the target slot by modifying a define value in the
+example application (in `Vitis/common/src/`), then rebuild with
+`./build.sh standalone --target <target>`. The table below shows the lines to modify and
+their potential values.
 
 |  | AXI PCIe designs | XDMA and QDMA designs |
 |--|------------------|-----------------------|
@@ -212,11 +248,24 @@ fails to associate the IP with the axipcie driver, and the BSP is built without 
 Our modified version of `axipcie.yaml` adds `xlnx,axi-pcie3-3.0` as a compatible string so that the
 driver is correctly included in the BSP for designs that use the AXI PCIe Gen3 IP.
 
-Additionally, the YAML references `xlnx,port-type` for the root complex detection field, but the device
-tree uses `xlnx,dev-port-type`. Our patch corrects this so that the `IncludeRootComplex` field in the
-config table is populated correctly. However, the device tree value for root port designs is `2` (PCI
-Express Root Port), while the driver expects `1` (`XAXIPCIE_IS_RC`). The example application normalizes
-any non-zero value to `1` after initialization to satisfy the driver's internal assertions.
+Additionally, the YAML's `required` list names the device tree property that populates the config table's
+`IncludeRootComplex` field — the flag the example application checks to confirm the IP is a root port. The
+two IPs publish that flag under *different* property names, and the YAML can only name one of them:
+
+| PCIe IP | designs | device tree property | value for a root port |
+|---------|---------|----------------------|-----------------------|
+| `axi_pcie` (Gen2) | kc705, vc707, zc706, PicoZed | `xlnx,port-type` | `1` |
+| `axi_pcie3` (Gen3) | kcu105, vc709 | `xlnx,dev-port-type` | `2` |
+
+Whichever property the YAML names, the other IP's node does not have it, the BSP generator writes `0` into
+`IncludeRootComplex`, and the application aborts with *"Failed to initialize...AXI PCIE is configured as
+endpoint"* even though the IP really is a root port. The Vitis build script (`Vitis/py/build-vitis.py`)
+therefore inspects the XSA and sets the YAML's `required` entry to the property that this design's PCIe IP
+actually publishes, before the platform is built.
+
+Note that for the Gen3 IP the value is `2` (PCI Express Root Port), while the driver expects `1`
+(`XAXIPCIE_IS_RC`). The example application normalizes any non-zero value to `1` after initialization to
+satisfy the driver's internal assertions.
 
 ### xdmapcie driver
 

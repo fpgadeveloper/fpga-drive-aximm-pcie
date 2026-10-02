@@ -27,11 +27,15 @@
 #     as esp(vfat)/storage(vfat)/root(ext4); bootimg-efi-amd populates the esp
 #     with BOOT.BIN + systemd-boot directly (no manual BOOT.BIN copy step).
 
-# CMA pool needed for PCIe DMA from large NVMe transfers.
-APPEND:append = " earlycon clk_ignore_unused rw rootwait cma=1536M"
+# Kernel command line. APPEND is NOT read by the EDF boot flow. This BSP boots
+# U-Boot -> boot.scr (CONFIG_BOOTCOMMAND in meta-user/recipes-bsp/u-boot/files/
+# fpgadrv-bootcmd.cfg), and the kernel arguments (including cma=1536M and
+# clk_ignore_unused) are set in meta-user/recipes-bsp/u-boot/files/fpgadrv-boot.cmd.
 
-# Hostname (overrides amd-edf default of "amd-edf").
-hostname:pn-base-files = "vmk180-fpgadrv-2025-2"
+# Hostname. meta-amd-edf's distro conf sets hostname:pn-base-files:amd-edf =
+# "amd-edf"; it is parsed after local.conf and its extra override outranks a
+# plain hostname:pn-base-files, so use :forcevariable (last in OVERRIDES).
+hostname:pn-base-files:forcevariable = "vmk180-fpgadrv-2025-2"
 
 # Reserve space in the rootfs for the toolset we install at image time.
 IMAGE_ROOTFS_EXTRA_SPACE = "524288"

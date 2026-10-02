@@ -33,13 +33,112 @@
 #   },
 #   "vivado_postfix": "",          # optional: appended to Vivado project dir name
 #   "linker_script_mods": {        # optional: per-arch linker script modifications
-#     "microblaze": "relocate_to_local_mem",
-#     "zynq": "relocate_to_ddr"
+#     "microblaze": "relocate_to_local_mem",   # or "relocate_to_ddr" / "code_local_bss_ddr"
+#     "zynq": "relocate_to_ddr"    #   (see "Linker script modifications" below)
 #   },
+#   "compile_optimization": {      # optional: per-arch app optimisation level (the
+#     "microblaze": "-O2"          #   app component's USER_COMPILE_OPTIMIZATION_LEVEL,
+#   },                             #   default -O0); a plain string = every arch
+#   "gc_sections": {               # optional: per-arch linker garbage collection
+#     "microblaze": true           #   (-ffunction/-fdata-sections + --gc-sections),
+#   },                             #   e.g. to fit a local-memory image
 #   "stack_size": "0x10000",         # optional: override default stack size in linker script
 #   "heap_size": "0x10000",          # optional: override default heap size in linker script
-#   "combine_bit_elf": true        # ignored here; used by make-boot.py later
+#                                    #   either a plain string (all architectures) or a
+#                                    #   per-arch map, e.g. {"microblaze": "0x8000"} --
+#                                    #   an arch that is not listed keeps the tool default
+#   "combine_bit_elf": true,       # ignored here; used by make-boot.py later
+#
+#   # ---- optional: User DTS for the platform (see "User DTS" below) ---------
+#   "user_dtsi": "common/dts/remote.dtsi",       # path relative to Vitis/
+#   "user_dtsi_generator": "py/user_dts.py"      # module that WRITES that file
 # }
+#
+# User DTS
+# --------
+# A design whose hardware is not fully described by its XSA can hand sdtgen an
+# extra device tree source ("Create Platform Component -> Advanced Options ->
+# User DTS" in the IDE). Both keys are optional and the whole feature is inert
+# when neither is set -- no advanced_options are passed at all, exactly as before.
+#
+#   "user_dtsi"            path of the .dtsi, RELATIVE TO Vitis/ (the directory
+#                          this script runs in). Checked-in file: used as is.
+#
+#   "user_dtsi_generator"  optional path (also relative to Vitis/) of a Python
+#                          module that COMPOSES the .dtsi from the current XSA.
+#                          It must expose:
+#
+#                              def compose(vitis_dir, xsa_path, out_dir, cfg):
+#                                  ...
+#                                  return "<absolute path>"   # or None
+#
+#                          It is called after the workspace is opened and BEFORE
+#                          the platform is created (which is the only moment a
+#                          User DTS can still be passed, and the earliest moment
+#                          anything may be written under the workspace -- Vitis
+#                          refuses a workspace holding files it did not create).
+#                          out_dir is <target>_workspace/dts, so the generated
+#                          file is build output and `build.sh clean --stage
+#                          standalone` takes it with it. Returning None skips the
+#                          User DTS for this target.
+#
+# The resolved path is passed to the platform as
+#     advanced_options = client.create_advanced_options_dict(user_dtsi=<abs path>)
+# which the Vitis client turns into the sdtgen hook VITIS_SDT_INCLUDE_DTS.
+#
+# NOTE: this is deliberately NOT the existing "pre_platform_build_script" hook.
+# That one runs after create_platform_component() (it is handed the platform
+# object), which is too late to influence the platform's own device tree.
+#
+# Other optional, per-repo behaviour (all inert unless its trigger is present)
+# ---------------------------------------------------------------------------
+# Hooks keyed off args.json:
+#   "pre_platform_build_script"  module exposing pre_platform_build(platform=,
+#                          domain_name=, arch=); run before platform.build().
+#   "pre_build_script"     script run as `python <script> <app_src>` before the
+#                          app is built (non-zero exit aborts the build).
+#   "src_overrides"        {"<target>": <src entry>} replaces the arch-based
+#                          "src" copy for that one target.
+#   stack_size / heap_size / compile_optimization / gc_sections accept a plain
+#                          value (every architecture) or a per-arch map; an
+#                          architecture not in the map keeps the tool default.
+#
+# Linker script modifications ("linker_script_mods", per arch):
+#   relocate_to_local_mem  every section -> the MicroBlaze local memory (LMB)
+#   relocate_to_ddr        every section -> the first DDR region
+#   code_local_bss_ddr     everything in the LMB except .bss/.heap, which go
+#                          to DDR (MicroBlaze booting from the bitstream with
+#                          a .bss too big for the LMB)
+# relocate_to_* are applied BEFORE the stack/heap sizes are set; code_local_
+# bss_ddr AFTER them (so the section rewrite is the last word on lscript.ld).
+# For a MicroBlaze whose mod is code_local_bss_ddr, the LMB use of the built
+# ELF is printed (informational; needs mb-size on PATH, silently skipped if not).
+#
+# Keyed off config/data.json (the target's design entry):
+#   "linkspeed"            when set, board.h also gets
+#                              #define LINE_RATE     <int>   (e.g. 100, 40, 25)
+#                              #define LINE_RATE_25G <1 if linkspeed == 25 else 0>
+#                          Each app uses the one it needs; nothing is written
+#                          for a target without "linkspeed".
+#
+# Keyed off the repo tree:
+#   EmbeddedSw/            patched embeddedsw drivers/libs: a LOCAL embeddedsw
+#                          repo is assembled in <target>_workspace/embeddedsw
+#                          (patched files + the rest of each patched component
+#                          from the Vitis install) and registered with Vitis.
+#   EmbeddedSw.<arch>/     optional per-arch overlay (e.g. EmbeddedSw.microblaze/)
+#                          copied on top of EmbeddedSw/ for that architecture only.
+#
+# Keyed off the XSA:
+#   axi_pcie / axi_pcie3   when the design has an AXI PCIe bridge AND the local
+#                          embeddedsw repo carries a patched axipcie.yaml
+#                          (EmbeddedSw/XilinxProcessorIPLib/drivers/axipcie_v*/
+#                          data/axipcie.yaml), its root-port property entry is
+#                          set to the one that core publishes (see
+#                          PCIE_PORT_TYPE_PROPS). No patched yaml -> nothing done.
+#   MicroBlaze selection   the application MicroBlaze is 'microblaze_0' (or
+#                          'microblaze_<n>'); MIG calibration MicroBlaze-MCS
+#                          cores are never chosen (see _select_app_microblaze).
 
 import os, sys, re, glob, json, shutil, subprocess, zipfile, xml.etree.ElementTree as ET
 
@@ -106,7 +205,7 @@ def copy_src_entry(entry, cwd, dst_dir):
         return total
     return _copy_single_src_entry(entry, cwd, dst_dir)
 
-def setup_embeddedsw(repo_root, workspace):
+def setup_embeddedsw(repo_root, workspace, arch=None):
     """Set up a local embeddedsw repo in the workspace from patched driver files.
 
     If <repo_root>/EmbeddedSw/ exists, creates <workspace>/embeddedsw/ containing:
@@ -114,10 +213,22 @@ def setup_embeddedsw(repo_root, workspace):
       2. The full 'src' and 'data' directories from the Vitis install for each
          driver/library that has patched files (without overwriting the patches)
 
+    Two overlays are applied, in order, and later files win:
+      EmbeddedSw/              every target (as before)
+      EmbeddedSw.<arch>/       only that architecture, e.g. EmbeddedSw.microblaze/
+    The per-arch one is optional and purely additive: a repo that does not have
+    the directory behaves exactly as it always did. Use it for a patch that
+    must NOT reach the other architectures' BSPs -- a BSP metadata change that
+    is right for a MicroBlaze design, say, but would alter what the tools
+    generate for a Zynq one.
+
     Returns the path to the local embeddedsw repo, or None if no EmbeddedSw/ folder.
     """
-    embeddedsw_src = os.path.join(repo_root, "EmbeddedSw")
-    if not os.path.isdir(embeddedsw_src):
+    overlays = [os.path.join(repo_root, "EmbeddedSw")]
+    if arch:
+        overlays.append(os.path.join(repo_root, f"EmbeddedSw.{arch}"))
+    overlays = [d for d in overlays if os.path.isdir(d)]
+    if not overlays:
         return None
 
     # Locate install's embeddedsw: XILINX_VITIS is e.g. /path/2025.2/Vitis
@@ -131,18 +242,19 @@ def setup_embeddedsw(repo_root, workspace):
     local_esw = os.path.join(workspace, "embeddedsw")
     info(f"Setting up local embeddedsw repo in {local_esw}")
 
-    # Step 1: Copy all patched files from repo's EmbeddedSw/ into workspace
-    for root, _, files in os.walk(embeddedsw_src):
-        if not files:
-            continue
-        rel_dir = os.path.relpath(root, embeddedsw_src)
-        if rel_dir == ".":
-            continue  # skip root-level files (e.g. README.md)
-        dst_dir = os.path.join(local_esw, rel_dir)
-        os.makedirs(dst_dir, exist_ok=True)
-        for f in files:
-            shutil.copy2(os.path.join(root, f), os.path.join(dst_dir, f))
-    info(f"  Copied patched files from EmbeddedSw/")
+    # Step 1: Copy all patched files from the repo's overlay(s) into workspace
+    for embeddedsw_src in overlays:
+        for root, _, files in os.walk(embeddedsw_src):
+            if not files:
+                continue
+            rel_dir = os.path.relpath(root, embeddedsw_src)
+            if rel_dir == ".":
+                continue  # skip root-level files (e.g. README.md)
+            dst_dir = os.path.join(local_esw, rel_dir)
+            os.makedirs(dst_dir, exist_ok=True)
+            for f in files:
+                shutil.copy2(os.path.join(root, f), os.path.join(dst_dir, f))
+        info(f"  Copied patched files from {os.path.basename(embeddedsw_src)}/")
 
     # Step 2: Find all 'src' and 'data' directories that should be in the local copy.
     # Look at the install's counterpart for each patched directory's parent to find
@@ -210,9 +322,9 @@ def sync_cmake_sources(app_src):
     info(f"CMakeLists.txt: added {len(missing)} source(s): {', '.join(missing)}")
 
 # ---------------- board.h generator ----------------
-def create_board_h(board_name, target_dir):
+def create_board_h(board_name, target_dir, linkspeed=None):
     vitis_root = os.environ.get("XILINX_VITIS", "")
-    # XILINX_VITIS is e.g. /home/jeff/Xilinx/2025.2/Vitis, so version is parent dir name
+    # XILINX_VITIS is e.g. /tools/Xilinx/2025.2/Vitis, so version is parent dir name
     vitis_ver = os.path.basename(os.path.dirname(vitis_root)) if vitis_root else "UNKNOWN"
     bn_up = str(board_name).upper()
     ensure_dir(target_dir)
@@ -223,6 +335,19 @@ def create_board_h(board_name, target_dir):
         fd.write(f"#define BOARD_NAME \"{bn_up}\"\n")
         fd.write(f"#define VITIS_VERSION \"{vitis_ver}\"\n")
         fd.write(f"#define BOARD_{bn_up} 1\n")
+        if linkspeed is not None:
+            # Per-port line rate of this target (data.json "linkspeed", e.g.
+            # 100, 40, 25, 10). Two forms, each app uses the one it needs:
+            #   LINE_RATE      the rate in Gb/s (2x-qsfp28-fmc: MAC bring-up
+            #                  config and the Si5328 GT refclk plan)
+            #   LINE_RATE_25G  1 for 25G, else 0 (sfp28-fmc-mrmac: MRMAC MODE)
+            ls = str(linkspeed).strip()
+            if ls.isdigit():
+                fd.write(f"#define LINE_RATE {int(ls)}\n")
+            else:
+                info(f"WARNING: data.json linkspeed {linkspeed!r} is not an integer; "
+                     f"LINE_RATE not defined")
+            fd.write(f"#define LINE_RATE_25G {1 if str(linkspeed) == '25' else 0}\n")
         fd.write("#endif\n")
     info(f"Generated {path}")
 
@@ -247,6 +372,84 @@ def _find_modules(xml_bytes):
             out.append((inst, vlnv))
     return out
 
+def _select_app_microblaze(names):
+    """Pick the *application* MicroBlaze out of the cores found in the top
+    block-design .hwh. On UltraScale DDR4 boards the MIG instantiates a
+    calibration MicroBlaze inside a MicroBlaze-MCS sub-block (normally in its
+    own '*_microblaze_mcs.hwh', which this function never sees, but be
+    defensive): drop anything that looks like an MCS sub-block and prefer the
+    conventional 'microblaze_0' / 'microblaze_<n>' top-level name. Same rule
+    as make-boot.py's _select_app_microblaze()."""
+    if not names:
+        return "microblaze_0"
+    cands = [n for n in names if "_mcs" not in n.lower()] or list(names)
+    cands.sort(key=lambda n: (
+        n.split("/")[-1] != "microblaze_0",
+        re.fullmatch(r"microblaze_\d+", n.split("/")[-1]) is None,
+    ))
+    return cands[0]
+
+# ---------------- optional: AXI PCIe root-port property (axipcie.yaml) ----------------
+# The system device tree names the AXI PCIe root-port flag differently
+# depending on which bridge core the design instantiates:
+#
+#   axi_pcie  (Gen2) -> xlnx,port-type     = <0x1>  (added by the SDT generator
+#                                                    from CONFIG.INCLUDE_RC)
+#   axi_pcie3 (Gen3) -> xlnx,dev-port-type = <0x2>  (the core's DEV_PORT_TYPE
+#                                                    parameter, PCIe port type)
+#
+# Both cores are served by the same axipcie driver, whose axipcie.yaml can name
+# only one of the two in its "required" list -- and the field it does not name
+# is simply absent from the node, so the BSP generator writes 0 into the
+# IncludeRootComplex field of the config table. The application then aborts with
+# "Failed to initialize...AXI PCIE is configured as endpoint" even though the
+# core really is a root port. Point the yaml at the property this design's core
+# actually publishes.
+#
+# Inert unless the repo patches axipcie.yaml under EmbeddedSw/ (only then does
+# the local embeddedsw copy contain one) and the XSA has an axi_pcie/axi_pcie3.
+PCIE_PORT_TYPE_PROPS = [
+    ("xilinx.com:ip:axi_pcie:",  "xlnx,port-type"),
+    ("xilinx.com:ip:axi_pcie3:", "xlnx,dev-port-type"),
+]
+
+def pcie_port_type_prop(xsa_path, bd_name):
+    """SDT property carrying the root-port flag for this design's PCIe bridge.
+    Returns None for designs with no AXI PCIe bridge (xdma/qdma designs use the
+    xdmapcie driver, whose yaml is not patched)."""
+    if not zipfile.is_zipfile(xsa_path):
+        return None
+    vlnvs = []
+    with zipfile.ZipFile(xsa_path, "r") as z:
+        for name in z.namelist():
+            if name.lower() == bd_name + ".hwh":
+                try:
+                    vlnvs += [v for _, v in _find_modules(z.read(name))]
+                except KeyError:
+                    pass
+    for vlnv_prefix, prop in PCIE_PORT_TYPE_PROPS:
+        if any(v.startswith(vlnv_prefix) for v in vlnvs):
+            return prop
+    return None
+
+def set_axipcie_port_type(local_esw, prop):
+    """Rewrite the patched axipcie.yaml's port-type entry to `prop`. Silent
+    no-op when the local embeddedsw copy has no axipcie.yaml."""
+    pattern = os.path.join(local_esw, "XilinxProcessorIPLib", "drivers",
+                           "axipcie_v*", "data", "axipcie.yaml")
+    for yaml_path in glob.glob(pattern):
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            text = f.read()
+        new_text, n = re.subn(r"(?m)^([ \t]*-[ \t]*)xlnx,(?:dev-)?port-type[ \t]*$",
+                              r"\g<1>" + prop, text)
+        if not n:
+            info(f"  WARNING: no port-type entry found in {yaml_path}")
+            continue
+        if new_text != text:
+            with open(yaml_path, "w", encoding="utf-8") as f:
+                f.write(new_text)
+        info(f"  axipcie.yaml: root-port property set to {prop}")
+
 def detect_arch_and_cpu_from_xsa(xsa_path, bd_name):
     """
     Returns:
@@ -267,8 +470,8 @@ def detect_arch_and_cpu_from_xsa(xsa_path, bd_name):
     has = {k: any(h in v for v in vlnvs) for k, h in CPU_VLNV_HINTS.items()}
 
     if has["microblaze"]:
-        mb_inst = next((n for n, v in modules if "microblaze" in v), "microblaze_0")
-        return "microblaze", mb_inst
+        return "microblaze", _select_app_microblaze(
+            [n for n, v in modules if "microblaze" in v])
     if has["versal_cips"]:
         return "versal", "psv_cortexa72_0"
     if has["zynq_ultra_ps_e"]:
@@ -278,9 +481,47 @@ def detect_arch_and_cpu_from_xsa(xsa_path, bd_name):
     return None, None
 
 # ---------------- linker script modifications ----------------
+def resolve_size_option(value, arch):
+    """args.json "stack_size"/"heap_size": a plain string applies to every
+    architecture (the original behaviour); a dict selects per architecture,
+    e.g. {"microblaze": "0x8000"}, and an architecture that is not listed
+    keeps the size the tools generated."""
+    if isinstance(value, dict):
+        return value.get(arch)
+    return value
+
+# Sections that "code_local_bss_ddr" leaves in DDR: the zero-initialised,
+# NOLOAD data that is too big for the LMB. Everything else -- code, read-only
+# data, initialised data, small-data (.sdata/.sbss stay together: the r13
+# small-data window), constructors, .drvcfg_sec and the stack -- goes to the
+# local memory, which is all updatemem can embed in the bitstream.
+CODE_LOCAL_DDR_SECTIONS = (".bss", ".heap")
+
+# Linker mods applied AFTER the stack/heap sizes are set through the Vitis API
+# (the others are applied before, as they always were).
+LINKER_MODS_AFTER_SIZES = ("code_local_bss_ddr",)
+
+# Linker mods after which the LMB use of the built MicroBlaze ELF is reported
+# (log only). Kept to code_local_bss_ddr so the relocate_to_* repos' build logs
+# stay as they were; adding "relocate_to_local_mem" here is safe.
+LINKER_MODS_REPORT_LMB = ("code_local_bss_ddr",)
+
+def _relocate_sections(text, names, target_mem):
+    """Point the output sections in 'names' at target_mem."""
+    for name in names:
+        pat = re.compile(r'(^' + re.escape(name) + r'\b[^{\n]*\{.*?\}\s*>\s*)(\S+)',
+                         re.MULTILINE | re.DOTALL)
+        text, n = pat.subn(lambda m: m.group(1) + target_mem, text, count=1)
+        if n == 0:
+            info(f"WARNING: section {name} not found in lscript.ld; left as is.")
+    return text
+
 def modify_linker_script(lscript_path, mod_type):
     """Modify the auto-generated linker script.
-    mod_type: "relocate_to_local_mem" or "relocate_to_ddr"
+    mod_type: "relocate_to_local_mem", "relocate_to_ddr" or
+    "code_local_bss_ddr" (MicroBlaze booting from the bitstream with a big
+    .bss: everything in the local memory except CODE_LOCAL_DDR_SECTIONS,
+    which go to DDR; the start-up code zeroes .bss wherever it is)
     """
     if not os.path.isfile(lscript_path):
         info(f"WARNING: lscript.ld not found at {lscript_path}; skipping linker mods.")
@@ -295,11 +536,17 @@ def modify_linker_script(lscript_path, mod_type):
         info("WARNING: No MEMORY entries found in lscript.ld; skipping.")
         return
 
-    if mod_type == "relocate_to_local_mem":
+    ddr_mem = None
+    if mod_type in ("relocate_to_local_mem", "code_local_bss_ddr"):
         target_mem = next((m for m in memories if "local_memory" in m), None)
         if not target_mem:
             info("WARNING: No local_memory found in lscript.ld; skipping relocation.")
             return
+        if mod_type == "code_local_bss_ddr":
+            ddr_mem = next((m for m in memories if "ddr" in m.lower()), None)
+            if not ddr_mem:
+                info("WARNING: No DDR memory found in lscript.ld; skipping relocation.")
+                return
     elif mod_type == "relocate_to_ddr":
         target_mem = next((m for m in memories if "ddr" in m.lower()), None)
         if not target_mem:
@@ -311,11 +558,86 @@ def modify_linker_script(lscript_path, mod_type):
 
     for m in memories:
         if m != target_mem:
-            text = re.sub(r'>\s*' + re.escape(m), f'> {target_mem}', text)
+            text = re.sub(r'>\s*' + re.escape(m) + r'\b', f'> {target_mem}', text)
+    if ddr_mem:
+        text = _relocate_sections(text, CODE_LOCAL_DDR_SECTIONS, ddr_mem)
 
     with open(lscript_path, "w", encoding="utf-8") as f:
         f.write(text)
-    info(f"Linker script: relocated all sections to {target_mem}")
+    if ddr_mem:
+        info(f"Linker script: {', '.join(CODE_LOCAL_DDR_SECTIONS)} in {ddr_mem}, "
+             f"everything else in {target_mem}")
+    else:
+        info(f"Linker script: relocated all sections to {target_mem}")
+
+def report_local_mem_use(elf_path, lscript_path):
+    """Print how much of the MicroBlaze local memory (LMB) the ELF occupies:
+    the sections that updatemem embeds in the bitstream, plus the stack. The
+    linker already fails on an overflow; this is the headroom figure."""
+    try:
+        with open(lscript_path, "r", encoding="utf-8") as f:
+            text = f.read()
+        m = re.search(r'(\S*local_memory\S*)\s*:\s*ORIGIN\s*=\s*(0x[0-9a-fA-F]+)\s*,'
+                      r'\s*LENGTH\s*=\s*(0x[0-9a-fA-F]+)', text)
+        if not m:
+            return
+        origin, length = int(m.group(2), 16), int(m.group(3), 16)
+        out = subprocess.run(["mb-size", "-A", elf_path], stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, text=True).stdout
+    except (OSError, ValueError):
+        return
+    used, rows = 0, []
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) != 3 or not parts[1].isdigit() or not parts[2].isdigit():
+            continue
+        name, size, addr = parts[0], int(parts[1]), int(parts[2])
+        if size and addr < origin + length and not name.startswith((".debug", ".comment")):
+            used += size
+            rows.append(f"{name} {size}")
+    top = origin + length   # the vectors below ORIGIN are part of the LMB too
+    info(f"Local memory (LMB) use: {used} of {top} bytes ({100.0 * used / top:.1f} %), "
+         f"{top - used} free: " + ", ".join(rows))
+
+def set_gc_sections(app_src):
+    """Turn on section garbage collection in the app component's
+    UserConfig.cmake: USER_COMPILE_GARBAGE (compile with -ffunction-sections
+    -fdata-sections) and -Wl,--gc-sections in USER_LINK_OTHER_FLAGS. The
+    generated linker script KEEPs the vectors, .init/.fini, constructors and
+    .drvcfg_sec, so only unreferenced code and data are dropped."""
+    path = os.path.join(app_src, "UserConfig.cmake")
+    if not os.path.isfile(path):
+        info(f"WARNING: {path} not found; no section garbage collection.")
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+    text, n1 = re.subn(r'set\(USER_COMPILE_GARBAGE[^)]*\)',
+                       'set(USER_COMPILE_GARBAGE "-Wl,--gc-sections")', text, count=1)
+    text, n2 = re.subn(r'set\(USER_LINK_OTHER_FLAGS\s*',
+                       'set(USER_LINK_OTHER_FLAGS -Wl,--gc-sections\n', text, count=1)
+    if n1 == 0 or n2 == 0:
+        info("WARNING: USER_COMPILE_GARBAGE / USER_LINK_OTHER_FLAGS not found in UserConfig.cmake.")
+        return
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    info("UserConfig.cmake: section garbage collection (--gc-sections) on")
+
+def set_compile_optimization(app_src, level):
+    """Set the app component's USER_COMPILE_OPTIMIZATION_LEVEL (UserConfig.cmake)."""
+    path = os.path.join(app_src, "UserConfig.cmake")
+    if not os.path.isfile(path):
+        info(f"WARNING: {path} not found; optimisation level left at the default.")
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+    text, n = re.subn(r'set\(USER_COMPILE_OPTIMIZATION_LEVEL[^)]*\)',
+                      f'set(USER_COMPILE_OPTIMIZATION_LEVEL {level})', text, count=1)
+    if n == 0:
+        info("WARNING: USER_COMPILE_OPTIMIZATION_LEVEL not found in UserConfig.cmake.")
+        return
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    info(f"UserConfig.cmake: optimisation level {level}")
 
 # ---------------- Vitis API (must run under `vitis -source`) ----------------
 try:
@@ -324,6 +646,53 @@ except ImportError:
     die("Must be run with the Vitis CLI:  vitis -source build-vitis.py [<target>] <args.json> [<data.json>]")
 
 # ---------------- CLI & data.json handling ----------------
+# ---------------- optional User DTS for the platform ----------------
+def resolve_user_dtsi(cfg, cwd, xsa_path, workspace):
+    """Absolute path of the platform's User DTS, or None when not configured.
+
+    Reads the two optional args.json keys documented at the top of this file:
+    "user_dtsi" (a checked-in .dtsi, relative to Vitis/) and, when the file has
+    to be derived from the current XSA, "user_dtsi_generator" (a repo-local
+    module exposing compose(vitis_dir, xsa_path, out_dir, cfg)).
+
+    Inert when neither key is set -- returns None and the caller passes no
+    advanced_options at all, which is the behaviour every existing repo has.
+    Must be called AFTER client.set_workspace() (Vitis rejects a workspace
+    directory containing files it did not create itself) and BEFORE
+    create_platform_component() (the only call that accepts a User DTS).
+    """
+    user_dtsi_gen = cfg.get("user_dtsi_generator")
+    if not user_dtsi_gen:
+        rel = cfg.get("user_dtsi")
+        if not rel:
+            return None
+        path = os.path.normpath(os.path.join(cwd, rel))
+        if not os.path.isfile(path):
+            die(f'args.json "user_dtsi" not found: {path}')
+        info(f"User DTS        : {path}")
+        return path
+
+    script_path = os.path.normpath(os.path.join(cwd, user_dtsi_gen))
+    if not os.path.isfile(script_path):
+        die(f'args.json "user_dtsi_generator" not found: {script_path}')
+    info(f"Composing User DTS with: {script_path}")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("user_dtsi_generator", script_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if not hasattr(mod, "compose"):
+        die(f"{script_path} has no compose(vitis_dir, xsa_path, out_dir, cfg)")
+    out_dir = os.path.join(workspace, "dts")
+    path = mod.compose(vitis_dir=cwd, xsa_path=xsa_path, out_dir=out_dir, cfg=cfg)
+    if not path:
+        info("User DTS        : generator returned nothing -- none for this target")
+        return None
+    if not os.path.isfile(path):
+        die(f"user_dtsi_generator returned a path that does not exist: {path}")
+    info(f"User DTS        : {path}")
+    return path
+
+
 def parse_cli(argv):
     args = argv[1:]
     if args and args[0] == "--":
@@ -390,13 +759,20 @@ def pick_target_interactively(data_json_path):
             return bare[idx - 1].get("label")
         print("Out of range. Try again.")
 
-def load_design_entry(data_json_path, target_label):
+def find_design_entry(data_json_path, target_label):
+    """The target's baremetal design entry in data.json, or None."""
     with open(data_json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     for d in data.get("designs", []):
         if d.get("label") == target_label and d.get("baremetal", False):
             return d
-    die(f"Target '{target_label}' not found (or not baremetal) in data.json")
+    return None
+
+def load_design_entry(data_json_path, target_label):
+    d = find_design_entry(data_json_path, target_label)
+    if d is None:
+        die(f"Target '{target_label}' not found (or not baremetal) in data.json")
+    return d
 
 # ---------------- main ----------------
 def main():
@@ -435,8 +811,12 @@ def main():
 
     pre_build_script = cfg.get("pre_build_script")
     pre_platform_build_script = cfg.get("pre_platform_build_script")
+    user_dtsi = cfg.get("user_dtsi")
+    user_dtsi_generator = cfg.get("user_dtsi_generator")
     stack_size = cfg.get("stack_size")
     heap_size = cfg.get("heap_size")
+    compile_opt = cfg.get("compile_optimization")
+    gc_sections = cfg.get("gc_sections")
 
     # Board name for board.h: prefer args.json's "boardnames" map — that's
     # the short ID used by fmc-prod-test-common's eeprom_fmc.c (e.g. "UZEV",
@@ -454,6 +834,15 @@ def main():
         board_name_for_header = design.get("boardname", design.get("board", target))
     else:
         board_name_for_header = target
+
+    # Optional data.json "linkspeed" for board.h (LINE_RATE / LINE_RATE_25G).
+    # Looked up without failing: a target that is not a baremetal entry in
+    # data.json has already died above unless boardnames supplied its name.
+    linkspeed_for_header = None
+    if data_json_path:
+        entry = find_design_entry(data_json_path, target)
+        if entry:
+            linkspeed_for_header = entry.get("linkspeed")
 
     # Vivado project path (with optional postfix)
     vivado_postfix = cfg.get("vivado_postfix", "")
@@ -487,6 +876,10 @@ def main():
         info(f"pre_plat_script : {pre_platform_build_script}")
     if pre_build_script:
         info(f"pre_build_script: {pre_build_script}")
+    if user_dtsi:
+        info(f"user_dtsi       : {user_dtsi}")
+    if user_dtsi_generator:
+        info(f"user_dtsi_gen   : {user_dtsi_generator}")
 
     if not os.path.isfile(xsa_path):
         die(f"XSA not found at: {xsa_path}")
@@ -498,6 +891,13 @@ def main():
         die("Could not detect architecture from XSA (MicroBlaze/Zynq/ZynqMP/Versal).")
     info(f"Detected arch   : {arch} (cpu/core hint: {cpu_hint})")
 
+    # stack_size/heap_size may be per-architecture maps -- resolve now that
+    # the architecture is known.
+    stack_size = resolve_size_option(stack_size, arch)
+    heap_size  = resolve_size_option(heap_size, arch)
+    compile_opt = resolve_size_option(compile_opt, arch)
+    gc_sections = resolve_size_option(gc_sections, arch)
+
     # Create workspace, platform, domain, app
     client = vitis.create_client()
     try:
@@ -505,10 +905,26 @@ def main():
 
         # Set up local embeddedsw repo (patched BSP drivers) if present
         repo_root = os.path.normpath(os.path.join(cwd, ".."))
-        local_esw = setup_embeddedsw(repo_root, workspace)
+        local_esw = setup_embeddedsw(repo_root, workspace, arch)
         if local_esw:
+            # Align a patched axipcie.yaml with the PCIe core in this design
+            # (see PCIE_PORT_TYPE_PROPS); no-op for every other repo
+            port_type_prop = pcie_port_type_prop(xsa_path, bd_name)
+            if port_type_prop:
+                set_axipcie_port_type(local_esw, port_type_prop)
             client.set_embedded_sw_repo(level='LOCAL', path=local_esw)
             info(f"Registered local embeddedsw repo: {local_esw}")
+
+        # Optional User DTS: resolved (and, for a generated one, composed) here
+        # -- after set_workspace, before the platform exists. No advanced_options
+        # are passed when the args.json keys are absent, so nothing changes for
+        # a repo that does not use the feature.
+        plat_kwargs = {}
+        user_dtsi_path = resolve_user_dtsi(cfg, cwd, xsa_path, workspace)
+        if user_dtsi_path:
+            plat_kwargs["advanced_options"] = client.create_advanced_options_dict(
+                user_dtsi=user_dtsi_path)
+            info(f"Platform advanced options: {plat_kwargs['advanced_options']}")
 
         plat_name = f"{target}_platform"
         info(f"Creating platform '{plat_name}' (cpu={cpu_hint}, os=standalone) ...")
@@ -516,7 +932,8 @@ def main():
             name=plat_name,
             hw_design=xsa_path,
             cpu=cpu_hint,
-            os="standalone"
+            os="standalone",
+            **plat_kwargs
         )
 
         doms = platform.list_domains()
@@ -621,13 +1038,14 @@ def main():
             sync_cmake_sources(app_src)
 
         # Create board.h in app src
-        create_board_h(board_name_for_header, app_src)
+        create_board_h(board_name_for_header, app_src, linkspeed_for_header)
 
-        # Linker script modifications (if configured for this arch)
+        # Linker script modifications that go BEFORE the stack/heap sizes
         lscript_path = os.path.join(app_src, "lscript.ld")
-        if arch in linker_mods:
-            info(f"Applying linker script mod: {linker_mods[arch]}")
-            modify_linker_script(lscript_path, linker_mods[arch])
+        linker_mod = linker_mods.get(arch)
+        if arch in linker_mods and linker_mod not in LINKER_MODS_AFTER_SIZES:
+            info(f"Applying linker script mod: {linker_mod}")
+            modify_linker_script(lscript_path, linker_mod)
 
         # Stack/heap size overrides (if configured)
         if stack_size or heap_size:
@@ -638,6 +1056,18 @@ def main():
             if heap_size:
                 ld.set_heap_size(size=heap_size)
                 info(f"Linker script: heap size set to {heap_size}")
+
+        # Linker script modifications that go AFTER the stack/heap sizes, so
+        # that nothing rewrites the regions afterwards
+        if arch in linker_mods and linker_mod in LINKER_MODS_AFTER_SIZES:
+            info(f"Applying linker script mod: {linker_mod}")
+            modify_linker_script(lscript_path, linker_mod)
+
+        # App optimisation level (if configured for this arch)
+        if compile_opt:
+            set_compile_optimization(app_src, compile_opt)
+        if gc_sections is True or str(gc_sections).lower() == "true":
+            set_gc_sections(app_src)
 
         # Run pre-build script (if configured)
         if pre_build_script:
@@ -656,6 +1086,8 @@ def main():
         build_ok = os.path.isfile(elf_path)
         if build_ok:
             info(f"{app_name} build succeeded: {elf_path}")
+            if arch == "microblaze" and linker_mod in LINKER_MODS_REPORT_LMB:
+                report_local_mem_use(elf_path, lscript_path)
         else:
             info(f"{app_name} build failed. ")
 

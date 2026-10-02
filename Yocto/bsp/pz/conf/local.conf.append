@@ -20,10 +20,21 @@
 # Console is the Zynq PS UART (exposed to Linux as ttyPS0). CMA is kept modest:
 # these carriers have 1 GB DDR, so a large CMA pool isn't available; 512M
 # matches the PetaLinux BSP.
-APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=512M"
 
-# Hostname (overrides amd-edf default of "amd-edf").
-hostname:pn-base-files = "picozed-fpgadrv-2025-2"
+# Kernel command line. APPEND is NOT read by the EDF boot flow. On Zynq-7000
+# the cmdline is built by boot.scr (meta-amd-edf edf-linux-mmc-boot.cmd.zynq):
+# DT /chosen/bootargs (sdtgen emits none on Zynq-7000) + "root=/dev/mmcblk<N>p3
+# ro rootwait uio_pdrv_genirq.of_id=generic-uio". BSP_EXTRA_BOOTARGS is appended
+# to it by meta-user/recipes-bsp/u-boot/u-boot-edf-scr_%.bbappend, so the
+# console args are carried here too.
+# Design args follow PetaLinux/bsp/pz CONFIG_SUBSYSTEM_USER_CMDLINE.
+# No "rw": root is mounted ro and systemd-remount-fs remounts it rw (fstab "/" defaults).
+BSP_EXTRA_BOOTARGS = "earlycon console=ttyPS0,115200 clk_ignore_unused cma=512M"
+
+# Hostname. meta-amd-edf's distro conf sets hostname:pn-base-files:amd-edf =
+# "amd-edf"; it is parsed after local.conf and its extra override outranks a
+# plain hostname:pn-base-files, so use :forcevariable (last in OVERRIDES).
+hostname:pn-base-files:forcevariable = "picozed-fpgadrv-2025-2"
 
 # Reserve space in the rootfs for the toolset we install at image time.
 IMAGE_ROOTFS_EXTRA_SPACE = "524288"

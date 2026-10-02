@@ -7,32 +7,40 @@
 
 };
 
+/* gem0 = the board Ethernet port (RJ45), kept enabled so the image is
+ * reachable over the board port (this design does not otherwise use the PS
+ * Ethernet). The generated DT describes no PHY for gem0 (no phy-handle), which
+ * makes 2025.01 u-boot data-abort while probing it, so the PHY is described
+ * here (MDIO address 0, rgmii-id). This dtb is also u-boot's control DT
+ * (BOOT.BIN loads it at 0x100000). The Marvell 88E151x PHY is on the
+ * PicoZed SOM; its LED setup below is kept from the original BSP. */
 &gem0 {
     status = "okay";
-    phy-handle = <&phy0>;
     phy-mode = "rgmii-id";
-    phy0: phy@0 {
-      compatible = "marvell,88E1510";
-      device_type = "ethernet-phy";
-      reg = <0x0>;
-      /* linux,phandle = <0x5>; */
-      /* phandle = <0x5>; */
-      /* 
-       * modify PHY registers to:
-       * Reg 3_16
-       * LED[1] bits [7:4] = ON=link, BLINK=activity, OFF=no activity
-       * LED[0] bits [3:0] = link speed detect (3 blinks= 1Gbps, 2 blinks = 100Mbps, 1 blink = 10Mbps)
-       * Reg 3_17
-       * LED[1:0] = ON-drive low, OFF-high
-       * Reg 3_18
-       * LED[0] bits [3:2] = link speed LED blink off period = 170ms
-       * LED[0] bits [1:0] = link speed LED blink on period = 340ms
-       */
-      marvell,reg-init = <3 16 0xff00 0x42>,
-         <3 17 0xfff0 0x0>,
-         <3 18 0xfff0 0x6>;
+    phy-handle = <&gem0_phy>;
+    xlnx,has-mdio = <0x1>;
+    mdio {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        gem0_phy: phy@0 {
+            device_type = "ethernet-phy";
+            reg = <0>;
+            /*
+             * modify PHY registers to:
+             * Reg 3_16
+             * LED[1] bits [7:4] = ON=link, BLINK=activity, OFF=no activity
+             * LED[0] bits [3:0] = link speed detect (3 blinks= 1Gbps, 2 blinks = 100Mbps, 1 blink = 10Mbps)
+             * Reg 3_17
+             * LED[1:0] = ON-drive low, OFF-high
+             * Reg 3_18
+             * LED[0] bits [3:2] = link speed LED blink off period = 170ms
+             * LED[0] bits [1:0] = link speed LED blink on period = 340ms
+             */
+            marvell,reg-init = <3 16 0xff00 0x42>,
+                <3 17 0xfff0 0x0>,
+                <3 18 0xfff0 0x6>;
+        };
     };
-
 };
 
 
@@ -67,9 +75,3 @@
     usb-phy = <&usb0>;
 };
 
-
-/* 2025.01 u-boot data-aborts probing gem0 because pcw.dtsi does not populate
- * phy-handle. This design does not use PS GEM — disabling avoids the crash. */
-&gem0 {
-    status = "disabled";
-};

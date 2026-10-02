@@ -71,7 +71,7 @@ if {[lindex $num_lanes 0] == "X4"} {
 
 # PicoZed 7015 supports PCIe Gen1
 # PicoZed 7030 and ZC706 support PCIe Gen2
-if {$board_name == "pz7z030" || $board_name == "zc706"} {
+if {$board_name == "picozed_7030_fmc2" || $board_name == "zc706"} {
   set max_link_speed 5.0_GT/s
 } else {
   set max_link_speed 2.5_GT/s

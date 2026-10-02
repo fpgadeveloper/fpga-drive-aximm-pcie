@@ -451,7 +451,7 @@
       "link": "https://www.xilinx.com/vcu118",
       "url": "xilinx.com",
       "boardname": "vcu118",
-      "ip": "axi_pcie3",
+      "ip": "xdma",
       "lanes": [
         "X4",
         "X4"

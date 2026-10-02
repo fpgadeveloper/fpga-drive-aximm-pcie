@@ -34,5 +34,5 @@ echo "  - Delay: ${real_time} seconds"
 echo "  - Speed: ${speed} MBytes/s"
 
 # Cleanup
-rm -f "$MOUNT_POINT/test.img"
+rm -f "$MOUNT_POINT1/test.img"
 

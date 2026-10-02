@@ -33,3 +33,30 @@
       stdout-path = "serial0:115200n8";
    };
 };
+
+/* PS GEM3 (board RJ45): the SDT flow does not describe the board-level
+ * TI DP83867 PHY, so Linux falls back to the Generic PHY driver and the
+ * RGMII clock delays are never programmed - the link negotiates 1G but
+ * passes no packets. Values from the official zynqmp-zcu111-revA.dts
+ * (PHY at MDIO address 0xc; its reset-gpios line is omitted because the
+ * TCA6416 expander it references is not in the SDT device tree - the
+ * PHY powers up out of reset from its straps). The fixed MAC replaces
+ * the random one the SDT flow leaves us with, keeping DHCP leases
+ * stable across boots.
+ */
+&gem3 {
+	local-mac-address = [00 0a 35 06 21 11];
+	phy-handle = <&gem3_phy>;
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gem3_phy: ethernet-phy@c {
+			compatible = "ethernet-phy-id2000.a231";
+			reg = <0xc>;
+			ti,rx-internal-delay = <0x8>;
+			ti,tx-internal-delay = <0xa>;
+			ti,fifo-depth = <0x1>;
+			ti,dp83867-rxctrl-strap-quirk;
+		};
+	};
+};

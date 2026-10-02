@@ -2,8 +2,23 @@
 / {
 };
 
-/* 2025.01 u-boot data-aborts probing gem0 because pcw.dtsi does not populate
- * phy-handle. This design does not use PS GEM — disabling avoids the crash. */
+/* gem0 = the board Ethernet port (RJ45), kept enabled so the image is
+ * reachable over the board port (this design does not otherwise use the PS
+ * Ethernet). The generated DT describes no PHY for gem0 (no phy-handle), which
+ * makes 2025.01 u-boot data-abort while probing it, so the PHY is described
+ * here (MDIO address 7, rgmii-id). This dtb is also u-boot's control DT
+ * (BOOT.BIN loads it at 0x100000). */
 &gem0 {
-    status = "disabled";
+    status = "okay";
+    phy-mode = "rgmii-id";
+    phy-handle = <&gem0_phy>;
+    xlnx,has-mdio = <0x1>;
+    mdio {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        gem0_phy: phy@7 {
+            device_type = "ethernet-phy";
+            reg = <7>;
+        };
+    };
 };

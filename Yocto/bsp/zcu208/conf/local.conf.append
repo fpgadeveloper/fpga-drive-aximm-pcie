@@ -30,10 +30,20 @@
 # change flows through XSA -> SDT -> machine.conf -> device tree automatically.
 
 # CMA pool needed for PCIe DMA from large NVMe transfers.
-APPEND:append = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p3 rw rootwait cma=1536M"
+# Kernel command line. APPEND is NOT read by the EDF boot flow. On ZynqMP the
+# cmdline is built by boot.scr (meta-amd-edf edf-linux-mmc-boot.cmd): DT
+# /chosen/bootargs ("earlycon console=ttyPS0,115200 clk_ignore_unused
+# init_fatal_sh=1", emitted by sdtgen) + "root=/dev/mmcblk<N>p3 ro rootwait
+# uio_pdrv_genirq.of_id=generic-uio". BSP_EXTRA_BOOTARGS is appended to it by
+# meta-user/recipes-bsp/u-boot/u-boot-edf-scr_%.bbappend.
+# Design args follow PetaLinux/bsp/zcu208 CONFIG_SUBSYSTEM_USER_CMDLINE.
+# No "rw": root is mounted ro and systemd-remount-fs remounts it rw (fstab "/" defaults).
+BSP_EXTRA_BOOTARGS = "cma=1536M"
 
-# Hostname (overrides amd-edf default of "amd-edf").
-hostname:pn-base-files = "zcu208-fpgadrv-2025-2"
+# Hostname. meta-amd-edf's distro conf sets hostname:pn-base-files:amd-edf =
+# "amd-edf"; it is parsed after local.conf and its extra override outranks a
+# plain hostname:pn-base-files, so use :forcevariable (last in OVERRIDES).
+hostname:pn-base-files:forcevariable = "zcu208-fpgadrv-2025-2"
 
 # Reserve space in the rootfs for the toolset we install at image time.
 IMAGE_ROOTFS_EXTRA_SPACE = "524288"

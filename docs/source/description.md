@@ -10,6 +10,18 @@ Both of the FMC cards shown below can be used with these reference designs.
 |---|---|
 | ![FPGA Drive FMC Gen4](images/fpga-drive-fmc-gen4.png) | ![M.2 M-key Stack FMC](images/m2-mkey-stack-fmc.png) |
 
+## Design overview
+
+Each design connects one or two M.2 NVMe SSDs to the processor of the target board through
+**one PCIe Root Port per M.2 slot**, built with the integrated PCIe block of the device. The
+processor enumerates and controls the SSDs through the Root Port's AXI slave interfaces,
+and the SSDs read and write the processor's DDR memory directly through the Root Port's
+AXI master. The diagram below shows the Zynq UltraScale+ version; the diagrams of all four
+device families, the PCIe link of every target and the address map are on the
+[hardware design](design) page.
+
+![Zynq UltraScale+ design block diagram](images/fpgadrv-block-zynqmp.png)
+
 ## Hardware Platforms
 
 The hardware designs provided in this reference are based on Vivado and support a range of FPGA, MPSoC and ACAP evaluation
@@ -25,9 +37,9 @@ boards. The repository contains all necessary scripts and code to build these de
     {% if designs_in_group | length > 0 %}
 ### {{ group.name }} platforms
 
-| Target board        | FMC Slot<br> Used | Active<br>M.2 Slots | PCIe IP | Standalone<br> Application | PetaLinux |
-|---------------------|---------------|---------|-----|-----|-----|
-{% for design in data.designs %}{% if design.group == group.label and design.publish %}| [{{ design.board }}]({{ design.link }}) | {{ design.connector }} | {{ design.lanes | length }}x | [{{ design.ip }}]({{ data.ips[design.ip].link }}) | {% if design.baremetal %} ✅ {% else %} ❌ {% endif %} | {% if design.petalinux %} ✅ {% else %} ❌ {% endif %} |
+| Target board        | FMC Slot<br> Used | Active<br>M.2 Slots | PCIe IP | Standalone<br> Application | PetaLinux | Yocto |
+|---------------------|---------------|---------|-----|-----|-----|-----|
+{% for design in data.designs %}{% if design.group == group.label and design.publish %}| [{{ design.board }}]({{ design.link }}) | {{ design.connector }} | {{ design.lanes | length }}x | [{{ design.ip }}]({{ data.ips[design.ip].link }}) | {% if design.baremetal %} ✅ {% else %} ❌ {% endif %} | {% if design.petalinux %} ✅ {% else %} ❌ {% endif %} | {% if design.yocto %} ✅ {% else %} ❌ {% endif %} |
 {% endif %}{% endfor %}
 {% endif %}
 {% endfor %}
@@ -61,17 +73,20 @@ When using designs with only one active slot, you must leave the slot labelled "
 
 ## Software
 
-These reference designs can be driven by either a standalone application or within a PetaLinux environment. 
-The repository includes all necessary scripts and code to build both environments. The table 
-below outlines the corresponding applications available in each environment:
+These reference designs can be driven by a standalone application or from embedded Linux,
+built with either PetaLinux or Yocto / EDF. The repository includes all necessary scripts
+and code to build these environments. The table below outlines the applications available
+in each environment:
 
 | Environment      | Available Applications  |
 |------------------|-------------------------|
-| Standalone       | PCIe enumeration test |
-| PetaLinux        | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+| Standalone       | PCIe enumeration test (`ssd_test`) |
+| PetaLinux, Yocto | Built-in Linux commands<br>Additional tools: nvme-cli, pciutils (`lspci`), fdisk, mkfs / mke2fs, blkid, mount<br>Versal images: SSD speed-test scripts |
 
-The standalone software application reports on the status of the PCIe link and 
-performs enumeration of the detected PCIe end-points (ie. the M.2 modules).
+The standalone application reports on the status of the PCIe link and performs
+enumeration of the detected PCIe end-points (ie. the M.2 modules); see
+[stand-alone application](stand_alone). Under Linux, the SSDs come up as NVMe block devices
+that you can partition, format and test; see [Test the SSDs in Linux](linux_test).
 
 
 [FPGA Drive FMC Gen4]: https://docs.opsero.com/op063/datasheet/overview/

@@ -19,7 +19,7 @@ Usage (the command names the artifact you want):
   ./build.sh package    --target <t>           # gather built artifacts -> bootimages/*.zip
   ./build.sh all        --target <t>           # everything the target supports + package
   ./build.sh status     --target <t>           # per-stage artifact state
-  ./build.sh clean      --target <t> [--stage xsa]
+  ./build.sh clean      --target <t> [--stage xsa | --keep-boot] [--yes]
   python build.py <command> ...                # same, without the shim
 
 --target all loops over every target (continue-on-error, per-target summary).
@@ -269,6 +269,36 @@ class Context:
         self.petl_zip = self.bootimages / f"{repo.prj_name}_{target}_petalinux-{self.ver_tag}.zip"
         self.bare_zip = self.bootimages / f"{repo.prj_name}_{target}_standalone-{self.ver_tag}.zip"
         self.yocto_zip = self.bootimages / f"{repo.prj_name}_{target}_yocto-{self.ver_tag}.zip"
+        # Processor-less targets: the deliverable is the device image itself
+        # (plus the configuration-memory image, for boards that boot from flash).
+        self.impl_dir = self.viv_prj / f"{target}.runs" / "impl_1"
+        self.dev_image = self.impl_dir / (
+            f"{repo.bd_name}_wrapper.pdi" if self.family == "versal"
+            else f"{repo.bd_name}_wrapper.bit")
+        # Configuration-memory image (stage 'cfgmem'). A MicroBlaze target with a
+        # bare-metal app boots its app from the flash too, so the source is the
+        # boot bitstream with the ELF embedded in the LMB BRAM (the standalone
+        # stage's boot file) and the .mcs/.prm go next to it into the Vitis boot
+        # dir (so the standalone zip ships them). Otherwise (processor-less
+        # target) the source is the implemented bitstream itself.
+        if self.family == "microblaze" and self.design.get("baremetal", False):
+            self.cfgmem_src = self.boot_file
+            self.cfgmem_mcs = self.boot_file.with_suffix(".mcs")
+            self.cfgmem_prm = self.boot_file.with_suffix(".prm")
+        else:
+            self.cfgmem_src = self.dev_image
+            self.cfgmem_mcs = self.viv_prj / f"{repo.bd_name}_wrapper.mcs"
+            self.cfgmem_prm = self.viv_prj / f"{repo.bd_name}_wrapper.prm"
+        self.bit_zip = self.bootimages / f"{repo.prj_name}_{target}_bitstream-{self.ver_tag}.zip"
+
+
+def has_software_flow(ctx: Context):
+    """True when the target builds software of any kind. A target with none is
+    processor-less: its whole deliverable is the device image the Vivado run
+    produced (e.g. ethernet-fmc-processorless, or a mezzanine FPGA driven over
+    a chip-to-chip link)."""
+    return any(ctx.design.get(k, False)
+               for k in ("baremetal", "petalinux", "yocto"))
 
 
 def scan_critical_warnings(log: Path):
@@ -589,6 +619,15 @@ def stage_bootfile(ctx: Context):
     if not has_vitis_flow(ctx):
         return ("skipped (data.json marks this target baremetal but the repo "
                 "ships no Vitis flow -- upstream inconsistency)")
+    # A boot file whose workspace is gone ('clean --keep-boot' deletes the
+    # workspace and keeps the boot dir) is the finished deliverable: it is up
+    # to date unless the XSA was rebuilt after it. Without this test the stage
+    # would rebuild the whole workspace just to compare against its .elf. To
+    # force a rebuild, 'clean --stage standalone' removes the boot dir as well.
+    if (ctx.boot_file.is_file() and not ctx.vit_ws.exists()
+            and (not ctx.xsa.is_file()
+                 or ctx.boot_file.stat().st_mtime >= ctx.xsa.stat().st_mtime)):
+        return "skipped (boot file exists; workspace was cleaned)"
     stage_workspace(ctx)
     vitis_exe, tool_env = vitis_tools(ctx)
 
@@ -600,6 +639,53 @@ def stage_bootfile(ctx: Context):
                   cwd=ctx.vit_dir, extra_env=tool_env)
     if rc != 0 or not ctx.boot_file.is_file():
         fail(f"Vitis boot file generation failed (rc={rc}); expected {ctx.boot_file}")
+    return "built"
+
+
+def stage_cfgmem(ctx: Context):
+    """Write the target's configuration-memory image (.mcs) from its bitstream.
+
+    Only a board that loads its own bitstream from a configuration flash needs
+    one; a hard-processor target's bitstream travels inside BOOT.BIN. On a
+    MicroBlaze bare-metal target the image is made from the boot bitstream
+    (application embedded in the LMB BRAM) and lands in the Vitis boot dir;
+    see Context.cfgmem_src. The stage is
+    therefore opt-in and doubly inert: the target must set "cfgmem": true in
+    data.json AND the repo must ship Vivado/scripts/cfgmem.tcl (which owns the
+    flash part/size/interface table, since those are board facts). No repo that
+    sets neither ever runs a line of this."""
+    if not ctx.design.get("cfgmem", False):
+        return "skipped (target has no configuration flash)"
+    tcl = ctx.viv_dir / "scripts" / "cfgmem.tcl"
+    if not tcl.is_file():
+        return ("skipped (data.json marks this target cfgmem but the repo "
+                "ships no Vivado/scripts/cfgmem.tcl -- upstream inconsistency)")
+    stage_xsa(ctx)
+    if ctx.cfgmem_src != ctx.dev_image:
+        # MicroBlaze + bare metal: the flash holds the bitstream with the app
+        # embedded, made by the standalone stage (a no-op when up to date).
+        stage_bootfile(ctx)
+    if not ctx.cfgmem_src.is_file():
+        fail(f"bitstream missing: {rel_to_repo(ctx.cfgmem_src, ctx.repo.root)} "
+             f"(it must exist before an .mcs can be made)")
+    if (ctx.cfgmem_mcs.is_file()
+            and ctx.cfgmem_mcs.stat().st_mtime >= ctx.cfgmem_src.stat().st_mtime):
+        return "skipped (mcs up to date)"
+    ctx.viv_logs.mkdir(exist_ok=True)
+    log = ctx.viv_logs / f"{ctx.target}_cfgmem.log"
+    rc = run_tool([vivado_exe(ctx), "-mode", "batch", "-notrace",
+                   "-source", "scripts/cfgmem.tcl",
+                   "-log", log.as_posix(), "-journal",
+                   (ctx.viv_logs / f"{ctx.target}_cfgmem.jou").as_posix(),
+                   "-tclargs", ctx.target, ctx.cfgmem_src.as_posix(),
+                   ctx.cfgmem_mcs.as_posix(),
+                   str(ctx.design.get("flashsize", "32")),
+                   str(ctx.design.get("flashintf", "SPIx4"))],
+                  cwd=ctx.viv_dir)
+    if rc != 0 or not ctx.cfgmem_mcs.is_file():
+        fail(f"configuration memory file generation failed (rc={rc}); expected "
+             f"{rel_to_repo(ctx.cfgmem_mcs, ctx.repo.root)}. "
+             f"See {rel_to_repo(log, ctx.repo.root)}")
     return "built"
 
 
@@ -625,7 +711,7 @@ def stage_petalinux(ctx: Context):
               f"{ctx.viv_ver} and run:")
         print(f"    ./build.sh all --target {ctx.target}")
         return "BLOCKED (Linux required)"
-    if (ctx.petl_img / "BOOT.BIN").is_file() or (ctx.petl_img / "boot.mcs").is_file():
+    if petalinux_built(ctx):
         return "skipped (images exist)"
     # Delegate to the tested Makefile flow -- make always exists on Linux.
     cmd = ["make", "-C", str(ctx.repo.root / "PetaLinux"),
@@ -642,7 +728,7 @@ def stage_petalinux(ctx: Context):
         rc = run_tool(cmd, cwd=ctx.repo.root)
     # The PetaLinux Makefile can exit 0 without producing images (e.g. bad
     # environment) -- verify like every other stage.
-    boot_ok = (ctx.petl_img / "BOOT.BIN").is_file() or (ctx.petl_img / "boot.mcs").is_file()
+    boot_ok = petalinux_built(ctx)
     if rc != 0 or not boot_ok:
         fail(f"PetaLinux build failed (rc={rc}; boot artifact "
              f"{'ok' if boot_ok else 'MISSING in ' + str(ctx.petl_img)}).")
@@ -650,19 +736,33 @@ def stage_petalinux(ctx: Context):
 
 
 def yocto_port_cfg_dir(ctx: Context):
-    """Optional per-target overlay layer (e.g. the Ethernet port-config
-    layers), derived from data.json 'lanes' the same way update.py used to
-    generate the Makefile target table. None when the repo ships no
-    Yocto/bsp/port-configs/ or the derived layer does not exist."""
-    root = ctx.repo.root / "Yocto" / "bsp" / "port-configs"
-    lanes = ctx.design.get("lanes")
-    if not root.is_dir() or not isinstance(lanes, list):
+    """Per-target port-config overlay layer. The overlay name is an explicit
+    data.json parameter ("portcfg") -- it is NOT derived from lanes here, since
+    the mapping is design-specific (e.g. -axieth / versal-prefixed / single-port
+    variants that lanes alone can't express). None when the design has no
+    portcfg or the named layer does not exist on disk."""
+    name = ctx.design.get("portcfg")
+    if not name:
         return None
-    length = 8 if len(lanes) > 4 else 4
-    name = "ports-" + "".join(str(i) if i in lanes else "-"
-                              for i in range(length))
-    d = root / name
+    d = ctx.repo.root / "Yocto" / "bsp" / "port-configs" / name
     return d if d.is_dir() else None
+
+
+def yocto_products(ctx: Context):
+    """The files whose presence means a target's Yocto image is built (the
+    stage's skip test and the keep-boot clean's guard share this list).
+    Zynq-7000 produces a u-boot-wrapped uImage; ZynqMP/Versal a raw Image."""
+    img = ctx.yocto_img
+    kernel = "uImage" if ctx.family == "zynq" else "Image"
+    return [img / "BOOT.BIN", img / kernel,
+            img / "rootfs.tar.gz", img / "rootfs.wic.xz"]
+
+
+def petalinux_built(ctx: Context):
+    """True when the target's PetaLinux boot artifact exists (BOOT.BIN, or
+    boot.mcs on MicroBlaze)."""
+    return ((ctx.petl_img / "BOOT.BIN").is_file()
+            or (ctx.petl_img / "boot.mcs").is_file())
 
 
 def stage_yocto(ctx: Context):
@@ -683,11 +783,8 @@ def stage_yocto(ctx: Context):
         print(f"    ./build.sh yocto --target {ctx.target}")
         return "BLOCKED (Linux required)"
     work = ydir / ctx.target
-    img = work / "images" / "linux"
-    # Zynq-7000 produces a u-boot-wrapped uImage; ZynqMP/Versal a raw Image.
-    kernel = "uImage" if ctx.family == "zynq" else "Image"
-    products = [img / "BOOT.BIN", img / kernel,
-                img / "rootfs.tar.gz", img / "rootfs.wic.xz"]
+    img = ctx.yocto_img
+    products = yocto_products(ctx)
     if all(p.is_file() for p in products):
         return "skipped (images exist)"
     stage_xsa(ctx)
@@ -717,8 +814,14 @@ def stage_yocto(ctx: Context):
         shutil.copyfile(ctx.xsa, hw_xsa)
     # 3. Configure (sdtgen + gen-machineconf parse-sdt + BSP/overlay/sstate).
     #    Re-run when the XSA or the board conf is newer than the done-marker.
-    board = ctx.target.split("_")[0]
-    bsp = ydir / "bsp" / board
+    #    Prefer a target-specific bsp (e.g. bsp/zcu102_hpc1) over the board-level
+    #    one (bsp/zcu102) when it exists -- mirrors the PetaLinux convention where
+    #    a design variant whose hardware differs (e.g. fewer MIPI camera ports)
+    #    gets its own bsp instead of sharing the board's.
+    bsp = ydir / "bsp" / ctx.target
+    if not bsp.is_dir():
+        bsp = ydir / "bsp" / ctx.target.split("_")[0]
+    board = bsp.name
     conf_append = bsp / "conf" / "local.conf.append"
     done = work / "configdone.txt"
     offline = ydir / "offline.txt"
@@ -755,6 +858,27 @@ def _zip_tree(zip_path: Path, entries):
                 z.writestr(arc, src)
 
 
+def _zip_current(zip_path: Path, sources):
+    """True when the zip exists and is no older than the artifacts it gathers,
+    i.e. there is nothing to do. A zip left behind by an earlier build is
+    rewritten once a rebuild has produced newer artifacts -- 'package' used to
+    skip on the zip's mere existence and kept shipping the old image. A zip
+    whose artifacts are (partly) gone, e.g. after 'clean', is kept as it is:
+    it cannot be regenerated and is still the last thing that was built."""
+    if not zip_path.is_file():
+        return False
+    sources = [p for p in sources if isinstance(p, Path)]
+    if not sources or not all(p.is_file() for p in sources):
+        return True
+    return zip_path.stat().st_mtime >= max(p.stat().st_mtime for p in sources)
+
+
+def _wrote(zip_path: Path, existed: bool):
+    """Result text for a zip just written; says so when it replaced a stale one."""
+    return (f"rewrote {zip_path.name} (artifacts were newer than the zip)"
+            if existed else f"wrote {zip_path.name}")
+
+
 def _tar_member_bytes(tgz: Path, member: str):
     """One member's bytes from a .tar.gz, or None if tarball/member is missing."""
     import tarfile
@@ -780,25 +904,31 @@ def stage_bootimage(ctx: Context):
     if ctx.design.get("baremetal", False) and not has_vitis_flow(ctx):
         results.append("standalone zip skipped (repo has no Vitis flow)")
     elif ctx.design.get("baremetal", False):
-        if ctx.bare_zip.is_file():
+        entries = ([(p, p.relative_to(ctx.vit_boot).as_posix())
+                    for p in sorted(ctx.vit_boot.rglob("*")) if p.is_file()]
+                   if ctx.boot_file.is_file() else [])
+        existed = ctx.bare_zip.is_file()
+        if _zip_current(ctx.bare_zip, [p for p, _ in entries]):
             results.append("standalone zip exists")
         elif ctx.boot_file.is_file():
-            entries = [(p, p.relative_to(ctx.vit_boot).as_posix())
-                       for p in sorted(ctx.vit_boot.rglob("*")) if p.is_file()]
             _zip_tree(ctx.bare_zip, entries)
-            results.append(f"wrote {ctx.bare_zip.name}")
+            results.append(_wrote(ctx.bare_zip, existed))
         else:
             fail(f"baremetal boot file missing: {ctx.boot_file}")
 
     if ctx.design.get("petalinux", False):
         img = ctx.petl_img
-        if ctx.petl_zip.is_file():
+        existed = ctx.petl_zip.is_file()
+        petl_files = (["boot.mcs", "boot.prm", "image.elf", "system.bit"]
+                      if ctx.family == "microblaze" else
+                      ["BOOT.BIN", "image.ub", "boot.scr", "rootfs.tar.gz"])
+        if _zip_current(ctx.petl_zip, [img / w for w in petl_files]):
             results.append("petalinux zip exists")
         else:
             boot_readme = "Copy these files to the boot (FAT32) partition of the SD card\n"
             root_readme = "Extract contents of rootfs.tar.gz to the root partition of the SD card\n"
             if ctx.family == "microblaze":
-                wanted = ["boot.mcs", "boot.prm", "image.elf", "system.bit"]
+                wanted = petl_files
                 entries = [(img / "boot.mcs", "flash/boot.mcs"),
                            (img / "boot.prm", "flash/boot.prm"),
                            ("Program the flash with this MCS file to boot from flash\n",
@@ -808,7 +938,7 @@ def stage_bootimage(ctx: Context):
                            ("Load these files via JTAG to boot PetaLinux from JTAG\n",
                             "jtag/readme.txt")]
             else:
-                wanted = ["BOOT.BIN", "image.ub", "boot.scr", "rootfs.tar.gz"]
+                wanted = petl_files
                 entries = [(img / "BOOT.BIN", "boot/BOOT.BIN"),
                            (img / "image.ub", "boot/image.ub"),
                            (img / "boot.scr", "boot/boot.scr"),
@@ -825,11 +955,14 @@ def stage_bootimage(ctx: Context):
                          f"{rel_to_repo(img, ctx.repo.root)}: {', '.join(missing)}")
             else:
                 _zip_tree(ctx.petl_zip, entries)
-                results.append(f"wrote {ctx.petl_zip.name}")
+                results.append(_wrote(ctx.petl_zip, existed))
 
     if ctx.design.get("yocto", False):
         img = ctx.yocto_img
-        if ctx.yocto_zip.is_file():
+        existed = ctx.yocto_zip.is_file()
+        if _zip_current(ctx.yocto_zip,
+                        [img / w for w in ("rootfs.wic.xz", "rootfs.wic.bmap",
+                                           "BOOT.BIN")]):
             results.append("yocto zip exists")
         else:
             # The EDF Yocto wic is a full SD-card image; bmaptool uses the .bmap
@@ -883,13 +1016,56 @@ def stage_bootimage(ctx: Context):
                          f"{rel_to_repo(img, ctx.repo.root)}: {', '.join(missing)}")
             else:
                 _zip_tree(ctx.yocto_zip, entries)
-                results.append(f"wrote {ctx.yocto_zip.name}")
+                results.append(_wrote(ctx.yocto_zip, existed))
+
+    if not has_software_flow(ctx):
+        # Processor-less target: no boot image exists, and none of the blocks
+        # above applies -- the deliverable is the device image the Vivado run
+        # produced, plus the configuration-memory image when the repo builds
+        # one (stage 'cfgmem'). Gathered under the same naming scheme as the
+        # other flows: <prj>_<target>_bitstream-<ver>.zip.
+        existed = ctx.bit_zip.is_file()
+        if _zip_current(ctx.bit_zip,
+                        [ctx.dev_image]
+                        + [p for p in (ctx.cfgmem_mcs, ctx.cfgmem_prm)
+                           if p.is_file()]):
+            results.append("bitstream zip exists")
+        elif ctx.dev_image.is_file():
+            # (file, one-line description) for everything this target ships.
+            shipped = [(ctx.dev_image, "the device image, to be loaded over JTAG")]
+            if ctx.cfgmem_mcs.is_file():
+                shipped.append((ctx.cfgmem_mcs,
+                                "the same design as a configuration-memory "
+                                "image, to be written into the board's flash "
+                                "so the FPGA loads it at every power-on"))
+                if ctx.cfgmem_prm.is_file():
+                    shipped.append((ctx.cfgmem_prm,
+                                    "the memory map written alongside the .mcs"))
+            entries = [(p, p.name) for p, _ in shipped]
+            width = max(len(p.name) for p, _ in shipped)
+            readme = (f"{ctx.repo.prj_name} / {ctx.target}: this target has no "
+                      f"processor and no\nsoftware flow -- the design itself is "
+                      f"the deliverable.\n\n")
+            for p, desc in shipped:
+                text = textwrap.wrap(desc, width=76 - width - 4)
+                readme += f"  {p.name:<{width}}  {text[0]}\n"
+                for cont in text[1:]:
+                    readme += f"  {'':<{width}}  {cont}\n"
+            entries.append((readme, "readme.txt"))
+            _zip_tree(ctx.bit_zip, entries)
+            results.append(_wrote(ctx.bit_zip, existed))
+        else:
+            # Non-fatal on purpose: 'package' on a target that was never built
+            # has always been a no-op, and repos run it over 'all' targets.
+            results.append(
+                f"bitstream zip NOT gathered ({rel_to_repo(ctx.dev_image, ctx.repo.root)} "
+                f"missing; build it with 'xsa --target {ctx.target}')")
 
     return "; ".join(results) if results else "nothing to gather"
 
 
 STAGE_FUNCS = {"ip": stage_ip, "project": stage_project, "xsa": stage_xsa,
-               "standalone": stage_bootfile,
+               "standalone": stage_bootfile, "cfgmem": stage_cfgmem,
                "petalinux": stage_petalinux, "yocto": stage_yocto,
                "package": stage_bootimage}
 
@@ -952,9 +1128,16 @@ def print_status(ctx: Context):
     elif kind == "board":
         groups.append(("ip", [ip_dir / "build" / ctx.target / "ip_done.txt"]))
     groups.append(("project", [ctx.xpr]))
-    groups.append(("xsa", [ctx.xsa]))
+    xsa_arts = [ctx.xsa]
+    if not has_software_flow(ctx):
+        # Processor-less target: the device image is a deliverable in its own
+        # right (it is what gets packaged), so show it next to the XSA.
+        xsa_arts.append(ctx.dev_image)
+    groups.append(("xsa", xsa_arts))
     # Only show artifact groups the target actually supports, so an unsupported
     # flow never reads as a "NOT BUILT" build that's waiting to be done.
+    if ctx.design.get("cfgmem", False):
+        groups.append(("cfgmem", [ctx.cfgmem_mcs]))
     if ctx.design.get("baremetal", False):
         groups.append(("standalone", [ctx.vit_ws, ctx.boot_file]))
     if ctx.design.get("petalinux", False):
@@ -972,6 +1155,8 @@ def print_status(ctx: Context):
         pkg.append(ctx.petl_zip)
     if ctx.design.get("yocto", False):
         pkg.append(ctx.yocto_zip)
+    if not has_software_flow(ctx):
+        pkg.append(ctx.bit_zip)
     if pkg:
         groups.append(("package", pkg))
 
@@ -1027,20 +1212,23 @@ def clean_paths(ctx: Context, scope):
     IP is now per-target, removing it is safe and never affects other targets.
     Explicit --stage limits removal to one stage:
       ip                     -> the target's generated HLS IP
-      project | xsa          -> the Vivado project
+      project | xsa          -> the Vivado project (which is also where the
+                                cfgmem stage writes its .mcs/.prm, except on a
+                                MicroBlaze bare-metal target: Vitis boot dir)
       standalone             -> the Vitis workspace + boot dir
       petalinux              -> the PetaLinux per-target project
       yocto                  -> the Yocto per-target workspace (huge; hours to rebuild)
       package                -> the bootimage zips
+    'clean --keep-boot' is the third mode, for disk hygiene after a successful
+    build: it deletes the rebuildable intermediates and keeps every deliverable.
+    It is not a scope of this function -- see keep_boot_plan().
     """
     paths = []
     if scope in (None, "ip"):
+        paths += ip_output_paths(ctx)
         kind, ip_dir = ip_flow(ctx)
         if kind == "cores":
-            paths += [core / ctx.target for core in hls_cores(ip_dir)]
             paths += list(ip_dir.glob("*.log"))
-        elif kind == "board":
-            paths.append(ip_dir / "build" / ctx.target)
     if scope in (None, "petalinux"):
         paths.append(ctx.repo.root / "PetaLinux" / ctx.target)
     if scope in (None, "yocto"):
@@ -1050,15 +1238,152 @@ def clean_paths(ctx: Context, scope):
     if scope in (None, "standalone"):
         paths += [ctx.vit_ws, ctx.vit_boot]
     if scope in (None, "package"):
-        paths += [ctx.petl_zip, ctx.bare_zip, ctx.yocto_zip]
+        paths += [ctx.petl_zip, ctx.bare_zip, ctx.yocto_zip, ctx.bit_zip]
     return [p for p in paths if p.exists()]
 
 
+def ip_output_paths(ctx: Context):
+    """The target's own generated IP (per-target dirs; shared files excluded)."""
+    kind, ip_dir = ip_flow(ctx)
+    if kind == "cores":
+        return [core / ctx.target for core in hls_cores(ip_dir)]
+    if kind == "board":
+        return [ip_dir / "build" / ctx.target]
+    return []
+
+
+def prune_paths(root: Path, keep):
+    """The children of `root` to delete so that only the paths in `keep` (and
+    the directories leading to them) survive.
+
+    A child that is a kept path is left alone; a directory that CONTAINS a
+    kept path is recursed into; everything else is returned whole, so a big
+    subtree (e.g. Yocto/<t>/build/) is one rmtree, not 500k unlinks. Symlinks
+    are never followed. Keep paths that do not exist are ignored (so a
+    directory that would only have led to one is removed whole rather than
+    emptied). The caller removes the returned paths (remove_paths)."""
+    keep = {Path(k).absolute() for k in keep if Path(k).exists()}
+    out = []
+    if not root.is_dir() or root.is_symlink():
+        return out
+    for child in sorted(root.iterdir()):
+        c = child.absolute()
+        if c in keep:
+            continue
+        if (child.is_dir() and not child.is_symlink()
+                and any(c in k.parents for k in keep)):
+            out += prune_paths(child, keep)
+        else:
+            out.append(child)
+    return out
+
+
+def keep_boot_plan(ctx: Context):
+    """What 'clean --keep-boot' removes for ctx.target: (paths, notes).
+
+    The point is disk hygiene after a successful build -- a finished target
+    can hold 30+ GB of intermediates (Vivado runs, the Vitis workspace, the
+    PetaLinux/Yocto build trees) while its deliverables are a few hundred MB.
+    Every deliverable is kept, so the target can still be flashed and tested,
+    and 'status' / 'package' / 'all' still see it as built ('all' is a no-op):
+      kept      the XSA, the device image (.bit/.pdi, for JTAG rescue and the
+                processor-less / cfgmem flows), the .mcs/.prm, Vitis/boot/<t>/,
+                PetaLinux/<t>/images/ + project-spec/ + the small top-level
+                files, Yocto/<t>/images/, bootimages/*.zip and every logs/ dir
+                (the logs dirs and zips live outside the pruned trees).
+      removed   the rest of Vivado/<t>/, the Vitis workspace, PetaLinux/<t>/
+                build/ + components/, everything in Yocto/<t>/ but images/
+                (configdone.txt included: with build/conf gone, a surviving
+                marker would make a later rebuild skip the configure step),
+                and the target's generated IP (the XSA already embeds it).
+    Each area is only touched when its own deliverable exists -- an unfinished
+    or failed build keeps its intermediates (a Yocto tree is hours to redo);
+    that is reported in `notes` instead."""
+    root = ctx.repo.root
+    paths, notes = [], []
+
+    if ctx.viv_prj.is_dir() or any(p.exists() for p in ip_output_paths(ctx)):
+        if ctx.xsa.is_file():
+            # Two small companions of the device image stay with it: the
+            # debug-probe file (.ltx) an ILA session needs, and the memory-map
+            # info (.mmi) that make-boot.py's updatemem step needs to embed a
+            # MicroBlaze ELF in the bitstream (it also lives inside the XSA,
+            # which make-boot falls back to, but keeping it is free).
+            keep = [ctx.xsa, ctx.dev_image, ctx.cfgmem_mcs, ctx.cfgmem_prm]
+            if ctx.impl_dir.is_dir():
+                keep += list(ctx.impl_dir.glob("*.ltx")) + list(ctx.impl_dir.glob("*.mmi"))
+            paths += prune_paths(ctx.viv_prj, keep)
+            paths += [p for p in ip_output_paths(ctx) if p.exists()]
+        else:
+            notes.append(f"{rel_to_repo(ctx.viv_prj, root)} kept: no XSA "
+                         f"(not built)")
+
+    if ctx.vit_ws.exists():
+        if ctx.boot_file.is_file():
+            paths.append(ctx.vit_ws)
+        else:
+            notes.append(f"{rel_to_repo(ctx.vit_ws, root)} kept: no boot file "
+                         f"{rel_to_repo(ctx.boot_file, root)} (not built)")
+
+    petl = root / "PetaLinux" / ctx.target
+    petl_big = [p for p in (petl / "build", petl / "components") if p.exists()]
+    if petl_big:
+        if petalinux_built(ctx):
+            paths += petl_big
+        else:
+            notes.append(f"{rel_to_repo(petl, root)} kept: no PetaLinux boot "
+                         f"image (not built)")
+
+    ywork = root / "Yocto" / ctx.target
+    if ywork.is_dir():
+        if all(p.is_file() for p in yocto_products(ctx)):
+            paths += prune_paths(ywork, [ywork / "images"])
+        else:
+            notes.append(f"{rel_to_repo(ywork, root)} kept: Yocto images "
+                         f"incomplete (not built)")
+    return paths, notes
+
+
+def tree_size(p: Path):
+    """Approximate bytes under p (sum of file sizes, symlinks not followed).
+    An os.scandir walk: fast enough for a 500k-file Yocto tree, and portable
+    (no du on Windows)."""
+    try:
+        if p.is_symlink() or not p.is_dir():
+            return p.lstat().st_size
+    except OSError:
+        return 0
+    total, stack = 0, [str(p)]
+    while stack:
+        try:
+            with os.scandir(stack.pop()) as it:
+                for e in it:
+                    try:
+                        if e.is_dir(follow_symlinks=False):
+                            stack.append(e.path)
+                        else:
+                            total += e.stat(follow_symlinks=False).st_size
+                    except OSError:
+                        pass
+        except OSError:
+            pass
+    return total
+
+
+def fmt_size(n):
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024
+
+
 def remove_paths(paths, root: Path):
-    """Delete each path, printing its repo-relative name."""
+    """Delete each path, printing its repo-relative name. A symlink is
+    unlinked, never followed (rmtree refuses one, and following it would
+    delete what it points at)."""
     for p in paths:
         disp = rel_to_repo(p, root)  # before deletion, while is_dir() is valid
-        if p.is_dir():
+        if p.is_dir() and not p.is_symlink():
             shutil.rmtree(p)
         else:
             p.unlink()
@@ -1068,6 +1393,7 @@ def remove_paths(paths, root: Path):
 def stages_for(command, design):
     fixed = {"ip": ["ip"], "project": ["project"], "xsa": ["xsa"],
              "standalone": ["xsa", "standalone"],
+             "cfgmem": ["xsa", "cfgmem"],
              "petalinux": ["xsa", "petalinux"],
              "yocto": ["xsa", "yocto"],
              "package": ["package"]}
@@ -1079,6 +1405,8 @@ def stages_for(command, design):
     order = ["xsa"]
     if design.get("baremetal", False):
         order.append("standalone")
+    if design.get("cfgmem", False):
+        order.append("cfgmem")
     if design.get("petalinux", False):
         order.append("petalinux")
     if design.get("yocto", False):
@@ -1092,6 +1420,19 @@ def stages_for(command, design):
 BUILD_COMMANDS = ["ip", "project", "xsa", "standalone",
                   "petalinux", "yocto", "package", "all"]
 
+
+def build_commands(repo):
+    """The build subcommands this repo offers.
+
+    'cfgmem' is only offered by a repo that ships Vivado/scripts/cfgmem.tcl --
+    i.e. one with a board that boots from a configuration flash. Everywhere
+    else it is not even in the help, so the runner's surface is unchanged."""
+    cmds = list(BUILD_COMMANDS)
+    if (repo.root / "Vivado" / "scripts" / "cfgmem.tcl").is_file():
+        cmds.insert(cmds.index("package"), "cfgmem")
+    return cmds
+
+
 COMMAND_HELP = {
     "list": "list targets and attributes",
     "labels": "print one target label per line (for scripting)",
@@ -1099,12 +1440,13 @@ COMMAND_HELP = {
     "project": "create the Vivado project (.xpr)",
     "xsa": "build the Vivado XSA (synth + impl + export)",
     "standalone": "create the Vitis workspace, build the app, then the baremetal boot file (BOOT.BIN / .bit)",
+    "cfgmem": "write the configuration memory file (.mcs) for a target that boots from flash",
     "petalinux": "build the PetaLinux image (Linux only)",
     "yocto": "build the Yocto image (Linux only)",
     "package": "gather built artifacts into bootimages/*.zip",
     "all": "build everything the target supports (incl. yocto), then package",
     "status": "show per-stage artifact state",
-    "clean": "delete a target's generated outputs (default: all, with a y/N prompt; --stage to limit)",
+    "clean": "delete a target's generated outputs (default: all, with a y/N prompt; --stage to limit; --keep-boot to free disk but keep every deliverable)",
 }
 
 
@@ -1114,7 +1456,7 @@ def shim_name():
 
 
 # Commands that only make sense for targets with a given data.json flag.
-COMMAND_CAPABILITY = {"standalone": "baremetal",
+COMMAND_CAPABILITY = {"standalone": "baremetal", "cfgmem": "cfgmem",
                       "petalinux": "petalinux", "yocto": "yocto"}
 
 
@@ -1217,7 +1559,7 @@ def print_overview(repo):
     print(f"Usage: {shim} <command> [--target <label>] [options]")
     print()
     print("Commands:")
-    cmds = ["list", "labels"] + BUILD_COMMANDS + ["status", "clean"]
+    cmds = ["list", "labels"] + build_commands(repo) + ["status", "clean"]
     label_w = max(len(c) for c in cmds) + 1   # widest command name + a gap
     indent = 2 + label_w + 1                   # left margin + label column + space
     text_w = max(shutil.get_terminal_size((80, 24)).columns - indent, 30)
@@ -1352,7 +1694,7 @@ def main():
     shim = shim_name()
     no_auto_help = ("don't auto-initialise missing git submodules; fail with "
                     "instructions instead")
-    for cmd in BUILD_COMMANDS:
+    for cmd in build_commands(repo):
         sp = sub.add_parser(cmd, parents=[targ], prog=f"{shim} {cmd}",
                             help=COMMAND_HELP[cmd])
         sp.add_argument("--jobs", type=int, default=8, help="Vivado synthesis jobs")
@@ -1367,16 +1709,27 @@ def main():
                    help="show per-stage artifact state")
     cp = sub.add_parser("clean", parents=[targ], prog=f"{shim} clean",
                         help="delete generated outputs for a target "
-                             "(default: everything, with a confirmation prompt)")
-    cp.add_argument("--stage", default=None,
+                             "(default: everything, with a confirmation prompt; "
+                             "--keep-boot: only intermediates)")
+    mode = cp.add_mutually_exclusive_group()
+    mode.add_argument("--stage", default=None,
                     choices=["ip", "project", "xsa", "standalone",
                              "petalinux", "yocto", "package"],
                     help="limit cleaning to one stage's outputs and skip the "
                          "confirmation prompt (default: clean everything for the "
                          "target after confirming)")
+    mode.add_argument("--keep-boot", action="store_true",
+                      help="disk hygiene after a successful build: delete the "
+                           "rebuildable intermediates (Vivado project except "
+                           "the XSA / device image / .mcs, Vitis workspace, "
+                           "PetaLinux build/ + components/, Yocto workspace "
+                           "except images/, generated IP) but keep every "
+                           "deliverable, so the target still reads as built; "
+                           "asks for confirmation unless --yes")
     cp.add_argument("--yes", "-y", action="store_true",
-                    help="skip the default-clean confirmation prompt (for "
-                         "scripts / 'clean --target all')")
+                    help="skip the confirmation prompt of the default and "
+                         "--keep-boot cleans (for scripts / 'clean --target "
+                         "all')")
 
     args = ap.parse_args()
 
@@ -1455,16 +1808,53 @@ def main():
         # Gather what every target would remove, then (for the destructive
         # default clean) show ONE combined list and confirm ONCE -- so
         # 'clean --target all' asks a single question, not one per target.
-        plan = [(t, clean_paths(Context(repo, t, 8), args.stage)) for t in targets]
+        if args.keep_boot:
+            plan = []
+            for t in targets:
+                ps, notes = keep_boot_plan(Context(repo, t, 8))
+                for n in notes:
+                    print(f"{t}: {n}")
+                plan.append((t, ps))
+        else:
+            plan = [(t, clean_paths(Context(repo, t, 8), args.stage))
+                    for t in targets]
         plan = [(t, ps) for t, ps in plan if ps]
         if not plan:
             print("nothing to remove")
             return
         if args.stage is None and not args.yes:
+            if args.keep_boot:
+                # Sizing a Yocto tree walks ~500k files (tens of seconds).
+                print("Measuring what will be freed...", flush=True)
             print("This will delete:")
+            total = 0
             for _, ps in plan:
+                if not args.keep_boot:
+                    for p in ps:
+                        print(f"  {rel_to_repo(p, repo.root)}")
+                    continue
+                # A pruned dir (e.g. .runs/impl_1/, ~80 reports and
+                # checkpoints around the kept device image) is summarised on
+                # one line so the prompt stays readable for --target all.
+                groups = {}
                 for p in ps:
-                    print(f"  {rel_to_repo(p, repo.root)}")
+                    groups.setdefault(p.parent, []).append(p)
+                for parent, group in groups.items():
+                    sizes = [tree_size(p) for p in group]
+                    n = sum(sizes)
+                    total += n
+                    if len(group) > 8:
+                        what = (f"{rel_to_repo(parent, repo.root)}* "
+                                f"({len(group)} entries; kept files stay)")
+                        print(f"  {fmt_size(n):>9}  {what}")
+                    else:
+                        for p, sz in zip(group, sizes):
+                            print(f"  {fmt_size(sz):>9}  "
+                                  f"{rel_to_repo(p, repo.root)}")
+            if args.keep_boot:
+                print(f"About {fmt_size(total)} will be freed; the XSA, device "
+                      f"image, boot files, images/ dirs, zips and logs are "
+                      f"kept.")
             if not sys.stdin.isatty():
                 print("Refusing to delete without confirmation (stdin is not a "
                       "TTY); re-run with --yes to proceed.")
@@ -1476,8 +1866,23 @@ def main():
             if ans not in ("y", "yes"):
                 print("Aborted (nothing deleted).")
                 return
+        scope = "keep-boot" if args.keep_boot else (args.stage or "all")
         for t, ps in plan:
-            print(f"=== clean: {t} (scope: {args.stage or 'all'}) ===")
+            if args.keep_boot:
+                # Routine hygiene may run while another terminal builds this
+                # target (e.g. 'all --target all'); pruning its tree mid-build
+                # would wreck that build, so respect the per-target lock.
+                lock = BuildLock(repo.root, t)
+                if not lock.acquire():
+                    print(f"=== clean: {t} skipped (build in progress) ===")
+                    continue
+                try:
+                    print(f"=== clean: {t} (scope: {scope}) ===")
+                    remove_paths(ps, repo.root)
+                finally:
+                    lock.release()
+                continue
+            print(f"=== clean: {t} (scope: {scope}) ===")
             remove_paths(ps, repo.root)
         return
 

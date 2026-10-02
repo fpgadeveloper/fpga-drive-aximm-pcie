@@ -149,12 +149,15 @@ show which boards are supported by each flow.
 | Environment | Build flow          | Available applications |
 |-------------|---------------------|------------------------|
 | Standalone  | Vitis               | PCIe enumeration test |
-| Linux       | PetaLinux  /  Yocto | Built-in Linux commands<br>Additional tools: mke2fs, badblocks, mount, mkfs, blkid, fdisk, pciutils |
+| Linux       | PetaLinux  /  Yocto | Built-in Linux commands<br>Additional tools: nvme-cli, pciutils (lspci), mke2fs, mkfs, mount, blkid, fdisk<br>Versal: SSD speed-test scripts |
 
 The standalone application reports on the status of the PCIe link and performs
 enumeration of the detected PCIe end-points (i.e. the M.2 modules). Under Linux, those
 same M.2 SSDs come up as NVMe block devices that you can partition, format and test
-with the bundled tools.
+with the bundled tools. The Yocto images also bring up the board's Ethernet port (DHCP,
+SSH server). The [user guide](https://refdesign.fpgadrive.com) describes the hardware
+design of each device family (with block diagrams), and how to boot, log in and test the
+SSDs, including the link speeds and throughput to expect.
 
 ## Build instructions
 

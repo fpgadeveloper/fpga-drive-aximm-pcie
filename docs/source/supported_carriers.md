@@ -64,6 +64,12 @@ The ZCU106 has two HPC FMC connectors, HPC0 and HPC1. The HPC0 connector has eno
 2x SSDs, each with an independent 4-lane PCIe interface. The HPC1 connector has only 1x connected gigabit transceiver, so it can only
 support 1x SSD (SSD1) with a 1-lane PCIe interface. This project contains designs for both of these connectors.
 
+### ZCU104
+
+The ZCU104 has one LPC FMC connector with one gigabit transceiver, so the design supports 1x SSD (SSD1) with a
+1-lane PCIe interface. VADJ is enabled by the FSBL from the FMC card's EEPROM; the PetaLinux and Yocto BSPs patch
+the 2025.2 FSBL so that it reads the FMC card's EEPROM (see [troubleshooting](troubleshooting)).
+
 ### ZCU111
 
 The ZCU111 has a single FMC+ connector that can support 2x SSDs, each with an independent 4-lane PCIe interface.
@@ -75,9 +81,10 @@ The ZCU208 has a single FMC+ connector that can support 2x SSDs, each with an in
 ### VCK190 and VMK180
 
 The VCK190 and VMK180 have two FMC+ connectors that both can support 2x SSDs with independent 4-lane PCIe interfaces.
-These boards have a system controller that runs on a Zynq UltraScale+. The system controller is responsible for enabling
-the adjustable voltage (VADJ) that is applied to the FMC cards. These designs can be run even when VADJ is not enabled
-(ie. when VADJ=0V); they can be run without the system controller.
+These boards have a system controller that runs on a Zynq UltraScale+. The system controller normally sets
+the adjustable voltage (VADJ) that is applied to the FMC cards. These designs do not depend on it: the standalone
+application, and U-Boot in the PetaLinux and Yocto images, enable VADJ at 1.5V themselves before the PCIe link is
+brought up (the same applies to the VPK120 and VPK180).
 
 Note that the BEAM Tool 2.2 has a 
 [known issue that causes multiple resets on power up](https://support.xilinx.com/s/article/000034111?language=en_US).

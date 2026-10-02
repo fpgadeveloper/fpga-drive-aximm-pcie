@@ -31,12 +31,15 @@ the full description of the runner.
    ```
 
 This will also launch the build process for the corresponding Vivado project if that project
-has not already been built and its hardware exported.
+has not already been built and its hardware exported. The output products (`BOOT.BIN`,
+`boot.scr`, `image.ub`, `rootfs.tar.gz`, ...) are written to
+`PetaLinux/<target>/images/linux/`; `./build.sh all --target <target>` also packs them into
+`bootimages/fpga-drive-aximm-pcie_<target>_petalinux-2025-2.zip`.
 
 ## Boot from SD card
 
-These instructions only apply to the target boards that allow booting from SD card. This includes all
-Zynq-7000 boards, Zynq UltraScale+ boards and Zynq RFSoC boards.
+These instructions apply to all of the target boards that have a PetaLinux image: the Zynq-7000,
+Zynq UltraScale+ (including Zynq RFSoC) and Versal boards.
 
 ### Prepare the SD card
 
@@ -96,6 +99,7 @@ losing data on one of your hard drives.
    * **ZCU10x:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
    * **ZCU111:** DIP switch SW6 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
    * **ZCU208:** DIP switch SW2 must be set to 1000 (1=ON,2=OFF,3=OFF,4=OFF)
+   * **Versal boards:** refer to the board's user guide for the SD boot-mode setting.
 3. Connect one or more M.2 NVMe PCIe SSDs to the [FPGA Drive FMC Gen4]. Connect the 
    [FPGA Drive FMC Gen4] to the FMC connector of the target board.
 4. Connect the USB-UART to your PC and then open a UART terminal set to 115200 baud and the 
@@ -185,68 +189,28 @@ the following command:
 sudo screen /dev/ttyUSB0 115200
 ```
 
-## Setup the NVMe SSD in PetaLinux
+## Log in
 
-1. Log into PetaLinux using the username `petalinux`. On the first time you boot, you will be forced to 
-   choose a password for this user. The password you choose will be required on all future boots, so choose
-   a password that you will remember.
-2. Check that the SSD has been enumerated using: `lspci`. Without any arguments, you get the output as shown 
-   in the image below. Use the `-vv` argument, to get a more detailed output with the link speed, number of
-   lanes used, etc.
+1. Log in with the username `petalinux`. On the first boot you are asked to choose a
+   password for this user; it is required on all later logins. The `petalinux` user can run
+   commands as root with `sudo`.
+2. The hostname of the image is `<board>-fpgadrv-2025-2` (for example
+   `zcu106-fpgadrv-2025-2`; `pz-fpgadrv-2025-2` on the PicoZed).
 
-   ![Check that the SSD has been enumerated with lspci](images/setup_ssd_in_petalinux_1.png)
+The kernel command line of each board (console, SD-card root file system, CMA size) is set in
+`PetaLinux/bsp/<board>/project-spec/configs/config` (`CONFIG_SUBSYSTEM_USER_CMDLINE`). On
+the VCK190, VMK180, VPK120 and VPK180, U-Boot enables the FMC VADJ supply at 1.5 V before it boots Linux (`vadj_1v5_en` in
+`project-spec/meta-user/recipes-bsp/u-boot/files/platform-top.h`).
 
-3. Use lsblk to make sure that the SSD has been recognized as a block device: 
-   `lsblk`.
+On the PicoZed and ZC706, the board's Ethernet port (PS GEM0) is enabled, with its PHY
+described in the device tree (`system-user.dtsi`); earlier versions of this design disabled
+it.
 
-   ![Running lsblk](images/setup_ssd_in_petalinux_2.png)
+## Test the SSDs
 
-4. Run fdisk to create a partition on the SSD: `fdisk /dev/nvme0n1`.
-
-   ![Running fdisk](images/setup_ssd_in_petalinux_3.png)
-   
-5. Type these options in fdisk:
-
-    - Type `n` to create a new partition
-    - Then type `p`, then `1` to create a new primary partition
-    - Use the defaults for the sector numbers
-    - Then type `w` to write the data to the disk
-
-   ![Using fdisk to create a partition](images/setup_ssd_in_petalinux_4.png)
-
-6. Get the name of the partition created by running `lsblk` again. In the example below, it is `nvme0n1p1`.
-
-   ![Get the partition name with lsblk](images/setup_ssd_in_petalinux_5.png)
-
-7. Create a file system on the new partition using: `mkfs -t ext2 /dev/nvme0n1p1`.
-
-   ![Create the file system using mkfs](images/setup_ssd_in_petalinux_6.png)
-
-8. After a reboot, systemd auto-mounts the new partition under
-   `/run/media/nvme0n1p1`. For example, on a dual-SSD board you'll see:
-
-   ```none
-   uzev-fpgadrv-2025-2:~$ lsblk
-   NAME         MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
-   ...
-   nvme0n1      259:0    0 931.5G  0 disk
-   `-nvme0n1p1  259:2    0 931.5G  0 part /run/media/nvme0n1p1
-   nvme1n1      259:1    0 931.5G  0 disk
-   `-nvme1n1p1  259:3    0 931.5G  0 part /run/media/nvme1n1p1
-   ```
-
-   If you want to mount the SSD in the same session in which you formatted
-   it (without rebooting), do it manually:
-
-   ```
-   mkdir -p /media/nvme
-   mount /dev/nvme0n1p1 /media/nvme
-   ```
-
-From this point you will be able to access the SSD from the Linux command line.
-You should be able to copy files to the mount point, create new files,
-delete files and use all the disk tools that are available in the
-PetaLinux build.
+Once logged in, continue with [Test the SSDs in Linux](linux_test): it covers checking the
+PCIe link with `lspci`, identifying the SSDs with `nvme list`, partitioning, formatting and
+mounting them, and measuring the throughput.
 
 ## Patches and Known Issues
 

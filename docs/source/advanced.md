@@ -29,7 +29,7 @@ it.
 │   └── bsp/                   <- Per-board BSP fragments
 │       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
 ├── Yocto/
-│   ├── scripts/               <- init-workspace / configure-build / build-image / package-output
+│   ├── scripts/               <- init-workspace / configure-build / build-image / package-output / hostfix
 │   └── bsp/                   <- Per-board meta-user layers
 │       └── pz/, uzev/, zc706/, zcu104/, vck190/, …
 ├── submodules/                <- Vendor board definition files (BDFs)
@@ -432,6 +432,7 @@ Development Framework — the announced successor to PetaLinux — using the
 | `configure-build.sh` | XSA → System Device Tree (sdtgen) → custom MACHINE via `gen-machineconf parse-sdt` (≈ importing the XSA + `petalinux-config`) |
 | `build-image.sh`     | `bitbake edf-linux-disk-image` (≈ `petalinux-build`)                     |
 | `package-output.sh`  | gather the flashable artifacts into `images/linux/` (≈ `petalinux-package`) |
+| `hostfix.sh`         | sourced by `configure-build.sh` and `build-image.sh`: on hosts whose `tar` uses the `openat2` syscall (distributions carrying the CVE-2025-45582 fix), which BitBake's fakeroot (pseudo) cannot follow, it puts a compatible `tar` first on the `PATH`; does nothing on other hosts |
 
 The step-by-step build instructions are in
 [build_instructions](build_instructions.md#build-yocto)
@@ -459,18 +460,23 @@ MACHINE / SDT / device tree from its own XSA.
 ```
 Yocto/bsp/<board>/
 ├── conf/
-│   └── local.conf.append                     <- bootargs (APPEND), hostname, image tweaks
+│   └── local.conf.append                     <- BSP_EXTRA_BOOTARGS, hostname, image tweaks
 └── meta-user/
     ├── conf/
     │   ├── layer.conf
     │   └── petalinuxbsp.conf
+    ├── recipes-apps/speed-tests/              <- (Versal only) SSD speed-test scripts
     ├── recipes-bsp/
     │   ├── device-tree/
     │   │   ├── device-tree.bbappend          <- injects system-user.dtsi (Linux domain only)
     │   │   └── files/system-user.dtsi        <- board-specific Linux DT fixups
-    │   └── u-boot/                            <- (Versal only) custom boot.scr + bootcmd override
-    │       ├── u-boot-edf-scr_%.bbappend  +  files/fpgadrv-boot.cmd
-    │       └── u-boot-xlnx_%.bbappend     +  files/fpgadrv-bootcmd.cfg
+    │   ├── embeddedsw/                        <- (zcu104 only) FSBL VADJ patch
+    │   │   ├── fsbl-firmware_%.bbappend  +  files/zcu104_vadj_fsbl.patch
+    │   └── u-boot/
+    │       ├── u-boot-edf-scr_%.bbappend      <- Zynq-7000/ZynqMP: appends BSP_EXTRA_BOOTARGS
+    │       │                                     to the EDF boot.scr;  Versal: custom boot.scr
+    │       │   (+ files/fpgadrv-boot.cmd on Versal)
+    │       └── u-boot-xlnx_%.bbappend     +  files/fpgadrv-bootcmd.cfg   <- (Versal only) bootcmd override
     ├── recipes-core/images/
     │   └── edf-linux-disk-image.bbappend      <- extra rootfs packages (IMAGE_INSTALL:append)
     └── recipes-kernel/linux/
@@ -507,28 +513,47 @@ domains do not define the SoC peripheral labels the overrides reference.
 The Yocto equivalent of the PetaLinux *"what would I lose"* list below.
 On top of the stock EDF flow, the Yocto BSPs layer:
 
-* **All boards:** hostname (`local.conf.append`), the reference-design
-  rootfs packages (`edf-linux-disk-image.bbappend`), and the kernel
-  PCIe/NVMe configs (`bsp.cfg`).
+* **All boards:**
+  * Hostname `<board>-fpgadrv-2025-2`, set in `local.conf.append` with
+    `hostname:pn-base-files:forcevariable` — a plain `hostname:pn-base-files` is overridden
+    by the `amd-edf` default of the EDF distribution configuration.
+  * The reference-design rootfs packages, including `pciutils` and `nvme-cli`
+    (`edf-linux-disk-image.bbappend`), and the kernel PCIe/NVMe configs (`bsp.cfg`).
+* **Kernel command line (Zynq-7000, Zynq UltraScale+):** the EDF flow builds the command
+  line in its U-Boot script (`boot.scr`) from the device tree's `/chosen/bootargs` plus the
+  root-device arguments, and never reads `APPEND` from `local.conf`. The board-specific
+  arguments (`cma=...`, and on Zynq-7000 the console arguments) are therefore set in
+  `BSP_EXTRA_BOOTARGS` (`local.conf.append`), and `u-boot-edf-scr_%.bbappend` appends them
+  to the script's `setenv bootargs` line.
 * **Zynq-7000 (pz, zc706):** `system-user.dtsi` restores the root
   `compatible = "xlnx,zynq-7000"` (the parse-sdt board merge drops it,
   which otherwise boots a generic machine and panics in the clock driver),
-  sets `/chosen/bootargs` (console + earlycon — the zynq DT carries no
-  default bootargs), and disables PS `gem0`. `bsp.cfg` adds
-  `CONFIG_PCIE_XILINX` + NVMe and the `CONFIG_VMSPLIT_2G` /
-  `CONFIG_PAGE_OFFSET=0x80000000` relayout needed to `ioremap` the 256 MB
-  AXI-PCIe config window.
+  sets `/chosen/bootargs`, and describes the PHY of PS `gem0` — the board Ethernet port
+  (Marvell PHY at MDIO address 0 on the PicoZed, 7 on the ZC706, `rgmii-id`). Without a PHY
+  description, U-Boot 2025.01 crashes while probing `gem0`, which is why earlier versions
+  disabled the port. `bsp.cfg` adds `CONFIG_PCIE_XILINX` + NVMe and the
+  `CONFIG_VMSPLIT_2G` / `CONFIG_PAGE_OFFSET=0x80000000` relayout needed to `ioremap` the
+  256 MB AXI-PCIe config window.
 * **Zynq UltraScale+:** `bsp.cfg` adds `CONFIG_PCIE_XDMA_PL` + NVMe;
   `system-user.dtsi` pins the UART `port-number`/serial aliases (so the
-  console is deterministic) and, on `zcu104`/`uzev`, caps the SD controller
-  at high-speed (the level shifter cannot sustain UHS).
+  console is deterministic), on `zcu104`/`uzev` caps the SD controller at high-speed (the
+  level shifter cannot sustain UHS), and on the ZCU10x/ZCU111/ZCU208/ZCU216 describes the TI
+  DP83867 PHY of the board Ethernet port (`gem3`, with its RGMII delays — without them the
+  link comes up but passes no packets) and gives it a fixed MAC address.
+* **ZCU104:** `recipes-bsp/embeddedsw/` patches the FSBL (`zcu104_vadj_fsbl.patch`) so that
+  it reads the VADJ record from the FMC card's EEPROM (I2C mux channel and address of the FMC
+  EEPROM, full-length read) and enables VADJ. The stock 2025.2 FSBL reads the board's own
+  EEPROM and leaves VADJ off, so the FMC is unpowered. The patch is applied in an extra task
+  after `do_copy_shared_src`, because in 2025.2 the embeddedsw sources are copied in after
+  `do_patch` runs.
 * **Versal:** `system-user.dtsi` overrides the QDMA PCIe `ranges` to a 1:1
   identity map (the SDT sets the PCI base to 0x0, which faults NVMe BAR
-  access). The U-Boot bbappends add a custom `boot.scr` (`fpgadrv-boot.cmd`
-  — with the IR38164 VADJ-enable sequence on VCK190/VMK180/VPK120/VPK180
-  and `earlycon=pl011,mmio32`) and override `CONFIG_BOOTCOMMAND`; the image
-  bbappend places `BOOT.BIN` and `boot.scr` onto the FAT esp via
-  `IMAGE_EFI_BOOT_FILES` so the card boots hands-free.
+  access) and describes the DP83867 PHY(s) of the board Ethernet port(s) (fixed MAC
+  addresses on the VCK190). The U-Boot bbappends add a custom `boot.scr` (`fpgadrv-boot.cmd`
+  — with the IR38164 VADJ-enable sequence on VCK190/VMK180/VPK120/VPK180, the kernel
+  arguments and `earlycon=pl011,mmio32`) and override `CONFIG_BOOTCOMMAND` to run it; the
+  image bbappend places `BOOT.BIN` and `boot.scr` onto the FAT esp via
+  `IMAGE_EFI_BOOT_FILES` so the card boots hands-free, and adds the `speed-tests` scripts.
 
 See the `Yocto/bsp/<board>/` sources and their in-file comments for the
 exact values and the rationale behind each fixup.
@@ -557,6 +582,10 @@ the stock one?"* — it is what to re-apply if you ever do that.
 
 ### Zynq-7000 BSPs (pz, zc706)
 
+* **Board Ethernet port (PS `gem0`)** enabled in `system-user.dtsi`, with its PHY described
+  (MDIO address 0 on the PicoZed, keeping the PicoZed LED `marvell,reg-init` setup; address 7
+  on the ZC706). Earlier versions disabled `gem0` because U-Boot 2025.01 crashed probing it
+  without a PHY description.
 * **SD-card root filesystem** configured in `configs/config`:
   `CONFIG_SUBSYSTEM_ROOTFS_EXT4`, `CONFIG_SUBSYSTEM_SDROOT_DEV`,
   `CONFIG_SUBSYSTEM_USER_CMDLINE` (with `cma=1536M` for the AXI DMA
@@ -621,9 +650,11 @@ the stock one?"* — it is what to re-apply if you ever do that.
 
 * **FSBL patch `zcu104_vadj_fsbl.patch`** in
   `recipes-bsp/embeddedsw/files/`, registered via
-  `fsbl-firmware_%.bbappend`. The ZCU104 FSBL is patched to program the
-  on-board IRPS5401 PMBus regulator to 1.8V before the FMC PHYs
-  come out of reset.
+  `fsbl-firmware_%.bbappend`. The 2025.2 FSBL reads the VADJ record
+  from the wrong EEPROM (the board's, not the FMC card's) and reads too
+  few bytes to reach it, so it never enables VADJ. The patch makes the
+  FSBL read the FMC card's EEPROM so that VADJ is set from it (the same
+  patch is used by the Yocto BSP).
 * Standard ZynqMP SD-root + PCIe / NVMe configs and U-Boot ubifs
   patch.
 
@@ -651,6 +682,6 @@ the stock one?"* — it is what to re-apply if you ever do that.
 | `Yocto/<target>/`                   | Yocto / EDF workspace (`.repo`, `sources`, `build`, `images`).                  |
 | `Yocto/<target>/images/linux/`      | `BOOT.BIN`, kernel (`Image` or `uImage`), `boot.scr`, `system.dtb`, `rootfs.wic.xz`, `rootfs.tar.gz`. |
 | `Yocto/<target>/build/`             | bitbake build directory (`tmp/`, `sstate-cache/`, `downloads/`).                |
-| `bootimages/`                       | Per-target zipped boot files (`<prj>_<target>_petalinux-<ver>.zip` and `<prj>_<target>_standalone-<ver>.zip`). |
+| `bootimages/`                       | Per-target zipped boot files (`<prj>_<target>_standalone-<ver>.zip`, `<prj>_<target>_petalinux-<ver>.zip`, `<prj>_<target>_yocto-<ver>.zip`). `package` rewrites a zip when the artifacts in it have been rebuilt since. |
 
 None of these directories are committed to the repository.

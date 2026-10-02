@@ -34,3 +34,31 @@
 	ranges = <0x02000000 0x00 0xa8000000  0x00 0xa8000000  0x00 0x08000000>,
 		 <0x43000000 0x04 0x80000000  0x04 0x80000000  0x00 0x40000000>;
 };
+
+/* Board RJ45 (GEM0 = u198 PHY; GEM1 is not used on this board): the SDT
+ * flow does not describe the board-level TI DP83867 PHY, so Linux falls
+ * back to the Generic PHY driver and the RGMII clock delays are never
+ * programmed - the link negotiates 1G but passes no packets.
+ * Values from the official versal-vpk120-revA/revB.dts (PHY addr 1,
+ * RX delay 3.00 ns = 0xb, TX delay 2.75 ns = 0xa); reset-gpios omitted
+ * because the SDT device tree does not define the gpio1 label - the PHY
+ * powers up out of reset from straps. Same fix as the HW-verified
+ * 2x-qsfp28-fmc vck190 Yocto BSP, but NOT yet verified on a VPK120.
+ * No fixed MAC: the MAC stays random per boot (add a local-mac-address
+ * property to pin one).
+ */
+&gem0 {
+	phy-handle = <&gem0_phy>;
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gem0_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id2000.a231";
+			reg = <1>;
+			ti,rx-internal-delay = <0xb>;
+			ti,tx-internal-delay = <0xa>;
+			ti,fifo-depth = <0x1>;
+			ti,dp83867-rxctrl-strap-quirk;
+		};
+	};
+};

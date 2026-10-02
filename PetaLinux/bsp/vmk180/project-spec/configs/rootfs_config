@@ -124,7 +124,7 @@ CONFIG_subsystem-sdt-flow=y
 #
 # e2fsprogs 
 #
-# CONFIG_e2fsprogs is not set
+CONFIG_e2fsprogs=y
 # CONFIG_e2fsprogs-dev is not set
 CONFIG_e2fsprogs-mke2fs=y
 # CONFIG_e2fsprogs-dbg is not set
@@ -135,7 +135,7 @@ CONFIG_e2fsprogs-mke2fs=y
 # CONFIG_libext2fs is not set
 # CONFIG_libe2p is not set
 # CONFIG_e2fsprogs-e2fsck is not set
-# CONFIG_e2fsprogs-badblocks is not set
+CONFIG_e2fsprogs-badblocks=y
 
 #
 # ed 
@@ -371,7 +371,7 @@ CONFIG_mtd-utils=y
 #
 # util-linux 
 #
-# CONFIG_util-linux is not set
+CONFIG_util-linux=y
 # CONFIG_util-linux-sulogin is not set
 # CONFIG_util-linux-losetup is not set
 # CONFIG_util-linux-hwclock is not set
@@ -383,20 +383,20 @@ CONFIG_mtd-utils=y
 # CONFIG_util-linux-umount is not set
 # CONFIG_util-linux-findfs is not set
 # CONFIG_util-linux-agetty is not set
-# CONFIG_util-linux-mount is not set
+CONFIG_util-linux-mount=y
 # CONFIG_util-linux-sfdisk is not set
 # CONFIG_util-linux-swaponoff is not set
 # CONFIG_util-linux-fsck.cramfs is not set
 # CONFIG_util-linux-prlimit is not set
 # CONFIG_util-linux-mcookie is not set
 # CONFIG_util-linux-getopt is not set
-# CONFIG_util-linux-blkid is not set
+CONFIG_util-linux-blkid=y
 # CONFIG_util-linux-dev is not set
 # CONFIG_util-linux-partx is not set
-# CONFIG_util-linux-mkfs is not set
+CONFIG_util-linux-mkfs=y
 # CONFIG_util-linux-readprofile is not set
 # CONFIG_util-linux-mountpoint is not set
-# CONFIG_util-linux-fdisk is not set
+CONFIG_util-linux-fdisk=y
 # CONFIG_util-linux-lscpu is not set
 # CONFIG_util-linux-dbg is not set
 # CONFIG_util-linux-uuidd is not set
@@ -2233,7 +2233,7 @@ CONFIG_libdfx=y
 #
 # coreutils 
 #
-# CONFIG_coreutils is not set
+CONFIG_coreutils=y
 # CONFIG_coreutils-dbg is not set
 # CONFIG_coreutils-dev is not set
 
@@ -3981,7 +3981,7 @@ CONFIG_u-boot-tools=y
 # CONFIG_imagefeature-ssh-server-dropbear is not set
 CONFIG_imagefeature-ssh-server-openssh=y
 CONFIG_imagefeature-hwcodecs=y
-# CONFIG_imagefeature-package-management is not set
+CONFIG_imagefeature-package-management=y
 # CONFIG_imagefeature-debug-tweaks is not set
 # CONFIG_imagefeature-empty-root-password is not set
 # CONFIG_imagefeature-serial-autologin-root is not set
@@ -3992,7 +3992,9 @@ CONFIG_Init-manager-systemd=y
 # user packages 
 #
 # CONFIG_gpio-demo is not set
+CONFIG_nvme-cli=y
 # CONFIG_peekpoke is not set
+CONFIG_speed-tests=y
 
 #
 # PetaLinux RootFS Settings

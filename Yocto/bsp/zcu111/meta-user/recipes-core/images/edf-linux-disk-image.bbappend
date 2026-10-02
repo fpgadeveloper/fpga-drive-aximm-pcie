@@ -19,3 +19,8 @@ IMAGE_INSTALL:append = " \
     pciutils \
     libdfx \
 "
+
+# nvme-cli for identifying/testing the NVMe SSDs on the FPGA Drive FMC (PetaLinux user-rootfsconfig; already in the pz/zc706 BSPs).
+IMAGE_INSTALL:append = " \
+    nvme-cli \
+"

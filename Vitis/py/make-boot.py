@@ -186,7 +186,27 @@ def detect_arch_and_cpu_from_xsa(xsa_path):
     return None, None
 
 # ---------------- MicroBlaze: embed or copy bit ----------------
-def make_mb_bit(impl_dir, bd_name, elf_path, mb_proc_name, out_bit, combine):
+def mmi_from_xsa(xsa_path, bd_name, out_dir):
+    """Extract the memory-map info (.mmi) that write_hw_platform packs into the
+    XSA. It is the same file Vivado leaves in impl_1, so it is the fallback
+    when the implementation directory was pruned ('build.sh clean --keep-boot'
+    keeps the XSA and the bitstream, but the rest of the run may be gone).
+    Returns the extracted path, or None when the XSA carries no .mmi."""
+    if not (xsa_path and zipfile.is_zipfile(xsa_path)):
+        return None
+    with zipfile.ZipFile(xsa_path, "r") as z:
+        for name in (f"{bd_name}_wrapper.mmi", f"{bd_name}.mmi"):
+            if name in z.namelist():
+                os.makedirs(out_dir, exist_ok=True)
+                out = os.path.join(out_dir, name)
+                with z.open(name) as src, open(out, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                note(f"MMI taken from the XSA ({name}); impl_1 has none")
+                return out
+    return None
+
+def make_mb_bit(impl_dir, bd_name, elf_path, mb_proc_name, out_bit, combine,
+                xsa_path=None):
     bit = pick_first_existing(
         os.path.join(impl_dir, f"{bd_name}_wrapper.bit"),
         os.path.join(impl_dir, f"{bd_name}.bit"),
@@ -199,7 +219,13 @@ def make_mb_bit(impl_dir, bd_name, elf_path, mb_proc_name, out_bit, combine):
         die(f"Could not find bit in '{impl_dir}' (expected {bd_name}_wrapper.bit or {bd_name}.bit)")
     if combine:
         if not mmi:
-            die(f"Could not find MMI in '{impl_dir}' (expected {bd_name}_wrapper.mmi or {bd_name}.mmi)")
+            # Into a scratch dir, not the boot dir: the boot dir is what the
+            # standalone zip ships and the .mmi is not a deliverable.
+            import tempfile
+            mmi = mmi_from_xsa(xsa_path, bd_name, tempfile.mkdtemp(prefix="mmi-"))
+        if not mmi:
+            die(f"Could not find MMI in '{impl_dir}' or inside the XSA "
+                f"(expected {bd_name}_wrapper.mmi or {bd_name}.mmi)")
         if not os.path.isfile(elf_path):
             die(f"ELF not found: {elf_path}")
         cmd = ["updatemem", "-force", "-meminfo", mmi, "-data", elf_path, "-bit", bit, "-proc", f"{bd_name}_i/{mb_proc_name}", "-out", out_bit]
@@ -380,7 +406,8 @@ def main():
     # -------- MicroBlaze
     if arch == "microblaze":
         out_bit = os.path.join(out_dir, f"{bd_name}_boot.bit" if combine else f"{bd_name}.bit")
-        make_mb_bit(impl_dir, bd_name, app_elf, core_hint or "microblaze_0", out_bit, combine)
+        make_mb_bit(impl_dir, bd_name, app_elf, core_hint or "microblaze_0", out_bit, combine,
+                    xsa_path=xsa_path)
         if not combine:
             if not os.path.isfile(app_elf):
                 die(f"ELF not found: {app_elf}")

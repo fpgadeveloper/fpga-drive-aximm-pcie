@@ -1,0 +1,61 @@
+Opsero Electronic Design Inc. 2026
+Jeff Johnson
+ZCU104 FSBL patch 2025.2
+========================
+The FSBL for Zynq UltraScale+ needs a patch to properly enable VADJ on the ZCU104 board in the 2025.2
+version of the AMD embeddedsw (PetaLinux and EDF / Yocto). The released FSBL code has code to read the FMC card's
+EEPROM and then enable VADJ to the correct value. The released FSBL code in fact reads from the ZCU104
+board's EEPROM (address 0x54) and not the FMC's EEPROM (address 0x50). It also only reads 32 bytes 
+from the EEPROM, which is not sufficient to include the VADJ voltage data. For both of these reasons, 
+the FSBL does not properly enable VADJ on this board if this patch is not applied.
+
+--- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
++++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.c
+@@ -85,7 +85,7 @@
+ 	u32 UStatus;
+ 	s32 Status;
+ 	u32 NominalVoltage;
+-	u32 EepromAddr = 0x54U;
++	u32 EepromAddr = 0x50U;
+ 	u32 MinVoltage;
+ 	u32 MaxVoltage;
+ 
+@@ -94,8 +94,8 @@
+ 	MaxVoltage = 0U;
+ 	XRecord.VadjRecordFound = 0U;
+ 
+-	/* Select the Channel-1 of MUX for I2C EEprom Access */
+-	WriteBuffer[0U] = 0x1U;
++	/* Select the Channel-6 of MUX for FMC I2C EEprom Access */
++	WriteBuffer[0U] = 0x20;
+ 	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
+ 				WriteBuffer, 1U, TCA9548A_ADDR);
+ 	if (Status != XST_SUCCESS) {
+@@ -109,6 +109,16 @@
+ 		/** For MISRA-C compliance */
+ 	}
+ 
++	/* Set the read address to zero */
++	WriteBuffer[0U] = 0x00U;
++	Status = XIicPs_MasterSendPolled(I2c0InstancePtr,
++				WriteBuffer, 1U, EepromAddr);
++	if (Status != XST_SUCCESS) {
++		UStatus = XFSBL_ERROR_I2C_WRITE;
++		XFsbl_Printf(DEBUG_GENERAL, "XFSBL_ERROR_I2C_WRITE\r\n");
++		goto END;
++	}
++
+ 	/* Read the contents of FMC EEPROM to Read_Buffer */
+ 		Status = XIicPs_MasterRecvPolled(I2c0InstancePtr, Read_Buffer,
+ 			EepromByteCount, EepromAddr);
+--- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
++++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_board.h
+@@ -58,7 +58,7 @@
+ #define IRPS5401_SWC_ADDR		0x45U
+ 
+ #define BUF_LEN		10U
+-#define MAX_SIZE		32U
++#define MAX_SIZE		256U
+ 
+ #define CMD_CFG_0_REG		0x06U
+ #define CMD_OUTPUT_0_REG	0x02U
