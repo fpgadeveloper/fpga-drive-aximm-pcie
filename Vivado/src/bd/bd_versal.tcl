@@ -654,7 +654,7 @@ proc create_qdma_support { index } {
       CONFIG.pf7_class_code_base {06} \
       CONFIG.pf7_class_code_sub {04} \
       CONFIG.pf7_sub_class_interface_menu {InfiniBand_to_PCI_host_bridge} \
-      CONFIG.pipe_line_stage {1} \
+      CONFIG.pipe_line_stage {2} \
       CONFIG.pipe_sim {false} \
       CONFIG.plltype {LCPLL} \
       CONFIG.sys_reset_polarity {ACTIVE_LOW} \
@@ -803,6 +803,10 @@ proc create_qdma_support { index } {
   }
   # Create instance: pcie_phy, and set properties
   set pcie_phy [ create_bd_cell -type ip -vlnv xilinx.com:ip:pcie_phy_versal pcie_phy ]
+  # PCIE4 (Gen4, 500 MHz PIPE): 2 PIPE pipeline stages between the PCIE40 block and the
+  # GTY quad, set on both pcie_phy (pipeline_stages) and pcie_versal (pipe_line_stage, whose
+  # standalone IP default is 2). With 1 stage the PIPELTSSM -> GT PCIELTSSM route failed timing
+  # on vck190_fmcp1 (PCIE40_X1Y2 + GTY_QUAD_X1Y2 are in different clock regions).
   if {$is_vck190 || $is_vmk180 || $is_vek280} {
     set_property -dict [ list \
       CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {16.0_GT/s} \
@@ -820,7 +824,7 @@ proc create_qdma_support { index } {
       CONFIG.phy_refclk_freq {100_MHz} \
       CONFIG.phy_userclk2_freq {250_MHz} \
       CONFIG.phy_userclk_freq {250_MHz} \
-      CONFIG.pipeline_stages {1} \
+      CONFIG.pipeline_stages {2} \
       CONFIG.tx_preset {4} \
    ] $pcie_phy
   } else {
