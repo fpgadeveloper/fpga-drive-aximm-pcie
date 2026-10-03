@@ -59,6 +59,10 @@
 * Added per-BSP U-Boot device-tree overlay
   (`meta-xilinx-tools/recipes-bsp/uboot-device-tree/`) for every
   target so U-Boot sees the FMC-side PCIe bridge
+* Versal (VCK190/VMK180/VEK280): PCIe PIPE pipeline 2 stages for timing closure. The
+  Gen4 root ports now use 2 PIPE pipeline stages between the PCIe block and the GTY quad
+  (`pipe_line_stage` / `pipeline_stages`, previously 1), which closes timing on the
+  VCK190 FMCP1 design.
 
 ## 2024.1 Changes
 
