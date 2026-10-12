@@ -47,3 +47,16 @@ set_property PACKAGE_PIN BH39 [get_ports {pci_exp_0_gtx_n[3]}]; # DP3_C2M_N
 set_property PACKAGE_PIN BM43 [get_ports {pci_exp_0_grx_p[3]}]; # DP3_M2C_P
 set_property PACKAGE_PIN BN43 [get_ports {pci_exp_0_grx_n[3]}]; # DP3_M2C_N
 
+
+#####################################################################
+# Placement: keep the QDMA soft IP next to its PCIE50 hard block
+#####################################################################
+# The QDMA request engine (dma_pcie_rq / RQ_FIFO / rc_new) runs at 250 MHz with
+# deep, high-fanout logic. Left unconstrained, the placer spreads the QDMA across
+# clock regions X2..X9 of row Y1 and timing closes with almost no margin. A HARD
+# pblock next to PCIE50_X1Y0 / GTYP_QUAD_X1Y0 (clock region X9Y1) keeps it compact.
+# Versal pblocks are soft by default, so IS_SOFT FALSE is required.
+create_pblock pblock_qdma_0
+add_cells_to_pblock [get_pblocks pblock_qdma_0] [get_cells [list fpgadrv_i/qdma_0 fpgadrv_i/qdma_support_0]]
+resize_pblock [get_pblocks pblock_qdma_0] -add {CLOCKREGION_X7Y1:CLOCKREGION_X9Y2}
+set_property IS_SOFT FALSE [get_pblocks pblock_qdma_0]
