@@ -76,10 +76,10 @@ set_msg_config -id {Constraints 18-4427} -suppress
 # the default strategy; the ones listed here need a stronger strategy to close.
 # vpk120: the 250 MHz qdma_0_axi_aclk paths inside the QDMA soft IP request
 # engine (dma_pcie_rq / RQ_FIFO / rc_new) are 7-15 LUT levels deep and close
-# only with the Explore directives (route -tns_cleanup), at about +0.01 ns.
-# They are logic-depth bound and already placed within a few slices: pblocks
-# next to the PCIE50 block, a USER_CLOCK_ROOT, AggressiveExplore phys_opt and
-# phys_opt retiming were tried and gave no extra margin. Do not drop this.
+# with the Explore directives (route -tns_cleanup); with the hard QDMA pblock in
+# vpk120.xdc it reaches +0.018 ns, without the pblock about +0.01 ns.
+# AggressiveExplore phys_opt and phys_opt retiming gave no extra margin.
+# Do not drop this.
 dict set impl_strategy_dict vpk120 {Performance_ExplorePostRoutePhysOpt}
 if { [dict exists $impl_strategy_dict $target] } {
   set impl_strategy [dict get $impl_strategy_dict $target]
