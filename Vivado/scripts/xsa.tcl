@@ -80,7 +80,11 @@ set_msg_config -id {Constraints 18-4427} -suppress
 # vpk120.xdc it reaches +0.018 ns, without the pblock about +0.01 ns.
 # AggressiveExplore phys_opt and phys_opt retiming gave no extra margin.
 # Do not drop this.
+# vhk158: same QDMA request-engine paths; a soft QDMA floorplan plus
+# USER_CLOCK_ROOT on the PCIe clocks in vhk158.xdc and this strategy give the
+# best result found (+0.004 ns); constraint-only options are exhausted there.
 dict set impl_strategy_dict vpk120 {Performance_ExplorePostRoutePhysOpt}
+dict set impl_strategy_dict vhk158 {Performance_ExplorePostRoutePhysOpt}
 if { [dict exists $impl_strategy_dict $target] } {
   set impl_strategy [dict get $impl_strategy_dict $target]
   puts "Using implementation strategy override for ${target}: $impl_strategy"
