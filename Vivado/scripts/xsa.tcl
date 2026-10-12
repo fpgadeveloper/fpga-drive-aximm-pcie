@@ -73,9 +73,13 @@ open_project $origin_dir/$design_name/$design_name.xpr
 set_msg_config -id {Constraints 18-4427} -suppress
 
 # Per-target implementation strategy overrides. Most targets close timing with
-# the default strategy; the ones listed here need a stronger strategy to close
-# (eg. vpk120 has marginal paths internal to the QDMA IP that only close with
-# a post-route phys_opt pass).
+# the default strategy; the ones listed here need a stronger strategy to close.
+# vpk120: the 250 MHz qdma_0_axi_aclk paths inside the QDMA soft IP request
+# engine (dma_pcie_rq / RQ_FIFO / rc_new) are 7-15 LUT levels deep and close
+# only with the Explore directives (route -tns_cleanup), at about +0.01 ns.
+# They are logic-depth bound and already placed within a few slices: pblocks
+# next to the PCIE50 block, a USER_CLOCK_ROOT, AggressiveExplore phys_opt and
+# phys_opt retiming were tried and gave no extra margin. Do not drop this.
 dict set impl_strategy_dict vpk120 {Performance_ExplorePostRoutePhysOpt}
 if { [dict exists $impl_strategy_dict $target] } {
   set impl_strategy [dict get $impl_strategy_dict $target]
