@@ -75,8 +75,9 @@ set_msg_config -id {Constraints 18-4427} -suppress
 # Per-target implementation strategy overrides. Most targets close timing with
 # the default strategy; the ones listed here need a stronger strategy to close
 # (eg. vpk120 has marginal paths internal to the QDMA IP that only close with
-# a post-route phys_opt pass).
+# a post-route phys_opt pass; vhk158 also floorplans the QDMA in its xdc).
 dict set impl_strategy_dict vpk120 {Performance_ExplorePostRoutePhysOpt}
+dict set impl_strategy_dict vhk158 {Performance_ExplorePostRoutePhysOpt}
 if { [dict exists $impl_strategy_dict $target] } {
   set impl_strategy [dict get $impl_strategy_dict $target]
   puts "Using implementation strategy override for ${target}: $impl_strategy"
