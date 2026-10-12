@@ -701,6 +701,45 @@ def find_petalinux_settings(ver):
     return None
 
 
+# A fresh PetaLinux build can log "ERROR: <recipe> do_<task>_setscene: Fetcher
+# failure: Unable to find file file://..." for sstate objects that vanish
+# between bitbake's existence check and the fetch. bitbake then runs the real
+# task instead (each such ERROR is followed by "Setscene task ... failed ...
+# real task will be run instead"), every task succeeds -- but the ERROR lines
+# alone make bitbake exit non-zero, so petalinux-build fails and make stops
+# before petalinux-package. Observed 2026-10 on fpga-drive-aximm-pcie/vek280.
+_PETL_SETSCENE_FETCH_ERR = re.compile(r"^ERROR: .*_setscene: Fetcher failure")
+_PETL_TASKS_SUMMARY = re.compile(r"^NOTE: Tasks Summary: .*$", re.M)
+
+
+def _petalinux_only_setscene_errors(text):
+    """True when a PetaLinux build log excerpt shows the harmless failure mode
+    above: the last bitbake 'Tasks Summary' says all tasks succeeded AND every
+    'ERROR:' line is a setscene (sstate) fetcher miss. Any other ERROR, or no
+    successful summary, means a real failure -- False."""
+    summaries = _PETL_TASKS_SUMMARY.findall(text)
+    if not summaries or "all succeeded" not in summaries[-1]:
+        return False
+    errors = [l for l in text.splitlines() if l.startswith("ERROR:")]
+    return bool(errors) and all(_PETL_SETSCENE_FETCH_ERR.match(l) for l in errors)
+
+
+def _read_appended(log: Path, offset: int):
+    """The text appended to `log` since it was `offset` bytes long (the whole
+    file if it has since been truncated/replaced and is shorter; '' when it is
+    absent). Binary read + errors='replace': a build log is not guaranteed to be
+    valid UTF-8."""
+    if not log.is_file():
+        return ""
+    try:
+        with open(log, "rb") as f:
+            if log.stat().st_size >= offset:
+                f.seek(offset)
+            return f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
 def stage_petalinux(ctx: Context):
     if not ctx.design.get("petalinux", False):
         return "skipped (target has no PetaLinux flow)"
@@ -716,22 +755,42 @@ def stage_petalinux(ctx: Context):
     # Delegate to the tested Makefile flow -- make always exists on Linux.
     cmd = ["make", "-C", str(ctx.repo.root / "PetaLinux"),
            "petalinux", f"TARGET={ctx.target}", f"JOBS={ctx.jobs}"]
+    settings = None
     if not os.environ.get("PETALINUX"):
         settings = find_petalinux_settings(ctx.viv_ver)
         if not settings:
             fail(f"PetaLinux {ctx.viv_ver} settings.sh not found -- install "
                  f"PetaLinux Tools or source settings.sh before running.")
-        rc = run_tool(["bash", "-c",
-                       f'source "{settings}" >/dev/null && ' + shlex.join(cmd)],
-                      cwd=ctx.repo.root)
-    else:
-        rc = run_tool(cmd, cwd=ctx.repo.root)
-    # The PetaLinux Makefile can exit 0 without producing images (e.g. bad
-    # environment) -- verify like every other stage.
+
+    def run_make():
+        if settings:
+            return run_tool(["bash", "-c",
+                             f'source "{settings}" >/dev/null && ' + shlex.join(cmd)],
+                            cwd=ctx.repo.root)
+        return run_tool(cmd, cwd=ctx.repo.root)
+
+    # petalinux-build appends to this log; remember where this run starts so
+    # only its own output is classified below.
+    log = ctx.repo.root / "PetaLinux" / ctx.target / "build" / "build.log"
+    offset = log.stat().st_size if log.is_file() else 0
+    rc = run_make()
+    if (not petalinux_built(ctx)
+            and _petalinux_only_setscene_errors(_read_appended(log, offset))):
+        print("\n  NOTE: bitbake reported harmless setscene (sstate) fetch misses "
+              "as ERRORs although every task succeeded, so petalinux-build "
+              "failed before the images were packaged. Re-running the PetaLinux "
+              "build once to package the images.")
+        rc = run_make()
+    # The Makefile's 'petalinux' rule wraps the build in a lock (touch; make;
+    # rm -f), so make's exit status is the rm's and says nothing about
+    # petalinux-build -- the boot artifact is the only reliable verdict.
     boot_ok = petalinux_built(ctx)
     if rc != 0 or not boot_ok:
-        fail(f"PetaLinux build failed (rc={rc}; boot artifact "
-             f"{'ok' if boot_ok else 'MISSING in ' + str(ctx.petl_img)}).")
+        fail(f"PetaLinux build failed (boot artifact "
+             f"{'ok' if boot_ok else 'MISSING in ' + rel_to_repo(ctx.petl_img, ctx.repo.root)}). "
+             f"The PetaLinux Makefile's lock wrapper hides petalinux-build's "
+             f"exit status (make rc={rc} is not meaningful); see "
+             f"{rel_to_repo(log, ctx.repo.root)} for the cause.")
     return "built"
 
 
@@ -756,6 +815,143 @@ def yocto_products(ctx: Context):
     kernel = "uImage" if ctx.family == "zynq" else "Image"
     return [img / "BOOT.BIN", img / kernel,
             img / "rootfs.tar.gz", img / "rootfs.wic.xz"]
+
+
+def yocto_bsp_dir(ctx: Context):
+    """The target's Yocto bsp dir: a target-specific bsp (e.g. bsp/zcu102_hpc1)
+    when it exists, else the board-level one (bsp/zcu102) -- mirrors the
+    PetaLinux convention where a design variant whose hardware differs (e.g.
+    fewer MIPI camera ports) gets its own bsp instead of sharing the board's."""
+    bsp = ctx.repo.root / "Yocto" / "bsp" / ctx.target
+    if not bsp.is_dir():
+        bsp = ctx.repo.root / "Yocto" / "bsp" / ctx.target.split("_")[0]
+    return bsp
+
+
+def yocto_extra_layers(bsp: Path, repo_root: Path):
+    """Existing extra layer dirs named in <bsp>/bblayers-extra.txt, resolved as
+    Yocto/scripts/configure-build.sh resolves them: one path per line, blank and
+    '#' lines ignored, absolute or repo-root-relative."""
+    f = bsp / "bblayers-extra.txt"
+    if not f.is_file():
+        return []
+    out = []
+    for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+        entry = line.strip()
+        if not entry or entry.startswith("#"):
+            continue
+        p = Path(entry)
+        p = p if p.is_absolute() else repo_root / entry
+        if p.is_dir():
+            out.append(p)
+    return out
+
+
+def _input_key(p: Path, root: Path):
+    """Stamp key for an input file: repo-relative posix path (absolute posix
+    for an extra layer that lives outside the repo)."""
+    try:
+        return p.relative_to(root).as_posix()
+    except ValueError:
+        return p.as_posix()
+
+
+def _sha256_file(p: Path):
+    import hashlib
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def yocto_inputs(ctx: Context):
+    """{repo-relative path: sha256} of everything in the repo the target's Yocto
+    image is built from: the XSA, the bsp dir (conf/local.conf.append,
+    meta-user/, bblayers-extra.txt), the port-config overlay and the extra
+    layers. Content hashes, not mtimes: a git checkout/pull rewrites mtimes of
+    files whose content did not change. Symlinks are followed; __pycache__,
+    *.pyc and .git are skipped (not inputs, and they churn). An ABSENT XSA is
+    left out (see yocto_input_changes)."""
+    root = ctx.repo.root
+    bsp = yocto_bsp_dir(ctx)
+    cfg = yocto_port_cfg_dir(ctx)
+    dirs = [bsp] + ([cfg] if cfg else []) + yocto_extra_layers(bsp, root)
+    files = {}
+    for d in dirs:
+        if not d.is_dir():
+            continue
+        seen = set()
+        for dirpath, dirnames, filenames in os.walk(d, followlinks=True):
+            real = os.path.realpath(dirpath)
+            if real in seen:            # symlink loop
+                dirnames[:] = []
+                continue
+            seen.add(real)
+            dirnames[:] = [n for n in dirnames if n not in ("__pycache__", ".git")]
+            for n in filenames:
+                if n.endswith(".pyc") or n == ".git":
+                    continue
+                p = Path(dirpath) / n
+                if p.is_file():         # follows symlinks; drops dangling ones
+                    files.setdefault(_input_key(p, root), p)
+    if ctx.xsa.is_file():
+        files[_input_key(ctx.xsa, root)] = ctx.xsa
+    return {k: _sha256_file(files[k]) for k in sorted(files)}
+
+
+# Beside the products, so 'clean --keep-boot' (which keeps images/) keeps it;
+# the yocto zip gathers named files only, so it is never shipped.
+YOCTO_STAMP = ".inputs-sha256"
+
+
+def read_yocto_stamp(ctx: Context):
+    """The inputs recorded when the images were built, or None if no stamp."""
+    p = ctx.yocto_img / YOCTO_STAMP
+    try:
+        text = p.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    out = {}
+    for line in text.splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        digest, sep, rel = line.partition("  ")
+        if sep:
+            out[rel] = digest
+    return out
+
+
+def write_yocto_stamp(ctx: Context, inputs):
+    p = ctx.yocto_img / YOCTO_STAMP
+    try:
+        with open(p, "w", encoding="utf-8", newline="\n") as f:
+            f.write("# Yocto inputs these images were built from "
+                    "(sha256  path); written by build.py\n")
+            for rel, digest in inputs.items():
+                f.write(f"{digest}  {rel}\n")
+    except OSError as e:
+        print(f"  WARNING: could not write {rel_to_repo(p, ctx.repo.root)}: {e}")
+
+
+def yocto_input_changes(ctx: Context, stamp, current):
+    """['changed  <path>' | 'added    <path>' | 'removed  <path>', ...] between
+    a stamp and the current inputs. The XSA is compared only when both sides
+    have it: 'clean' of the Vivado project (or a stamp adopted while it was
+    gone) must never by itself force an hours-long Yocto rebuild."""
+    xsa = _input_key(ctx.xsa, ctx.repo.root)
+    if xsa not in stamp or xsa not in current:
+        stamp = {k: v for k, v in stamp.items() if k != xsa}
+        current = {k: v for k, v in current.items() if k != xsa}
+    out = []
+    for k in sorted(set(stamp) | set(current)):
+        if k not in current:
+            out.append(f"removed  {k}")
+        elif k not in stamp:
+            out.append(f"added    {k}")
+        elif stamp[k] != current[k]:
+            out.append(f"changed  {k}")
+    return out
 
 
 def petalinux_built(ctx: Context):
@@ -786,8 +982,32 @@ def stage_yocto(ctx: Context):
     img = ctx.yocto_img
     products = yocto_products(ctx)
     if all(p.is_file() for p in products):
-        return "skipped (images exist)"
+        # Freshness: compare the repo-side inputs with the stamp written when
+        # the images were built. Images built before the stamp existed are
+        # adopted as current -- exactly what the old presence-only test
+        # assumed -- so this never rebuilds an already-built target by itself.
+        current = yocto_inputs(ctx)
+        stamp = read_yocto_stamp(ctx)
+        if stamp is None:
+            write_yocto_stamp(ctx, current)
+            return "skipped (images exist)"
+        changes = yocto_input_changes(ctx, stamp, current)
+        if not changes:
+            xsa = _input_key(ctx.xsa, ctx.repo.root)
+            if xsa in current and xsa not in stamp:
+                write_yocto_stamp(ctx, current)     # adopt the XSA too
+            return "skipped (images up to date)"
+        print(f"  Yocto inputs changed since the images were built "
+              f"({len(changes)}):")
+        for c in changes[:10]:
+            print(f"    {c}")
+        if len(changes) > 10:
+            print(f"    ... and {len(changes) - 10} more")
+        print("  Rebuilding the images (bitbake is incremental).")
     stage_xsa(ctx)
+    # Snapshot the inputs now (the XSA exists), not after the build: an edit
+    # made while bitbake runs must still read as a change next time.
+    inputs = yocto_inputs(ctx)
     # The scripts need the Vitis environment (xsct/sdtgen) and Google's
     # `repo` tool on PATH.
     vitis = find_tool("Vitis", ctx.viv_ver)
@@ -813,22 +1033,19 @@ def stage_yocto(ctx: Context):
         hw_xsa.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ctx.xsa, hw_xsa)
     # 3. Configure (sdtgen + gen-machineconf parse-sdt + BSP/overlay/sstate).
-    #    Re-run when the XSA or the board conf is newer than the done-marker.
-    #    Prefer a target-specific bsp (e.g. bsp/zcu102_hpc1) over the board-level
-    #    one (bsp/zcu102) when it exists -- mirrors the PetaLinux convention where
-    #    a design variant whose hardware differs (e.g. fewer MIPI camera ports)
-    #    gets its own bsp instead of sharing the board's.
-    bsp = ydir / "bsp" / ctx.target
-    if not bsp.is_dir():
-        bsp = ydir / "bsp" / ctx.target.split("_")[0]
+    #    Re-run when the XSA, the board conf or the extra-layers list (both read
+    #    only at configure time) is newer than the done-marker. See
+    #    yocto_bsp_dir() for which bsp dir a target uses.
+    bsp = yocto_bsp_dir(ctx)
     board = bsp.name
     conf_append = bsp / "conf" / "local.conf.append"
+    extra_layers = bsp / "bblayers-extra.txt"
     done = work / "configdone.txt"
     offline = ydir / "offline.txt"
     sstate = ""
     if offline.is_file():
         sstate = offline.read_text(encoding="utf-8").splitlines()[0].strip()
-    deps = [p for p in (hw_xsa, conf_append) if p.is_file()]
+    deps = [p for p in (hw_xsa, conf_append, extra_layers) if p.is_file()]
     if not done.is_file() or any(done.stat().st_mtime < p.stat().st_mtime
                                  for p in deps):
         sh("configure-build.sh",
@@ -844,6 +1061,7 @@ def stage_yocto(ctx: Context):
     if missing:
         fail(f"Yocto build completed but products are missing in "
              f"{rel_to_repo(img, ctx.repo.root)}: {', '.join(missing)}")
+    write_yocto_stamp(ctx, inputs)
     return "built"
 
 
@@ -1146,8 +1364,15 @@ def print_status(ctx: Context):
         else:
             groups.append(("petalinux", [ctx.petl_img / "BOOT.BIN",
                                           ctx.petl_img / "image.ub"]))
+    notes = {}  # artifact path -> short note printed under it
     if ctx.design.get("yocto", False):
         groups.append(("yocto", [ctx.yocto_img / "rootfs.wic.xz"]))
+        # Read-only: never adopt/write the stamp from a status call.
+        stamp = read_yocto_stamp(ctx)
+        if (stamp is not None and all(p.is_file() for p in yocto_products(ctx))
+                and yocto_input_changes(ctx, stamp, yocto_inputs(ctx))):
+            notes[ctx.yocto_img / "rootfs.wic.xz"] = (
+                f"stale (inputs changed; 'yocto --target {ctx.target}' rebuilds)")
     pkg = []  # bootimage zips -- all produced by the 'package' command
     if ctx.design.get("baremetal", False):
         pkg.append(ctx.bare_zip)
@@ -1191,6 +1416,8 @@ def print_status(ctx: Context):
             print(f"  {label:<{w}} {branch} {fmt_artifact(p):<{state_w}}  {plines[0]}")
             for cont in plines[1:]:                      # continuation under the path
                 print(f"{' ' * indent}{cont}")
+            if p in notes:
+                print(f"{' ' * indent}{notes[p]}")
     print()                                             # blank line between targets
 
 
@@ -1458,6 +1685,9 @@ def shim_name():
 # Commands that only make sense for targets with a given data.json flag.
 COMMAND_CAPABILITY = {"standalone": "baremetal", "cfgmem": "cfgmem",
                       "petalinux": "petalinux", "yocto": "yocto"}
+# How each capability flag reads in "target 'x' has no <flow> flow".
+FLOW_NAME = {"baremetal": "baremetal", "cfgmem": "configuration-memory",
+             "petalinux": "PetaLinux", "yocto": "Yocto"}
 
 
 def capable_designs(repo, flag=None):
@@ -1575,7 +1805,13 @@ def print_overview(repo):
     print("Examples:")
     print(f"  {shim} list")
     print(f"  {shim} xsa --target {ex}")
-    print(f"  {shim} standalone --target {ex}")
+    # One software-flow example, for a flow this repo has and a target that
+    # supports it (a 'standalone' example in a Linux-only repo would fail).
+    for cmd in ("standalone", "petalinux", "yocto"):
+        flag = COMMAND_CAPABILITY[cmd]
+        if capable_designs(repo, flag):
+            print(f"  {shim} {cmd} --target {example_target(repo, flag)}")
+            break
     print(f"  {shim} all --target {ex}")
     print(f"  {shim} all --target all")
     print()
@@ -1885,6 +2121,35 @@ def main():
             print(f"=== clean: {t} (scope: {scope}) ===")
             remove_paths(ps, repo.root)
         return
+
+    # A flow-specific command on a target without that flow is refused (single
+    # target) or the target is dropped (--target all) BEFORE any work: otherwise
+    # the 'xsa' stage it depends on would run (possibly an hour of Vivado) only
+    # for the flow stage to report "skipped". 'all' needs no such filter -- it
+    # picks its stages per target capability.
+    flag = COMMAND_CAPABILITY.get(args.command)
+    if flag:
+        flow = FLOW_NAME.get(flag, flag)
+        lacking = [t for t in targets if not repo.design(t).get(flag)]
+        single = args.target != "all"
+        if single and lacking:
+            print(f"ERROR: target '{args.target}' has no {flow} flow "
+                  f"('{args.command}' needs \"{flag}\": true in "
+                  f"config/data.json) -- nothing was built.")
+        if not capable_designs(repo, flag):
+            print(f"This repo has no targets that support '{args.command}'.")
+            sys.exit(2)
+        if single and lacking:
+            print()
+            print_targets(repo, flag=flag, cmd=args.command)
+            print()
+            print(f"Example:  {shim_name()} {args.command} --target "
+                  f"{example_target(repo, flag)}")
+            sys.exit(2)
+        if lacking:
+            print(f"Skipping {len(lacking)} target(s) with no {flow} flow: "
+                  f"{', '.join(lacking)}")
+            targets = [t for t in targets if t not in lacking]
 
     ensure_submodules(repo, auto=not getattr(args, "no_auto_submodules", False))
     results = {}
