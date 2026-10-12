@@ -47,3 +47,26 @@ set_property PACKAGE_PIN CB59 [get_ports {pci_exp_0_gtx_n[3]}]; # DP3_C2M_N
 set_property PACKAGE_PIN BV61 [get_ports {pci_exp_0_grx_p[3]}]; # DP3_M2C_P
 set_property PACKAGE_PIN BV62 [get_ports {pci_exp_0_grx_n[3]}]; # DP3_M2C_N
 
+
+##############################################################################
+# Placement: keep the QDMA soft core next to its PCIE50 hard block
+##############################################################################
+# PCIE50_X1Y0 and GTYP_QUAD_X1Y0 sit in clock region X9Y1 (SLR0). Left to itself
+# the placer spreads the ~90k-cell QDMA soft core (qdma_0) thinly along clock-
+# region row Y1 from X2 to X9. The QDMA request engine (dma_pcie_rq / RQ_FIFO /
+# rc_new, 13-15 LUT levels with high-fanout enables, ~73% route delay) then only
+# met 250 MHz (qdma_0_axi_aclk) by a few ps, and the 500 MHz PIPE paths into the
+# PCIE50E5 (phy_pclk/phy_coreclk, which the pcie_phy IP puts in the same
+# CLOCK_DELAY_GROUP as the user clock, rooted at X5Y1) sat at +0.001 ns. Both
+# needed the post-route phys_opt rescue (route_design -0.13..-0.16 ns) and the
+# build closed at WNS 0.000..+0.001 ns.
+# This hard pblock confines qdma_0 and qdma_support_0 to clock regions X6..X9
+# of rows Y1..Y2, next to PCIE50_X1Y0 and the PL NoC NMU (the placer packs it
+# into X6Y1..X9Y1); the router alone then closes at about +0.03 ns, no rescue.
+# Must be hard (IS_SOFT FALSE): Vivado creates pblocks soft by default here and
+# the placer then ignores most of the range. Do not add the SmartConnects to it:
+# their PS-side (clk_pl_0) halves must stay near the CIPS (tried: -1.2 ns).
+create_pblock pblock_qdma0
+add_cells_to_pblock [get_pblocks pblock_qdma0] [get_cells [list fpgadrv_i/qdma_0 fpgadrv_i/qdma_support_0]]
+resize_pblock [get_pblocks pblock_qdma0] -add {CLOCKREGION_X6Y1:CLOCKREGION_X9Y2}
+set_property IS_SOFT FALSE [get_pblocks pblock_qdma0]
