@@ -29,6 +29,12 @@ The Root Port is the DMA/Bridge Subsystem for PCI Express (`xdma`) in AXI Bridge
 configured for Gen3 (8 GT/s). Its AXI-Lite slave holds the ECAM space and its AXI slave is
 the BAR window, both reached from the PS through `M_AXI_HPM0_FPD` (`M_AXI_HPM1_FPD` for
 the second slot). Its AXI master reaches DDR through `S_AXI_HP0_FPD` (`S_AXI_HP1_FPD`).
+These HP ports, and the HP-port side of their AXI interconnects, run on `pl_clk1` at
+250 MHz: 128 bits at 250 MHz = 4.0 GB/s per port, above the payload rate of a Gen3 x4 link
+(3.94 GB/s raw), so the PS port does not limit the SSD's DMA. The register path from the PS
+(`M_AXI_HPM0_FPD`, `M_AXI_HPM1_FPD`) runs on `pl_clk0` at 99.99 MHz. On the one-lane designs
+(`zcu104`, `zcu106_hpc1`) the Root Port's AXI side runs at 125 MHz and 64 bits (~1.0 GB/s),
+above the ~985 MB/s of a Gen3 x1 link.
 The BAR window must be in the 32-bit address space for the SSD to enumerate correctly
 (see the comments in `bd_zynqmp.tcl`).
 

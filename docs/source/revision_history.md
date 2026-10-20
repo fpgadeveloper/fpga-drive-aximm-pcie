@@ -63,6 +63,22 @@
   Gen4 root ports now use 2 PIPE pipeline stages between the PCIe block and the GTY quad
   (`pipe_line_stage` / `pipeline_stages`, previously 1), which closes timing on the
   VCK190 FMCP1 design.
+* Zynq UltraScale+ (`uzev`, `zcu104`, `zcu106_hpc0`, `zcu106_hpc1`, `zcu111`, `zcu208`,
+  `zcu216`): HP-port clock fix. The XDMA Root Ports reached the PS DDR through
+  `S_AXI_HP0_FPD` and `S_AXI_HP1_FPD`, which, with the HP-port side of their interconnects,
+  were clocked from `pl_clk0` at 99.99 MHz. A 128-bit port at that clock carries at most
+  1.60 GB/s, so each SSD slot was capped at 1.60 GB/s, writing and reading, whatever the
+  drive. `pl_clk1` is now enabled at 250 MHz, and HP0/HP1 and the HP-port side of their
+  interconnects run on it, which gives 4.0 GB/s per port, above the payload rate of a Gen3 x4
+  link; the register paths from the PS (`M_AXI_HPM0_FPD`, `M_AXI_HPM1_FPD`) stay on
+  `pl_clk0`. The one-lane designs (`zcu104`, `zcu106_hpc1`) get the same clocking but no
+  higher rate: their Root Port runs at 125 MHz and 64 bits (~1.0 GB/s), and a Gen3 x1 link
+  carries ~985 MB/s anyway. Timing is met on all seven targets with no critical warnings
+  (WNS +0.306 ns `uzev`, +1.122 ns `zcu104`, +0.170 ns `zcu106_hpc0`, +1.123 ns
+  `zcu106_hpc1`, +0.209 ns `zcu111`, +0.382 ns `zcu208`, +0.236 ns `zcu216`), at a cost of
+  ~33 LUTs and 55 registers on `zcu106_hpc0` (not yet verified on hardware). The
+  [FPGA Drive Recorder](https://recorder.fpgadrive.com), which is based on this design,
+  received the same fix.
 
 ## 2024.1 Changes
 

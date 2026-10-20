@@ -133,7 +133,8 @@ FAMILIES = {
         title="Zynq UltraScale+ designs  —  ZCU104, ZCU106, ZCU111, ZCU208, ZCU216, UltraZed-EV",
         proc_title="Zynq\nUltraScale+\nPS",
         proc_body="Arm Cortex-A53\n\nstandalone app\n(ssd_test)\nor Linux\n(PetaLinux / Yocto)\n\n"
-                  "pl_clk0\n100 MHz",
+                  "pl_clk0 100 MHz\n(M_AXI_HPM0/1)\n\n"
+                  "pl_clk1 250 MHz\n(S_AXI_HP0/1)",
         ddr="PS DDR4",
         host_lbl=("M_AXI_HPM0_FPD", "M_AXI_HPM1_FPD"),
         dma_lbl=("S_AXI_HP0_FPD", "S_AXI_HP1_FPD"),
